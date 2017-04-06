@@ -20,6 +20,9 @@ jar {
                     'X-Service-Class': mainClassName
         }
     }
+    from('ui/www') {
+        into "www"
+    }
 }
 
 sourceSets {
