@@ -5,7 +5,8 @@ function(React) {
             super();
             this._onSubmit = this.onSubmit.bind(this);
             this._onInputChange = this.onInputChange.bind(this);
-            this.state = { fuelVolume: "", odometer: "", location: "", cost: "", fullFill: false };
+            this._defaultState = { fuelVolume: "", odometer: "", location: "", cost: "", fullFill: false, registering: false };
+            this.state = this._defaultState;
         }
         render() {
             return <div>
@@ -47,7 +48,7 @@ function(React) {
                                        name="location" id="inputLocation" value={this.state.location} placeholder="Tesco Elmers End" />
                             </div>
 
-                            <button type="submit" className="btn btn-primary">Submit</button>
+                            <button type="submit" className="btn btn-primary" disabled={this.state.registering}>Submit</button>
                         </form>
                     </div>
                 </div>
@@ -66,6 +67,7 @@ function(React) {
         }
         onSubmit(e) {
             e.preventDefault();
+            this.setState({ registering: true });
             $.ajax({
                 headers: { accept: 'application/json' },
                 url: "/_api/fuel",
@@ -82,13 +84,25 @@ function(React) {
                     location: this.state.location
                 }),
                 success: (data, status, xhr) => {
-                    console.log("fuel post success", data, status, xhr);
+                    this.setState(this._defaultState);
+                    if (xhr.status !== 201) {
+                        BUS.broadcast("NewFuelPurchaseEntry.PurchaseSubmissionFailed", {status: xhr.status, exception: null, data: data});
+                        return;
+                    }
+                    const location = xhr.getResponseHeader('Location');
+                    const matches = location.match(/\/_api\/fuel\/(.+)$/);
+                    if (!matches) {
+                        console.warn("invalid creation URI", location);
+                        return;
+                    }
+                    const fuelPurchaseId = matches[1];
+                    BUS.broadcast("NewFuelPurchaseEntry.PurchaseSubmitted", fuelPurchaseId);
                 },
                 error: (xhr, status, ex) => {
-                    console.log("fuel post failed", e, status, xhr);
+                    BUS.broadcast("NewFuelPurchaseEntry.PurchaseSubmissionFailed", {status: status, exception: ex});
                 },
                 complete: (xhr, status) => {
-                    this.registering = null;
+                    this.setState({ registering: false });
                 }
             });
         }
