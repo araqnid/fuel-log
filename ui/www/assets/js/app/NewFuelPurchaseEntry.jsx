@@ -4,6 +4,10 @@ function(React) {
         constructor() {
             super();
             this._onSubmit = this.onSubmit.bind(this);
+            this.inputFuelVolume = null;
+            this.inputOdometer = null;
+            this.inputFuelVolume = null;
+            this.inputLocation = null;
         }
         render() {
             return <div>
@@ -13,31 +17,31 @@ function(React) {
                         <form onSubmit={ this._onSubmit }>
                             <div className="form-group">
                                 <label htmlFor="inputFuelVolume">Fuel volume (litres)</label>
-                                <input type="text" className="form-control" id="inputFuelVolume" placeholder="45.79" />
+                                <input type="text" ref={el => this.inputFuelVolume = el} className="form-control" id="inputFuelVolume" placeholder="45.79" />
                             </div>
 
                             <div className="form-group">
                                 <label htmlFor="inputCost">Cost (£)</label>
-                                <input type="text" className="form-control" id="inputCost" placeholder="68.80" />
+                                <input type="text" ref={el => this.inputCost = el} className="form-control" id="inputCost" placeholder="68.80" />
                             </div>
 
                             <div className="form-group">
                                 <label htmlFor="inputOdometer">Odometer reading (miles)</label>
-                                <input type="text" className="form-control" id="inputOdometer" placeholder="111000" />
+                                <input type="text" ref={el => this.inputOdometer = el} className="form-control" id="inputOdometer" placeholder="111000" />
                             </div>
 
                             <div className="form-group">
                                 <label htmlFor="inputFullFill">Filled tank to full?</label>
                                 <div className="form-check">
                                     <label className="form-check-label">
-                                        <input type="checkbox" className="form-check-input" id="inputFullFill" />
+                                        <input type="checkbox" ref={el => this.inputFullFill = el} className="form-check-input" id="inputFullFill" />
                                     </label>
                                 </div>
                             </div>
 
                             <div className="form-group">
                                 <label htmlFor="inputLocation">Location</label>
-                                <input type="text" className="form-control" id="inputLocation" placeholder="Tesco Elmers End" />
+                                <input type="text" ref={el => this.inputLocation = el} className="form-control" id="inputLocation" placeholder="Tesco Elmers End" />
                             </div>
 
                             <button type="submit" className="btn btn-primary">Submit</button>
@@ -54,14 +58,14 @@ function(React) {
                 method: "POST",
                 contentType: 'application/json',
                 data: JSON.stringify({
-                    odometer: 0,
+                    odometer: this.inputOdometer.value * 1.60934,
                     cost: {
                         currency: 'GBP',
-                        amount: 0.0
+                        amount: this.inputCost.value
                     },
-                    fuel_volume: 0.0,
-                    full_fill: false,
-                    location: ''
+                    fuel_volume: this.inputFuelVolume.value,
+                    full_fill: this.inputFullFill.checked,
+                    location: this.inputLocation.value
                 }),
                 success: (data, status, xhr) => {
                     console.log("fuel post success", data, status, xhr);
