@@ -106,10 +106,13 @@ task runtimeDeps(dependsOn: 'processResources') {
     def sha1 = java.security.MessageDigest.getInstance("SHA-1")
     def metainf = new File("$buildDir/resources/main/META-INF")
     def depsFile = new File(metainf, project.name + ".deps.txt")
+    def bootDepsFile = new File(metainf, project.name + ".bootdeps.txt")
 
     outputs.file depsFile
+    outputs.file bootDepsFile
     outputs.upToDateWhen {
         if (!depsFile.exists()) return false
+        if (!bootDepsFile.exists()) return false
         def newArtifacts = 0
         def currentContent = depsFile.text
         configurations.runtime.resolvedConfiguration.resolvedArtifacts.each { artifact ->
@@ -124,6 +127,7 @@ task runtimeDeps(dependsOn: 'processResources') {
         configurations.runtime.resolvedConfiguration.resolvedArtifacts.each { artifact ->
             depsFile.text += sha1.digest(artifact.file.bytes).collect {String.format "%02x", it}.join() + ' ' + artifact.moduleVersion.id + ' ' + artifact.type + '\n'
         }
+        bootDepsFile.text = ''
     }
 }
 
