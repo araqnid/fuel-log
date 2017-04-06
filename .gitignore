@@ -1,0 +1,7 @@
+/.idea
+build
+/.gradle
+/ui/node_modules
+/ui/www/assets/_pack
+/events
+/out
