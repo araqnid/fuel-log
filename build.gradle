@@ -28,9 +28,7 @@ configurations {
 
 allprojects {
     group = "org.araqnid.fuellog"
-    if (System.getenv("BUILD_NUMBER")) {
-        version = "0.0.${System.getenv("BUILD_NUMBER")}"
-    }
+    version = "git describe --tags".execute().text.trim().replaceFirst("^v", "").replace('-', '.')
 
     repositories {
         mavenCentral()

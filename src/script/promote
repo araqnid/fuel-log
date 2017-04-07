@@ -1,5 +1,9 @@
 #!/bin/sh
 
+artifact=fuel-log
+site=fuel
+server_host=ob.araqnid.org
+
 set -e
 
 cd "$(dirname $0)/../.."
@@ -8,26 +12,28 @@ gradle() {
     ./gradlew "$@"
 }
 
-version_majors=0.0
-artifact=fuel-log
-site=fuel
-server_host=ob.araqnid.org
+tagged_as=$(git describe --tags)
+if ! expr "$tagged_as" : 'v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' >/dev/null; then
+    if [ -n "$NO_REBUILD" ]; then
+        echo "$0: current version $tagged_as is not a release version" >&2
+        exit 1
+    fi
+    version_patchnr=$( expr "$tagged_as" : 'v[0-9][0-9]*\.[0-9][0-9]*\.\([0-9][0-9]*\)-' )
+    if [ -z "$version_patchnr" ]; then
+        echo "$0: current version $tagged_as is not a release version and doesn't have an obvious patch scheme" >&2
+        exit 1
+    fi
+    version_majmin=$( expr "$tagged_as" : 'v\([0-9][0-9]*\.[0-9][0-9]*\)\.[0-9][0-9]*' )
+    next_patchnr=$(expr $version_patchnr + 1)
+    next_version="$version_majmin.$next_patchnr"
+    git tag -m "Version $next_version" v$next_version
+    tagged_as=v$next_version
+fi
+version=$(echo $tagged_as | sed -e 's/^v//')
 
 if [ -z "$NO_REBUILD" ]; then
-    if [ -f .build_number ]; then
-	BUILD_NUMBER=$(expr $(cat .build_number) + 1)
-    else
-	BUILD_NUMBER=1
-    fi
-    echo $BUILD_NUMBER > .build_number
-    export BUILD_NUMBER
     gradle clean build
-    git tag v$version_majors.$BUILD_NUMBER
-else
-    BUILD_NUMBER=$(cat .build_number)
 fi
-
-version=$version_majors.$BUILD_NUMBER
 
 tmpdir=$(mktemp -d -t $artifact-$site-promote)
 trap 'rm -rf "$tmpdir"' EXIT
@@ -36,7 +42,7 @@ jarfile=$artifact-$version.jar
 ln -sfn $PWD/build/libs/$jarfile $tmpdir/$jarfile
 ln -sfn $PWD/src/script/mount_service $tmpdir/mount
 
-remote_jadm_command="set -e; tmpdir=\$(mktemp -d -p /srv/$site-japp); tar -C \$tmpdir -x -f -; cd \$tmpdir; ARTIFACT=$artifact SITE=$site VERSION=$version ./mount && systemctl restart $site-japp; cd /; rm -rf \$tmpdir"
+remote_jadm_command="set -e; tmpdir=\$(mktemp -d -p /srv/$site-japp); tar -C \$tmpdir -x -f -; cd \$tmpdir; ARTIFACT=$artifact SITE=$site VERSION=$version ./mount && echo systemctl restart $site-japp; cd /; rm -rf \$tmpdir"
 remote_user_command="sudo -u $site-jadm sh -c '$remote_jadm_command'"
 
 tar --dereference -C $tmpdir -c -f - . | ssh root@$server_host "$remote_user_command"
