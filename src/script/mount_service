@@ -7,7 +7,7 @@ die() {
     exit 1
 }
 
-set -e -x
+set -e
 
 apprepo="$HOME/packages"
 jarfile="$ARTIFACT-$VERSION.jar"
