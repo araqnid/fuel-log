@@ -1,0 +1,42 @@
+#!/bin/sh
+
+set -e
+
+cd "$(dirname $0)/../.."
+
+gradle() {
+    ./gradlew "$@"
+}
+
+version_majors=0.0
+artifact=fuel-log
+site=fuel
+server_host=ob.araqnid.org
+
+if [ -z "$NO_REBUILD" ]; then
+    if [ -f .build_number ]; then
+	BUILD_NUMBER=$(expr $(cat .build_number) + 1)
+    else
+	BUILD_NUMBER=1
+    fi
+    echo $BUILD_NUMBER > .build_number
+    export BUILD_NUMBER
+    gradle clean build
+    git tag v$version_majors.$BUILD_NUMBER
+else
+    BUILD_NUMBER=$(cat .build_number)
+fi
+
+version=$version_majors.$BUILD_NUMBER
+
+tmpdir=$(mktemp -d -t $artifact-$site-promote)
+trap 'rm -rf "$tmpdir"' EXIT
+
+jarfile=$artifact-$version.jar
+ln -sfn $PWD/build/libs/$jarfile $tmpdir/$jarfile
+ln -sfn $PWD/src/script/mount_service $tmpdir/mount
+
+remote_jadm_command="set -e; tmpdir=\$(mktemp -d -p /srv/$site-japp); tar -C \$tmpdir -x -f -; cd \$tmpdir; ARTIFACT=$artifact SITE=$site VERSION=$version ./mount && systemctl restart $site-japp; cd /; rm -rf \$tmpdir"
+remote_user_command="sudo -u $site-jadm sh -c '$remote_jadm_command'"
+
+tar --dereference -C $tmpdir -c -f - . | ssh root@$server_host "$remote_user_command"

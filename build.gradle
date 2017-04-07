@@ -12,19 +12,6 @@ ext {
     guavaVersion = '21.0'
 }
 
-jar {
-    if (version) {
-        manifest {
-            attributes 'Implementation-Title': project.description ?: project.name,
-                    'Implementation-Version': version,
-                    'X-Service-Class': mainClassName
-        }
-    }
-    from('ui/www') {
-        into "www"
-    }
-}
-
 sourceSets {
     tools {
         java {
@@ -64,6 +51,17 @@ allprojects {
         kotlinOptions {
             jvmTarget = "1.8"
         }
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': project.description ?: project.name,
+                'Implementation-Version': project.version,
+                'X-Service-Class': mainClassName
+    }
+    from('ui/www') {
+        into "www"
     }
 }
 

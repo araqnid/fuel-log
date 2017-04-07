@@ -1,0 +1,71 @@
+#!/bin/sh
+
+set -e
+
+die() {
+    echo "$0: $@" >&2
+    exit 1
+}
+
+set -e -x
+
+apprepo="$HOME/packages"
+jarfile="$ARTIFACT-$VERSION.jar"
+
+cache_dir="$apprepo/artifact-cache"
+[ -d "$cache_dir" ] || mkdir -p "$cache_dir"
+
+unzip -qc "$jarfile" "META-INF/$ARTIFACT.deps.txt" > deps
+unzip -qc "$jarfile" "META-INF/$ARTIFACT.bootdeps.txt" >> bootdeps
+
+url_of() {
+    group="$1"
+    name="$2"
+    version="$3"
+    case "$group" in
+        org.araqnid)
+            repo="https://repo.araqnid.org/maven"
+            ;;
+        *)
+            repo="http://central.maven.org/maven2"
+            ;;
+    esac
+    echo "$repo/$(echo $group | tr '.' '/')/$name/$version/$name-$version.jar"
+}
+
+touch urls files bootfiles digests
+
+while read sha1 id type; do
+    set -- $(echo $id | tr ':' ' ')
+    group="$1"
+    name="$2"
+    version="$3"
+    url=$(url_of $group $name $version)
+    file="$name-$version.jar"
+    [ -f "$cache_dir/$file" ] || echo $url >> urls
+    echo "$cache_dir/$file" >> files
+    echo "$sha1  $cache_dir/$file" >> digests
+done < deps
+
+while read sha1 id type; do
+    set -- $(echo $id | tr ':' ' ')
+    group="$1"
+    name="$2"
+    version="$3"
+    url=$(url_of $group $name $version)
+    file="$name-$version.jar"
+    [ -f "$cache_dir/$file" ] || echo $url >> urls
+    echo "$cache_dir/$file" >> bootfiles
+    echo "$sha1  $cache_dir/$file" >> digests
+done < bootdeps
+
+if [ -s urls ]; then
+    wget -P "$cache_dir" -c -nd $(cat urls)
+fi
+
+shasum -c digests
+
+cp files $apprepo/$ARTIFACT-$VERSION.deps
+cp bootfiles $apprepo/$ARTIFACT-$VERSION.bootdeps
+ln -fv $ARTIFACT-$VERSION.jar $apprepo/$ARTIFACT-$VERSION.jar
+ln -sfvn $ARTIFACT-$VERSION.jar $apprepo/$SITE-latest.jar

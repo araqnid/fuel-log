@@ -5,3 +5,4 @@ build
 /ui/www/assets/_pack
 /events
 /out
+/.build_number
