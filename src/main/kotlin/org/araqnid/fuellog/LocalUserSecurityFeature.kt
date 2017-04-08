@@ -88,7 +88,10 @@ class LocalUserSecurityHandler : SecurityHandler() {
 
     data class LocalUserIdentity(val userId: UUID) : UserIdentity {
         val user = LocalUser(userId)
-        val javaxSubject = Subject().apply { principals.add(user) }
+        val javaxSubject = Subject().apply {
+            principals.add(user)
+            setReadOnly()
+        }
 
         override fun getSubject() = javaxSubject
         override fun isUserInRole(role: String?, scope: UserIdentity.Scope?) = false
