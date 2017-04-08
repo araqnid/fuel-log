@@ -3,7 +3,7 @@ package org.araqnid.fuellog
 import org.eclipse.jetty.security.Authenticator
 import org.eclipse.jetty.security.RoleInfo
 import org.eclipse.jetty.security.SecurityHandler
-import org.eclipse.jetty.security.authentication.SessionAuthentication
+import org.eclipse.jetty.security.UserAuthentication
 import org.eclipse.jetty.server.Authentication
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.UserIdentity
@@ -69,7 +69,7 @@ class LocalUserSecurityHandler : SecurityHandler() {
                 val userId = (request as HttpServletRequest).maybeSession?.userId
                 return when (userId) {
                     null -> Authentication.UNAUTHENTICATED
-                    else -> SessionAuthentication(methodName, LocalUserIdentity(userId), userId)
+                    else -> UserAuthentication(methodName, LocalUserIdentity(userId))
                 }
             }
 
