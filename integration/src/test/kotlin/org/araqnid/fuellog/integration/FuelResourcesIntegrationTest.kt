@@ -11,9 +11,9 @@ import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.araqnid.eventstore.Blob
 import org.araqnid.eventstore.EventCategoryReader
-import org.araqnid.eventstore.EventReader
 import org.araqnid.eventstore.EventStreamWriter
 import org.araqnid.eventstore.StreamId
+import org.araqnid.fuellog.FuelRecord
 import org.araqnid.fuellog.FuelResources
 import org.araqnid.fuellog.events.Event
 import org.araqnid.fuellog.events.EventCodecs
@@ -28,9 +28,9 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasEntry
-import org.hamcrest.Matchers.not
 import org.hamcrest.TypeSafeDiagnosingMatcher
 import org.junit.Test
+import java.io.InputStream
 import java.time.Instant
 import java.util.UUID
 
@@ -61,6 +61,10 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
 
         execute(HttpGet("/_api/fuel/$purchaseId"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
+        val fuelRecord = readJsonResponse<FuelRecord>()
+        assertThat(fuelRecord.userId, equalTo(user.userId))
+        assertThat(fuelRecord.fuelPurchaseId, equalTo(purchaseId))
+        assertThat(fuelRecord.fuelVolume, equalTo(50.0))
     }
 
     @Test fun post_new_fuel_purchase() {
@@ -95,7 +99,6 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 .findFirstAndClose()!!
 
         assertThat(response.getFirstHeader("Location")?.value, equalTo(server.uri("/_api/fuel/${streamId.id}").toString()))
-
     }
 
     @Test fun post_new_fuel_purchase_inaccessible_without_login() {
@@ -132,9 +135,29 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_FORBIDDEN))
     }
 
-    inline fun <reified T> typeReference() : TypeReference<T> = object : TypeReference<T>() {}
+    @Test fun get_fuel_purchases_for_current_user() {
+        val purchaseId = UUID.randomUUID()
+        val user = loginAsNewUser()
 
-    fun Blob.parseJsonAsGeneric(): Map<String, Any> = objectMapper.readerFor(typeReference<Map<String, Any>>()).readValue(this.openStream())
+        server.instance<EventStreamWriter>().write(StreamId("fuel", purchaseId.toString()), listOf(
+                EventCodecs.encode(FuelPurchased(
+                        Instant.now(server.clock),
+                        user.userId,
+                        50.0,
+                        MonetaryAmount("GBP", 100.0),
+                        110000.0,
+                        true,
+                        "Some place"
+                ), emptyMetadata)
+        ))
+
+        execute(HttpGet("/_api/fuel"))
+        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
+        val fuelRecords = readJsonResponse<Collection<FuelRecord>>().toList()
+        assertThat(fuelRecords[0].userId, equalTo(user.userId))
+        assertThat(fuelRecords[0].fuelPurchaseId, equalTo(purchaseId))
+        assertThat(fuelRecords[0].fuelVolume, equalTo(50.0))
+    }
 
     fun serverEvents(): List<DecodedEvent> = server.instance<EventCategoryReader>().readCategoryForwards("fuel")
             .map { (_, event) -> DecodedEvent(event.streamId.category, EventCodecs.decode(event), event.metadata.parseJsonAsGeneric()) }
@@ -172,4 +195,12 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
             }
         }
     }
+
+    private inline fun <reified T> typeReference() : TypeReference<T> = object : TypeReference<T>() {}
+
+    private fun Blob.parseJsonAsGeneric(): Map<String, Any> = objectMapper.readerFor(typeReference<Map<String, Any>>()).readValue(this.openStream())
+
+    private inline fun <reified T> readJsonResponse(): T = readJson(response.entity.content)
+
+    private inline fun <reified T> readJson(input: InputStream): T = objectMapper.readerFor(typeReference<T>()).readValue(input)
 }

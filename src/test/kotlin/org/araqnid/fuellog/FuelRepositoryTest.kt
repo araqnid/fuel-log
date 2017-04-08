@@ -1,0 +1,86 @@
+package org.araqnid.fuellog
+
+import org.araqnid.eventstore.InMemoryEventSource
+import org.araqnid.eventstore.NoSuchStreamException
+import org.araqnid.eventstore.StreamId
+import org.araqnid.fuellog.events.Event
+import org.araqnid.fuellog.events.EventCodecs
+import org.araqnid.fuellog.events.EventMetadata
+import org.araqnid.fuellog.events.FuelPurchased
+import org.araqnid.fuellog.events.MonetaryAmount
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.containsInAnyOrder
+import org.hamcrest.Matchers.equalTo
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.ExpectedException
+import java.time.Clock
+import java.time.Instant
+import java.util.UUID
+
+class FuelRepositoryTest {
+    @Rule @JvmField val thrown: ExpectedException = ExpectedException.none()
+    val clock = ManualClock.initiallyAt(Clock.systemDefaultZone())
+    val eventSource = InMemoryEventSource(clock)
+    val repo = FuelRepository(eventSource.streamReader, eventSource.categoryReader)
+
+    val emptyMetadata = object : EventMetadata { }
+
+    @Test fun gets_purchase_by_id() {
+        val purchaseId = randomUUID()
+
+        val timestamp = Instant.parse("2017-06-08T16:54:00Z")
+        val userId = randomUUID()
+        val fuelVolume = 45.67
+        val currency = "GBP"
+        val amount = 62.13
+        val odometer = 111023.0
+        val location = "Someplace"
+
+        submit(StreamId("fuel", purchaseId.toString()),
+                FuelPurchased(timestamp, userId, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location))
+
+        val purchase = repo[purchaseId]
+        assertThat(purchase.fuelPurchaseId, equalTo(purchaseId))
+        assertThat(purchase.cost.currency, equalTo(currency))
+        assertThat(purchase.cost.amount, equalTo(amount))
+        assertThat(purchase.fuelVolume, equalTo(fuelVolume))
+        assertThat(purchase.odometer, equalTo(odometer))
+        assertThat(purchase.locationString, equalTo(location))
+    }
+
+    @Test fun unknown_purchase_throws_error() {
+        thrown.expect(NoSuchStreamException::class.java)
+        repo[randomUUID()]
+    }
+
+    @Test fun gets_purchases_by_user_id() {
+        val userId1 = randomUUID()
+        val userId2 = randomUUID()
+        val purchaseId1 = randomUUID()
+        val purchaseId2 = randomUUID()
+        val purchaseId3 = randomUUID()
+
+        val fuelVolume = 45.67
+        val currency = "GBP"
+        val amount = 62.13
+        val odometer = 111023.0
+        val location = "Someplace"
+
+        submit(StreamId("fuel", purchaseId1.toString()),
+                FuelPurchased(Instant.parse("2017-06-08T16:54:00Z"), userId1, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location))
+        submit(StreamId("fuel", purchaseId2.toString()),
+                FuelPurchased(Instant.parse("2017-06-09T16:54:00Z"), userId1, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location))
+        submit(StreamId("fuel", purchaseId3.toString()),
+                FuelPurchased(Instant.parse("2017-06-10T16:54:00Z"), userId2, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location))
+
+        assertThat(repo.byUserId(userId1).map { it.fuelPurchaseId }, containsInAnyOrder(purchaseId1, purchaseId2))
+        assertThat(repo.byUserId(userId2).map { it.fuelPurchaseId }, containsInAnyOrder(purchaseId3))
+    }
+
+    fun submit(streamId: StreamId, event: Event) {
+        eventSource.streamWriter.write(streamId, listOf(EventCodecs.encode(event, emptyMetadata)))
+    }
+
+    fun randomUUID(): UUID = UUID.randomUUID()
+}

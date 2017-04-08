@@ -1,5 +1,6 @@
 package org.araqnid.fuellog
 
+import org.araqnid.eventstore.EventCategoryReader
 import org.araqnid.eventstore.EventStreamReader
 import org.araqnid.eventstore.StreamId
 import org.araqnid.fuellog.events.Event
@@ -10,7 +11,7 @@ import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 
-class FuelRepository @Inject constructor(val streamReader: EventStreamReader) {
+class FuelRepository @Inject constructor(val streamReader: EventStreamReader, val categoryReader: EventCategoryReader) {
     operator fun get(fuelPurchaseId: UUID): FuelRecord {
         var record: FuelRecord? = null
         val streamId = StreamId("fuel", fuelPurchaseId.toString())
@@ -29,9 +30,28 @@ class FuelRepository @Inject constructor(val streamReader: EventStreamReader) {
                 }
         return record!!
     }
+
+    fun byUserId(userId: UUID): Collection<FuelRecord> {
+        val records = HashMap<UUID, FuelRecord>()
+        categoryReader.readCategoryForwards("fuel")
+                .map { it.event }
+                .forEachOrderedAndClose { eventRecord ->
+                    val streamId = eventRecord.streamId
+                    val event = EventCodecs.decode(eventRecord)
+                    val purchaseId = UUID.fromString(streamId.id)
+                    val existingRecord = records[purchaseId]
+                    when {
+                        existingRecord != null -> existingRecord.accept(event)
+                        event is FuelPurchased && event.userId == userId -> records.put(purchaseId, FuelRecord.from(purchaseId, event))
+                        // else ignore
+                    }
+                }
+        return records.values
+    }
 }
 
 data class FuelRecord(val fuelPurchaseId: UUID,
+                      val userId: UUID,
                       val purchasedAt: Instant,
                       val fuelVolume: Double,
                       val cost: MonetaryAmount,
@@ -48,6 +68,7 @@ data class FuelRecord(val fuelPurchaseId: UUID,
     companion object {
         fun from(id: UUID, purchaseEvent: FuelPurchased): FuelRecord {
             return FuelRecord(fuelPurchaseId = id, purchasedAt = purchaseEvent.timestamp,
+                    userId = purchaseEvent.userId,
                     fuelVolume = purchaseEvent.fuelVolume, cost = purchaseEvent.cost,
                     odometer = purchaseEvent.odometer, fullFill = purchaseEvent.fullFill,
                     locationString = purchaseEvent.location)

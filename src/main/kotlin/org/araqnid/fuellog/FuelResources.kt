@@ -27,7 +27,7 @@ import javax.ws.rs.core.UriInfo
 @Path("/fuel")
 class FuelResources @Inject constructor(val streamWriter: EventStreamWriter, val fuelRepository: FuelRepository, val clock: Clock) {
     @GET
-    @Path("{purchaseId}")
+    @Path("/{purchaseId}")
     @Produces("application/json")
     fun getPurchase(@PathParam("purchaseId") purchaseId: String): FuelRecord {
         return try {
@@ -35,6 +35,13 @@ class FuelResources @Inject constructor(val streamWriter: EventStreamWriter, val
         } catch (e: NoSuchStreamException) {
             throw NotFoundException(e)
         }
+    }
+
+    @GET
+    @Produces("application/json")
+    fun findPurchasesForUser(@Context securityContext: SecurityContext): Collection<FuelRecord> {
+        val user = securityContext.userPrincipal as LocalUser
+        return fuelRepository.byUserId(user.id)
     }
 
     @POST
