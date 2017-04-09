@@ -1,11 +1,10 @@
 package org.araqnid.fuellog.integration
 
-import com.fasterxml.jackson.databind.JsonNode
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
 import org.araqnid.fuellog.matchers.jsonBytesStructuredAs
-import org.araqnid.fuellog.matchers.jsonNull
 import org.araqnid.fuellog.matchers.jsonObject
+import org.araqnid.fuellog.matchers.jsonScalar
 import org.araqnid.fuellog.matchers.jsonString
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.any
@@ -26,9 +25,9 @@ class InfoResourcesIntegrationTest : IntegrationTest() {
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType(MediaType.APPLICATION_JSON))
         assertThat(response.entity.bytes, jsonBytesStructuredAs(jsonObject()
-                        .withProperty("version", any(JsonNode::class.java))
-                        .withProperty("title", "fuel-log")
-                        .withProperty("vendor", jsonNull())))
+                        .withProperty("version", jsonScalar())
+                        .withProperty("title", jsonScalar())
+                        .withProperty("vendor", jsonScalar())))
     }
 
     @Test fun version_has_text() {

@@ -113,5 +113,18 @@ fun jsonNull(): Matcher<JsonNode> = object : TypeSafeDiagnosingMatcher<JsonNode>
     }
 }
 
+fun jsonAny(): Matcher<JsonNode> = Matchers.any(JsonNode::class.java)
+
+fun jsonScalar(): Matcher<JsonNode> = object : TypeSafeDiagnosingMatcher<JsonNode>() {
+    override fun matchesSafely(item: JsonNode, mismatchDescription: Description): Boolean {
+        mismatchDescription.appendText("was ").appendValue(item)
+        return !item.isArray && !item.isObject
+    }
+
+    override fun describeTo(description: Description) {
+        description.appendText("<scalar>")
+    }
+}
+
 private val objectMapper = ObjectMapper()
         .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
