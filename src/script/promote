@@ -42,7 +42,8 @@ jarfile=$artifact-$version.jar
 ln -sfn $PWD/build/libs/$jarfile $tmpdir/$jarfile
 ln -sfn $PWD/src/script/mount_service $tmpdir/mount
 
-remote_jadm_command="set -e; tmpdir=\$(mktemp -d -p /srv/$site-japp); tar -C \$tmpdir -x -f -; cd \$tmpdir; ARTIFACT=$artifact SITE=$site VERSION=$version ./mount && echo systemctl restart $site-japp; cd /; rm -rf \$tmpdir"
-remote_user_command="sudo -u $site-jadm sh -c '$remote_jadm_command'"
+remote_jadm_command="set -e; tmpdir=\$(mktemp -d -p /srv/$site-japp); trap \"cd / && rm -rf \$tmpdir\" EXIT; tar -C \$tmpdir -x -f -; cd \$tmpdir; ARTIFACT=$artifact SITE=$site VERSION=$version ./mount"
+remote_user_command="sudo -u $site-jadm sh -c '$remote_jadm_command' && systemctl restart $site-japp"
 
+echo "Dispatching $artifact to $site on $server_host"
 tar --dereference -C $tmpdir -c -f - . | ssh root@$server_host "$remote_user_command"
