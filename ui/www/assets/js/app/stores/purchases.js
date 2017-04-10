@@ -4,6 +4,9 @@ function(MemoBus, $, identity) {
         constructor() {
             this.bus = new MemoBus("Purchases");
             this.userId = null;
+            this.refreshInterval = 30 * 1000;
+            this._loading = null;
+            this._sleeping = null;
         }
         subscribe(handlers, owner) {
             this.bus.subscribeAll(handlers, owner);
@@ -19,6 +22,9 @@ function(MemoBus, $, identity) {
                     if (this.userId) {
                         this._startLoading();
                     }
+                    else {
+                        this._stopLoading();
+                    }
                 }
             }, this);
             BUS.subscribe("NewFuelPurchaseEntry.PurchaseSubmitted", id => {
@@ -32,6 +38,10 @@ function(MemoBus, $, identity) {
             if (this._loading) {
                 this._loading.abort();
                 this._loading = null;
+            }
+            if (this._sleeping) {
+                clearTimeout(this._sleeping);
+                this._sleeping = null;
             }
         }
         _startLoading() {
@@ -47,8 +57,17 @@ function(MemoBus, $, identity) {
                 },
                 complete: (xhr, status) => {
                     this._loading = null;
+                    if (this.userId) {
+                        this._sleeping = setTimeout(this._tick.bind(this), this.refreshInterval);
+                    }
                 }
             })
+        }
+        _tick() {
+            this._sleeping = null;
+            if (this.userId) {
+                this._startLoading();
+            }
         }
     }
     return new Purchases();
