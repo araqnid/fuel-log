@@ -9,49 +9,45 @@ function(React) {
             this.state = this._defaultState;
         }
         render() {
-            return <div>
-                <div className="container">
-                    <div className="row">
-                        <p>Enter fuel purchase</p>
-                        <form onSubmit={ this._onSubmit }>
-                            <div className="form-group">
-                                <label htmlFor="inputFuelVolume">Fuel volume (litres)</label>
-                                <input type="text" onChange={this._onInputChange} className="form-control"
-                                       name="fuelVolume" id="inputFuelVolume" value={this.state.fuelVolume} placeholder="45.79" />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="inputCost">Cost (£)</label>
-                                <input type="text" onChange={this._onInputChange} className="form-control"
-                                       name="cost" id="inputCost" value={this.state.cost} placeholder="68.80" />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="inputOdometer">Odometer reading (miles)</label>
-                                <input type="text" onChange={this._onInputChange} className="form-control"
-                                       name="odometer" id="inputOdometer" value={this.state.odometer} placeholder="111000" />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="inputFullFill">Filled tank to full?</label>
-                                <div className="form-check">
-                                    <label className="form-check-label">
-                                        <input type="checkbox" onChange={this._onInputChange} className="form-check-input"
-                                               name="fullFill" id="inputFullFill" checked={this.state.fullFill ? "checked" : ""} />
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="inputLocation">Location</label>
-                                <input type="text" onChange={this._onInputChange} className="form-control"
-                                       name="location" id="inputLocation" value={this.state.location} placeholder="Tesco Elmers End" />
-                            </div>
-
-                            <button type="submit" className="btn btn-primary" disabled={this.state.registering}>Submit</button>
-                        </form>
+            return <div className="col-sm-4">
+                <h2>Enter purchase</h2>
+                <form onSubmit={ this._onSubmit }>
+                    <div className="form-group">
+                        <label htmlFor="inputFuelVolume">Fuel volume (litres)</label>
+                        <input type="text" onChange={this._onInputChange} className="form-control"
+                               name="fuelVolume" id="inputFuelVolume" value={this.state.fuelVolume} placeholder="45.79" />
                     </div>
-                </div>
+
+                    <div className="form-group">
+                        <label htmlFor="inputCost">Cost (£)</label>
+                        <input type="text" onChange={this._onInputChange} className="form-control"
+                               name="cost" id="inputCost" value={this.state.cost} placeholder="68.80" />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="inputOdometer">Odometer reading (miles)</label>
+                        <input type="text" onChange={this._onInputChange} className="form-control"
+                               name="odometer" id="inputOdometer" value={this.state.odometer} placeholder="111000" />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="inputFullFill">Filled tank to full?</label>
+                        <div className="form-check">
+                            <label className="form-check-label">
+                                <input type="checkbox" onChange={this._onInputChange} className="form-check-input"
+                                       name="fullFill" id="inputFullFill" checked={this.state.fullFill ? "checked" : ""} />
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="inputLocation">Location</label>
+                        <input type="text" onChange={this._onInputChange} className="form-control"
+                               name="location" id="inputLocation" value={this.state.location} placeholder="Tesco Elmers End" />
+                    </div>
+
+                    <button type="submit" className="btn btn-primary" disabled={this.state.registering}>Submit</button>
+                </form>
             </div>;
         }
         onInputChange(e) {
