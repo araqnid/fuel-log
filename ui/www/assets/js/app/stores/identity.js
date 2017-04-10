@@ -9,6 +9,7 @@ function(MemoBus, $) {
             this.facebookProfile = null;
             this.realm = null;
             this._pendingSignInRealm = null;
+            this._autoLoginRealms = {};
         }
         start() {
             BUS.subscribe('GoogleApi.Loaded', () => {
@@ -40,11 +41,17 @@ function(MemoBus, $) {
                         this._pendingSignInRealm = null;
                         this._doAssociateGoogle(idToken);
                     }
+                    else {
+                        this._joinForAutoLogin("GOOGLE");
+                    }
                 }
                 else {
                     if (this._pendingSignInRealm === "GOOGLE") {
                         this._pendingSignInRealm = null;
                         this._clearLocalIdentity();
+                    }
+                    else {
+                        this._joinForAutoLogin("GOOGLE");
                     }
                 }
             });
@@ -67,6 +74,9 @@ function(MemoBus, $) {
                     if (this._pendingSignInRealm === "FACEBOOK") {
                         this._pendingSignInRealm = null;
                         this._clearLocalIdentity();
+                    }
+                    else {
+                        this._joinForAutoLogin("FACEBOOK");
                     }
                     this.facebookProfile = null;
                     this.bus.dispatch('facebookProfile', null);
@@ -145,6 +155,25 @@ function(MemoBus, $) {
             if (this._pendingSignInRealm === "FACEBOOK") {
                 this._pendingSignInRealm = null;
                 this._doAssociateFacebook();
+            }
+            else {
+                this._joinForAutoLogin("FACEBOOK");
+            }
+        }
+        _joinForAutoLogin(realm) {
+            if (realm === "GOOGLE") {
+                this._autoLoginRealms.google = this.googleUser.getAuthResponse().id_token !== null;
+            }
+            else if (realm === "FACEBOOK") {
+                this._autoLoginRealms.facebook = this.facebookProfile !== null;
+            }
+            if (Object.keys(this._autoLoginRealms).length !== 2) return;
+            console.log("auto-login", this._autoLoginRealms);
+            if (this._autoLoginRealms.google) {
+                this.beginGoogleSignIn();
+            }
+            else if (this._autoLoginRealms.facebook) {
+                this.beginFacebookSignIn();
             }
         }
         _doStartGoogle() {

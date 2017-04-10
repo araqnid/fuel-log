@@ -1,0 +1,14 @@
+2016-04-23  108098  53.35   Yes 57.03   Tesco Elmers End
+2016-04-30  108458  20.25   No  24.48   Keele Services M6
+2016-05-02  108578  45.94   Yes 50.02   Texaco, Hare and Hounds
+2016-05-27  108917  30.01   No  32.98   Tesco Elmers End
+2016-08-08  109034  50.00   No  54.45   Tesco Elmers End
+2016-08-18  109254  39.48   Yes 43.39   Esso Purley Way
+2016-09-03  109649  54.28   Yes 59.65   Tesco Elmers End
+2016-10-08  109994  53.56   Yes 59.93   Tesco Elmers End
+2016-10-23  110264  41.57   Yes 47.35   Tesco Uttoxeter
+2016-11-15  110571  40.96   Yes 46.65   Tesco Elmers End
+2016-12-23  110799  41.96   Yes 47.79   Tesco Elmers End
+2016-12-28  111197  56.46   Yes 63.18   Sainsburys Colne
+2017-01-17  111600  24.00   No  28.30   Tesco Elmers End
+2017-02-17  111736  53.68   Yes 63.83   Tesco Purley
