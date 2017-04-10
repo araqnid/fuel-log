@@ -40,11 +40,10 @@ function(MemoBus, $, identity) {
                 headers: { accept: 'application/json' },
                 url: "/_api/fuel",
                 success: (data, status, xhr) => {
-                    console.log("success; ", data, this);
                     this.bus.dispatch("purchaseList", data);
                 },
                 error: (xhr, status, ex) => {
-
+                    this.bus.dispatch("loadFailure", { status: status, exception: ex });
                 },
                 complete: (xhr, status) => {
                     this._loading = null;
