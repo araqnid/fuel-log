@@ -17,7 +17,12 @@ function(MemoBus, $, identity) {
         start() {
             identity.subscribe({
                 localIdentity: user => {
-                    this.userId = user.userId;
+                    if (user) {
+                        this.userId = user.userId;
+                    }
+                    else {
+                        this.userId = null;
+                    }
                     this.bus.dispatch("purchaseList", null);
                     if (this.userId) {
                         this._startLoading();
