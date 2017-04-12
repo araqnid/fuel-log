@@ -6,7 +6,7 @@ var assetsdir = path.resolve(__dirname, "www/assets");
 
 module.exports = {
     context: assetsdir + "/js",
-    entry: "app/pages/main",
+    entry: ["app/pages/main", "bootstrap", path.resolve(assetsdir, "css/styles.css")],
     output: {
         path: assetsdir + "/_pack",
         filename: "[name].js"
