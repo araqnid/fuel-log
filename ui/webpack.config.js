@@ -30,6 +30,10 @@ module.exports = {
             {
                 test: /jquery\.ba-hashchange\.js/,
                 loader: "imports-loader?this=>global"
+            },
+            {
+                test: /\.(png|woff|woff2|eot|ttf|svg)$/,
+                loader: 'url-loader?limit=100000'
             }
         ]
     },

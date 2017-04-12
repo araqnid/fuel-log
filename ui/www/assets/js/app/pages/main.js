@@ -1,6 +1,6 @@
 define(['jquery', 'react', 'react-dom',
         'app/Root', 'app/Identity', 'app/Bus', 'app/stores/identity', 'app/stores/purchases',
-        'bootstrap'],
+        'bootstrap', '../../../css/styles.css'],
 function main$$init($, React, ReactDOM,
                     Root, Identity, Bus, identity, purchases) {
     window.BUS = new Bus();
