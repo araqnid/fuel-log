@@ -42,12 +42,12 @@ module.exports = {
         extensions: ['.webpack.js', '.web.js', '.js', '.jsx'],
         alias: {
             "app": assetsdir + "/js/app",
-            "lodash": "lodash/index.js",
-            "jquery": "jquery/dist/jquery.js",
-            "bootstrap": "bootstrap/dist/js/bootstrap.js",
+            "lodash$": "lodash/index.js",
+            "jquery$": "jquery/dist/jquery.js",
+            "bootstrap$": "bootstrap/dist/js/bootstrap.js",
             "react$": "react/react.js",
-            "react-addons-css-transition-group": "react-addons-css-transition-group/index.js",
-            "jquery.ba-hashchange": assetsdir + "/js/lib/jquery.ba-hashchange.js"
+            "react-addons-css-transition-group$": "react-addons-css-transition-group/index.js",
+            "jquery.ba-hashchange$": assetsdir + "/js/lib/jquery.ba-hashchange.js",
         }
     },
     plugins: [
