@@ -74,4 +74,11 @@ fi
 cp files $apprepo/$ARTIFACT-$VERSION.deps
 cp bootfiles $apprepo/$ARTIFACT-$VERSION.bootdeps
 ln -fv $ARTIFACT-$VERSION.jar $apprepo/$ARTIFACT-$VERSION.jar
+if [ -x "$extract_site_content" ]; then
+    ln -sfvn $HOME/content/v$VERSION $apprepo/$ARTIFACT-$VERSION.content
+fi
+
 ln -sfvn $ARTIFACT-$VERSION.jar $apprepo/$SITE-latest.jar
+if [ -x "$extract_site_content" ]; then
+    ln -sfvn $HOME/content/v$VERSION $apprepo/$SITE-latest.content
+fi
