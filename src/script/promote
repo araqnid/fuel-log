@@ -33,6 +33,8 @@ version=$(echo $tagged_as | sed -e 's/^v//')
 
 if [ -z "$NO_REBUILD" ]; then
     gradle clean build
+    git push origin master
+    git push origin $tagged_as
 fi
 
 tmpdir=$(mktemp -d -t $artifact-$site-promote)
