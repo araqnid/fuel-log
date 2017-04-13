@@ -58,10 +58,12 @@ jar {
                 'Implementation-Version': project.version,
                 'X-Service-Class': mainClassName
     }
-    from('ui/www') {
+    from('ui/build/site') {
         into "www"
     }
 }
+
+jar.dependsOn(':ui:site');
 
 configurations {
     runtime.exclude group: 'commons-logging', module: 'commons-logging'

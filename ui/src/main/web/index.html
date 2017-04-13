@@ -6,7 +6,7 @@
     <meta name="google-signin-client_id" content="515812716745-t7hno1i869lv1fc127j36r3shcgfr76g.apps.googleusercontent.com" />
     <meta name="google-signin-fetch_basic_profile" content="false" />
     <meta name="google-signin-scope" content="profile openid" />
-    <link rel="icon" type="image/png" href="assets/images/1491804155_fuel.png" />
+    <link rel="icon" type="image/png" href="images/1491804155_fuel.png" />
 </head>
 <body>
 <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
@@ -36,11 +36,12 @@ function onGapiLoad() { if ('BUS' in window) window.BUS.broadcast('GoogleApi.Loa
 <script src="https://apis.google.com/js/platform.js?onload=onGapiLoad" async defer></script>
 
 <script>
+    var appIds = { prod: '1783504724996776', test: '1783514281662487' };
+    var environment = location.hostname === "localhost" ? "test" : "prod";
     window.fbAsyncInit = function() {
         FB.init({
-            //appId: '1783504724996776',
-            appId: '1783514281662487', // Test1
-            xfbml: true,
+            appId: appIds[environment],
+            xfbml: false,
             version: 'v2.8'
         });
         FB.AppEvents.logPageView();
@@ -55,6 +56,6 @@ function onGapiLoad() { if ('BUS' in window) window.BUS.broadcast('GoogleApi.Loa
     }(document, 'script', 'facebook-jssdk'));
 </script>
 
-<script src="assets/_pack/main.js" charset="utf-8"></script>
+<script src="main.js" charset="utf-8"></script>
 </body>
 </html>

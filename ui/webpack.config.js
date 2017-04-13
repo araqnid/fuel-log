@@ -2,13 +2,12 @@ var webpack = require("webpack");
 var path = require('path');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 
-var assetsdir = path.resolve(__dirname, "www/assets");
+var assetsdir = path.resolve(__dirname, "src/main/web");
 
 module.exports = {
-    context: assetsdir + "/js",
     entry: ["app/pages/main", "bootstrap", path.resolve(assetsdir, "css/styles.css")],
     output: {
-        path: assetsdir + "/_pack",
+        path: path.resolve(__dirname, 'build/site'),
         filename: "[name].js"
     },
     module: {

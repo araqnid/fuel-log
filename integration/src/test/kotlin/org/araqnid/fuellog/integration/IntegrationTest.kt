@@ -19,7 +19,7 @@ import org.junit.Rule
 import java.util.UUID
 
 abstract class IntegrationTest {
-    @Rule @JvmField val server = ServerRunner(mapOf("PORT" to "0", "DOCUMENT_ROOT" to "../ui/www"))
+    @Rule @JvmField val server = ServerRunner(mapOf("PORT" to "0", "DOCUMENT_ROOT" to "../ui/build/site"))
 
     var response: HttpResponse = BasicHttpResponse(HttpVersion.HTTP_1_0, HttpStatus.SC_INTERNAL_SERVER_ERROR, "No request executed")
     var currentUser: IdentityResources.UserInfo? = null

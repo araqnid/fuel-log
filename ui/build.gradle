@@ -1,0 +1,37 @@
+task npmInstall(type: Exec) {
+    inputs.file project.file("package.json")
+    outputs.files fileTree(project.file("node_modules")) { include '**/package.json' }
+    commandLine "npm", "install"
+}
+
+task webpack(type: Exec, dependsOn: npmInstall) {
+    outputs.files fileTree(project.file("build/site")) {
+        include 'main.js'
+    }
+    inputs.files fileTree(project.file("src/main/web")) {
+        include '**/*.js'
+        include '**/*.jsx'
+    }
+    inputs.files project.file('webpack.config.js')
+    commandLine "node_modules/.bin/webpack", "-p", "--devtool", "source-map"
+}
+
+task staticFiles(type: Copy) {
+    from 'src/main/web'
+    into 'build/site'
+    include 'index.html'
+    include 'images/**'
+}
+
+task clean {
+    doLast {
+        delete project.file("node_modules")
+        delete project.file("build")
+    }
+}
+
+task site(dependsOn: [webpack, staticFiles]) {
+}
+
+task build(dependsOn: [site]) {
+}
