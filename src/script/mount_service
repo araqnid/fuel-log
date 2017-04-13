@@ -80,5 +80,5 @@ fi
 
 ln -sfvn $ARTIFACT-$VERSION.jar $apprepo/$SITE-latest.jar
 if [ -x "$extract_site_content" ]; then
-    ln -sfvn $HOME/content/v$VERSION $apprepo/$SITE-latest.content
+    ln -sfvn $ARTIFACT-VERSION.content $apprepo/$SITE-latest.content
 fi
