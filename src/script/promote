@@ -41,6 +41,7 @@ trap 'rm -rf "$tmpdir"' EXIT
 jarfile=$artifact-$version.jar
 ln -sfn $PWD/build/libs/$jarfile $tmpdir/$jarfile
 ln -sfn $PWD/src/script/mount_service $tmpdir/mount
+ln -sfn $PWD/src/script/extract_site_content $tmpdir/extract_site_content
 
 remote_jadm_command="set -e; tmpdir=\$(mktemp -d -p /srv/$site-japp); trap \"cd / && rm -rf \$tmpdir\" EXIT; tar -C \$tmpdir -x -f -; cd \$tmpdir; ARTIFACT=$artifact SITE=$site VERSION=$version ./mount"
 remote_user_command="sudo -u $site-jadm sh -c '$remote_jadm_command' && systemctl restart $site-japp"

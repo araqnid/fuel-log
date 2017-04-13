@@ -1,0 +1,52 @@
+#!/bin/sh
+
+set -e
+
+output_dir="$1"
+shift
+
+universal_output_dir="$output_dir/universal"
+if [ ! -d "$universal_output_dir" ]; then
+    mkdir "$universal_output_dir"
+    touch "$universal_output_dir/MANIFEST"
+fi
+
+for jarfile in "$@"; do
+    version=$(unzip -c "$jarfile"  META-INF/MANIFEST.MF | awk -F': ' '$1 == "Implementation-Version" { print $2 }' | perl -lpe 's/\r//')
+    if [ -n "$version" -a ! "$version" = "unspecified" ]; then
+        version_output_dir="$output_dir/v$version"
+        if [ ! -d "$version_output_dir" ]; then
+            mkdir "$version_output_dir"
+            unzip -q -d "$version_output_dir" "$jarfile" 'www/*'
+            mv "$version_output_dir"/www/* "$version_output_dir"
+            rmdir "$version_output_dir/www"
+            ( cd $version_output_dir && find . -type f \( -name MANIFEST -o -print \) | while read filename; do
+                shasum "$filename" | sed -e 's/\.\///'
+            done ) > "$version_output_dir/MANIFEST"
+            while read sha1 filename; do
+                dirname=$(dirname "$filename")
+                universal_filename=$(grep "^$sha1  " "$universal_output_dir/MANIFEST" | awk '{print $2}')
+                if [ -n "$universal_filename" ]; then
+                    echo "LINK $filename"
+                    ln -f "$universal_output_dir/$universal_filename" "$version_output_dir/$filename"
+                    if [ -f "$universal_output_dir/$universal_filename.gz" ]; then
+                        echo "LINK $filename.gz"
+                        ln -f "$universal_output_dir/$universal_filename.gz" "$version_output_dir/$filename.gz"
+                    fi
+                else
+                    echo "NEW  $filename"
+                    mkdir -p "$universal_output_dir/$dirname"
+                    universal_filename="$dirname/$sha1.$(basename "$filename")"
+                    ln "$version_output_dir/$filename" "$universal_output_dir/$universal_filename"
+                    echo "$sha1  $universal_filename" >> "$universal_output_dir/MANIFEST"
+                    case "$filename" in
+                        *.js|*.html|*.jsx|*.css|*.js.map|*.svg)
+                            echo "GZIP $filename"
+                            gzip -9 < "$universal_output_dir/$universal_filename" > "$universal_output_dir/$universal_filename.gz"
+                            ;;
+                    esac
+                fi
+            done < "$version_output_dir/MANIFEST"
+        fi
+    fi
+done
