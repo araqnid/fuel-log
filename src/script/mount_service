@@ -68,7 +68,7 @@ shasum -c digests
 extract_site_content="$(dirname "$0")/extract_site_content"
 if [ -x "$extract_site_content" ]; then
     [ -d "$HOME/content" ] || mkdir -m 0755 "$HOME/content"
-    "$extract_site_content" $HOME/content $apprepo/$ARTIFACT-$VERSION.jar
+    "$extract_site_content" $HOME/content $ARTIFACT-$VERSION.jar
 fi
 
 cp files $apprepo/$ARTIFACT-$VERSION.deps
