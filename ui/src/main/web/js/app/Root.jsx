@@ -1,39 +1,25 @@
 import React from "react";
-import identity from "app/stores/identity";
-import purchases from "app/stores/purchases";
-import NewFuelPurchaseEntry from "app/NewFuelPurchaseEntry";
-import FuelPurchaseList from "app/FuelPurchaseList";
-import Facade from "app/Facade";
+import Content from "app/Content";
+import Identity from "app/Identity";
 
 export default class Root extends React.Component {
-    constructor() {
-        super();
-        this.state = { user: null, purchases: null };
-    }
     render() {
-        if (!this.state.user)
-            return <div><Facade /></div>;
-        return <div className="container">
-            <div className="row">
-                <NewFuelPurchaseEntry />
-                <FuelPurchaseList purchases={this.state.purchases} />
+        return <div>
+            <div className="navbar navbar-inverse navbar-fixed-top" role="navigation">
+                <div className="container">
+                    <div className="navbar-header">
+                        <button type="button" className="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span className="sr-only">Toggle navigation</span>
+                            <span className="icon-bar"></span>
+                            <span className="icon-bar"></span>
+                            <span className="icon-bar"></span>
+                        </button>
+                        <a className="navbar-brand" id="fuellog-home-link" href="#">Fuel Log</a>
+                    </div>
+                    <Identity />
+                </div>
             </div>
+            <Content />
         </div>;
-    }
-    componentDidMount() {
-        identity.subscribe({
-            localIdentity: user => {
-                this.setState({ user: user });
-            }
-        }, this);
-        purchases.subscribe({
-            purchaseList: purchases => {
-                this.setState({ purchases: purchases });
-            }
-        }, this);
-    }
-    componentWillUnmount() {
-        identity.unsubscribe(this);
-        purchases.unsubscribe(this);
     }
 }
