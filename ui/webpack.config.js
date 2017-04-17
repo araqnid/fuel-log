@@ -49,7 +49,7 @@ module.exports = {
             "bootstrap$": "bootstrap/dist/js/bootstrap.js",
             "react$": "react/react.js",
             "react-addons-css-transition-group$": "react-addons-css-transition-group/index.js",
-            "jquery.ba-hashchange$": assetsdir + "/js/lib/jquery.ba-hashchange.js",
+            "jquery.ba-hashchange$": assetsdir + "/js/lib/jquery.ba-hashchange.js"
         }
     },
     plugins: [

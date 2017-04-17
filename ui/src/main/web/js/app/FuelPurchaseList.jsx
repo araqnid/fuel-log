@@ -1,5 +1,6 @@
 import React from "react";
 import _ from "lodash";
+import {Instant, ZonedDateTime, ZoneId} from "js-joda";
 
 export default props => {
     if (!props.purchases) {
@@ -7,10 +8,12 @@ export default props => {
     }
 
     const toRow = purchase => {
-        const date = new Date(purchase.purchased_at * 1000);
+        const purchaseInstant = Instant.ofEpochMilli(purchase.purchased_at * 1000);
+        const purchaseDateTime = ZonedDateTime.ofInstant(purchaseInstant, ZoneId.SYSTEM);
+        const purchaseDate = purchaseDateTime.toLocalDate();
         const money = (purchase.cost.currency === "GBP" ? "£" : purchase.cost.currency + " ") + purchase.cost.amount.toFixed(2);
         return <tr key={ purchase.fuel_purchase_id }>
-            <td>{ date.toLocaleString() }</td>
+            <td>{ purchaseDate.toString() }</td>
             <td>{ (purchase.odometer / 1.60934).toFixed(0) }</td>
             <td>{ purchase.fuel_volume.toFixed(2) }</td>
             <td>{ purchase.full_fill ? "Yes" : "" }</td>
