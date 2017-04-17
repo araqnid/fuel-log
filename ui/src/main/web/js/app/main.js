@@ -1,11 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import Root from "app/Root";
-import Bus from "app/Bus";
+import BUS from "app/message-bus";
 import _ from "lodash";
 import * as stores from "app/stores";
 
-window.BUS = new Bus();
+window.BUS = BUS;
 
 _.forEach(stores, store => {
     if (process.env.NODE_ENV !== "production") console.log("starting store", store);

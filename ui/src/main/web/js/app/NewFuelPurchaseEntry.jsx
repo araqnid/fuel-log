@@ -1,4 +1,5 @@
 import React from "react";
+import BUS from "app/message-bus";
 
 export default class NewFuelPurchaseEntry extends React.Component {
     constructor() {

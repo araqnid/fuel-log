@@ -1,3 +1,5 @@
+import BUS from "app/message-bus";
+
 function route(template, target) {
     const placeholderPattern = /\{([a-zA-Z_]?[0-9a-zA-Z_]*)\}/g;
     const placeholders = [];

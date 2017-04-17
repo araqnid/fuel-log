@@ -1,5 +1,6 @@
 import $ from "jquery";
 import MemoBus from "app/MemoBus";
+import BUS from "app/message-bus";
 
 export default class IdentityStore {
     constructor() {

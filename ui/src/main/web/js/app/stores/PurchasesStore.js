@@ -1,6 +1,7 @@
 import $ from "jquery";
 import MemoBus from "app/MemoBus";
 import {identity} from "app/stores";
+import BUS from "app/message-bus";
 
 export default class PurchasesStore {
     constructor() {
