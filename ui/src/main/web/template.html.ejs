@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fuel Log</title>
+    <title><%= htmlWebpackPlugin.options.title %></title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google-signin-client_id" content="515812716745-t7hno1i869lv1fc127j36r3shcgfr76g.apps.googleusercontent.com" />
     <meta name="google-signin-fetch_basic_profile" content="false" />
@@ -56,6 +57,5 @@ function onGapiLoad() { if ('BUS' in window) window.BUS.broadcast('GoogleApi.Loa
     }(document, 'script', 'facebook-jssdk'));
 </script>
 
-<script src="main.js" charset="utf-8"></script>
 </body>
 </html>

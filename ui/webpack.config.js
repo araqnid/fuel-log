@@ -5,7 +5,8 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var assetsdir = path.resolve(__dirname, "src/main/web");
 
 module.exports = {
-    entry: ["app/pages/main", "bootstrap", path.resolve(assetsdir, "css/styles.css")],
+    context: assetsdir,
+    entry: ["bootstrap", path.resolve(assetsdir, "css/styles.css"), "app/pages/main"],
     output: {
         path: path.resolve(__dirname, 'build/site'),
         filename: "[name].js"
@@ -55,10 +56,14 @@ module.exports = {
             $: "jquery",
             jQuery: "jquery",
             "window.jQuery": "jquery"
+        }),
+        new HtmlWebpackPlugin({
+            title: "Fuel Log",
+            template: "template.html.ejs"
         })
     ]
 };
 
 // Local Variables:
-// compile-command: "nodejs node_modules/webpack/bin/webpack.js -d    --display-modules"
+// compile-command: "node_modules/.bin/webpack -d"
 // End:
