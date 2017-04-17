@@ -6,7 +6,9 @@ task npmInstall(type: Exec) {
 
 task webpack(type: Exec, dependsOn: npmInstall) {
     outputs.files fileTree(project.file("build/site")) {
-        include 'main.js'
+        include 'index.html'
+        include 'main*.js'
+        include 'main*.js.map'
     }
     inputs.files fileTree(project.file("src/main/web")) {
         include '**/*.js'
