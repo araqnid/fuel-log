@@ -23,6 +23,27 @@ task staticFiles(type: Copy) {
     include 'images/**'
 }
 
+task appStatusUi {
+    outputs.files fileTree(project.file("build/site")) {
+        include "_status/**"
+    }
+    doLast {
+        def cfg = rootProject.configurations.compile.copy()
+        cfg.transitive = false
+        def jarfile = cfg.files { dep -> dep.group == "org.araqnid" && dep.name == "app-status" }[0]
+        def tmpdir = new File(buildDir, "appStatus")
+        copy {
+            from zipTree(jarfile)
+            include 'org/araqnid/appstatus/site/**'
+            into tmpdir
+        }
+        copy {
+            from new File(tmpdir, "org/araqnid/appstatus/site")
+            into project.file("build/site/_status")
+        }
+    }
+}
+
 task clean {
     doLast {
         delete project.file("node_modules")
@@ -30,7 +51,7 @@ task clean {
     }
 }
 
-task site(dependsOn: [webpack, staticFiles]) {
+task site(dependsOn: [webpack, staticFiles, appStatusUi]) {
 }
 
 task build(dependsOn: [site]) {
