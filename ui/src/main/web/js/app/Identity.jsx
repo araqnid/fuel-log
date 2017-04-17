@@ -1,5 +1,5 @@
 import React from "react";
-import identity from "app/stores/identity";
+import {identity} from "app/stores";
 
 const identity_beginSignOut = identity.beginSignOut.bind(identity);
 const identity_beginGoogleSignIn = identity.beginGoogleSignIn.bind(identity);

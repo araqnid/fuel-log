@@ -2,11 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom";
 import Root from "app/Root";
 import Bus from "app/Bus";
-import identity from "app/stores/identity";
-import purchases from "app/stores/purchases";
+import _ from "lodash";
+import * as stores from "app/stores";
 
 window.BUS = new Bus();
-identity.start();
-purchases.start();
+
+_.forEach(stores, store => {
+    if (process.env.NODE_ENV !== "production") console.log("starting store", store);
+    store.start();
+});
 
 ReactDOM.render(React.createElement(Root), document.getElementById("component.Root"));

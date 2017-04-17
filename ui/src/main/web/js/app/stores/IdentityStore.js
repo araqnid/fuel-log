@@ -1,7 +1,7 @@
 import $ from "jquery";
 import MemoBus from "app/MemoBus";
 
-class Identity {
+export default class IdentityStore {
     constructor() {
         this.bus = new MemoBus("Identity");
         this.gapiLoaded = false;
@@ -290,14 +290,3 @@ class Identity {
         this.realm = null;
     }
 }
-
-export default new Identity();
-
-/*
- start -> identity_loaded(full)
-       -> identity_loaded(none)
-
- identity_loaded(none) ; beginGoogleSignIn -> loading_google -> linking_google -> identity_loaded(full)
- identity_loaded(full) && realm == Google ; beginGoogleSignOut -> identity_loaded(none)
- identity_loaded(full) && realm == Facebook ; beginFacebookSignOut -> identity_loaded(none)
- */

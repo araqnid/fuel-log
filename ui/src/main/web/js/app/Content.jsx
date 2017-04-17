@@ -1,6 +1,5 @@
 import React from "react";
-import identity from "app/stores/identity";
-import purchases from "app/stores/purchases";
+import {identity, purchases} from "app/stores";
 import NewFuelPurchaseEntry from "app/NewFuelPurchaseEntry";
 import FuelPurchaseList from "app/FuelPurchaseList";
 import Facade from "app/Facade";

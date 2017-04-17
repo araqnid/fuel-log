@@ -1,8 +1,8 @@
 import $ from "jquery";
 import MemoBus from "app/MemoBus";
-import identity from "app/stores/identity";
+import {identity} from "app/stores";
 
-class Purchases {
+export default class PurchasesStore {
     constructor() {
         this.bus = new MemoBus("Purchases");
         this.userId = null;
@@ -77,4 +77,3 @@ class Purchases {
         }
     }
 }
-export default new Purchases();
