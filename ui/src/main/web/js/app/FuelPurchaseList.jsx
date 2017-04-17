@@ -2,7 +2,7 @@ import React from "react";
 import _ from "lodash";
 import {Instant, ZonedDateTime, ZoneId} from "js-joda";
 
-export default props => {
+export default function FuelPurchaseList(props) {
     if (!props.purchases) {
         return <div className="col-sm-8" />;
     }
