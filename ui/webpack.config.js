@@ -8,7 +8,7 @@ var production = process.env.NODE_ENV === "production";
 
 module.exports = {
     context: assetsdir,
-    entry: ["bootstrap", path.resolve(assetsdir, "css/styles.css"), "app/pages/main"],
+    entry: ["bootstrap", path.resolve(assetsdir, "css/styles.css"), "app/main"],
     output: {
         path: path.resolve(__dirname, 'build/site'),
         filename: production ? "[name]-[hash].js" : "[name].js"
