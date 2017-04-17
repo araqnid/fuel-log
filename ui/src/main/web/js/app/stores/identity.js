@@ -169,7 +169,6 @@ class Identity {
             this._autoLoginRealms.facebook = this.facebookProfile !== null;
         }
         if (Object.keys(this._autoLoginRealms).length !== 2) return;
-        console.log("auto-login", this._autoLoginRealms);
         if (this._autoLoginRealms.google) {
             this.beginGoogleSignIn();
         }

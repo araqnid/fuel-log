@@ -9,9 +9,11 @@ export default class Bus {
         let typeSubscribers = this.subscribers[type];
         if (typeSubscribers === undefined || typeSubscribers.length === 0) {
             typeSubscribers = this.subscribers.dead;
-            if (console && console.log) console.log((this.name ? this.name : "BUS"), type + " (dead)", data);
+            if (console && console.log && process.env.NODE_ENV !== "production")
+                console.log((this.name ? this.name : "BUS"), type + " (dead)", data);
         } else {
-            if (console && console.log) console.log((this.name ? this.name : "BUS"), type, data);
+            if (console && console.log && process.env.NODE_ENV !== "production")
+                console.log((this.name ? this.name : "BUS"), type, data);
         }
         _.forEach(typeSubscribers, subscriber => {
             const receiver = subscriber[0];
