@@ -62,6 +62,7 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
 
         with(Multibinder.newSetBinder(binder(), Any::class.java, StatusSource::class.java)) {
             addBinding().toInstance(BasicStatusComponents)
+            addBinding().to(StatusComponents::class.java)
             addBinding().to(SubscriptionStatistics::class.java)
             if (usingSnapshots) {
                 addBinding().to(SnapshotStatistics::class.java)
