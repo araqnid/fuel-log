@@ -15,19 +15,19 @@ export default class NewFuelPurchaseEntry extends React.Component {
             <form onSubmit={ this._onSubmit }>
                 <div className="form-group">
                     <label htmlFor="inputFuelVolume">Fuel volume (litres)</label>
-                    <input type="text" onChange={this._onInputChange} className="form-control"
+                    <input type="number" onChange={this._onInputChange} className="form-control"
                            name="fuelVolume" id="inputFuelVolume" value={this.state.fuelVolume} placeholder="45.79" />
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="inputCost">Cost (£)</label>
-                    <input type="text" onChange={this._onInputChange} className="form-control"
+                    <input type="number" onChange={this._onInputChange} className="form-control"
                            name="cost" id="inputCost" value={this.state.cost} placeholder="68.80" />
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="inputOdometer">Odometer reading (miles)</label>
-                    <input type="text" onChange={this._onInputChange} className="form-control"
+                    <input type="number" onChange={this._onInputChange} className="form-control"
                            name="odometer" id="inputOdometer" value={this.state.odometer} placeholder="111000" />
                 </div>
 
