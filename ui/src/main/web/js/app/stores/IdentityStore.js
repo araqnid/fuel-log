@@ -1,10 +1,9 @@
-import $ from "jquery";
-import MemoBus from "app/MemoBus";
+import BaseStore from "app/stores/BaseStore";
 import BUS from "app/message-bus";
 
-export default class IdentityStore {
+export default class IdentityStore extends BaseStore {
     constructor() {
-        this.bus = new MemoBus("Identity");
+        super("Identity");
         this.gapiLoaded = false;
         this.fbsdkLoaded = false;
         this.registering = null;
@@ -19,20 +18,12 @@ export default class IdentityStore {
                 this._doStartGoogle();
             }
         });
-        if ('gapi' in window) {
-            this._doStartGoogle();
-        }
 
         BUS.subscribe('FacebookSdk.Loaded', () => {
             if (!this.fbsdkLoaded) {
                 this._doStartFacebook();
             }
         });
-        if ('FB' in window) {
-            this._doStartFacebook();
-        }
-
-        this._beginFetchLocalIdentity();
 
         BUS.subscribe('GoogleApi.Auth2.CurrentUser', googleUser => {
             this.bus.dispatch('googleUser', googleUser);
@@ -93,6 +84,16 @@ export default class IdentityStore {
             this.facebookProfile.picture = facebookPicture;
             this._joinFacebookProfile();
         });
+
+        if ('gapi' in window) {
+            this._doStartGoogle();
+        }
+
+        if ('FB' in window) {
+            this._doStartFacebook();
+        }
+
+        this._beginFetchLocalIdentity();
     }
     beginGoogleSignIn() {
         let authResponse = this.googleUser.getAuthResponse();
@@ -132,7 +133,7 @@ export default class IdentityStore {
         else if (this.realm === "FACEBOOK") {
             this.beginFacebookSignOut();
         }
-        $.ajax({
+        this._ajax({
             url: '/_api/user/identity',
             method: 'DELETE',
             success: (data, status, xhr) => {
@@ -144,12 +145,6 @@ export default class IdentityStore {
             complete: (xhr, status) => {
             }
         });
-    }
-    subscribe(handlers, owner) {
-        this.bus.subscribeAll(handlers, owner);
-    }
-    unsubscribe(owner) {
-        this.bus.unsubscribe(owner);
     }
     _joinFacebookProfile() {
         if (!this.facebookProfile.user || !this.facebookProfile.picture) return;
@@ -206,8 +201,7 @@ export default class IdentityStore {
         if (this.registering) {
             this.registering.abort();
         }
-        this.registering = $.ajax({
-            headers: { accept: 'application/json' },
+        this.registering = this._ajax({
             url: '/_api/user/identity/google',
             method: 'POST',
             contentType: 'text/plain',
@@ -227,8 +221,7 @@ export default class IdentityStore {
         if (this.registering) {
             this.registering.abort();
         }
-        this.registering = $.ajax({
-            headers: { accept: 'application/json' },
+        this.registering = this._ajax({
             url: '/_api/user/identity/facebook',
             method: 'POST',
             data: { id: this.facebookProfile.user.id, name: this.facebookProfile.user.name, picture: this.facebookProfile.picture.data.url },
@@ -244,8 +237,7 @@ export default class IdentityStore {
         });
     }
     _beginFetchLocalIdentity() {
-        $.ajax({
-            headers: { accept: 'application/json' },
+        this._ajax({
             url: '/_api/user/identity',
             method: 'GET',
             success: (data, status, xhr) => {

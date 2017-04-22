@@ -48,6 +48,7 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
         bind(IdentityResources::class.java)
         bind(FuelResources::class.java)
         bind(LocalUserSecurityFeature::class.java)
+        bind(PreferencesResources::class.java)
 
         with(Multibinder.newSetBinder(binder(), Service::class.java)) {
             addBinding().to(JettyService::class.java)

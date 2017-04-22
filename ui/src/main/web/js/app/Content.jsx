@@ -1,5 +1,5 @@
 import React from "react";
-import {identity, purchases} from "app/stores";
+import {identity, preferences, purchases} from "app/stores";
 import NewFuelPurchaseEntry from "app/NewFuelPurchaseEntry";
 import FuelPurchaseList from "app/FuelPurchaseList";
 import Facade from "app/Facade";
@@ -7,15 +7,15 @@ import Facade from "app/Facade";
 export default class Content extends React.Component {
     constructor() {
         super();
-        this.state = { user: null, purchases: null };
+        this.state = { user: null, purchases: null, preferences: null };
     }
     render() {
-        if (!this.state.user)
+        if (!this.state.user || !this.state.preferences)
             return <div><Facade /></div>;
         return <div className="container">
             <div className="row">
-                <NewFuelPurchaseEntry />
-                <FuelPurchaseList purchases={this.state.purchases} />
+                <NewFuelPurchaseEntry preferences={this.state.preferences} />
+                <FuelPurchaseList purchases={this.state.purchases} preferences={this.state.preferences} />
             </div>
         </div>;
     }
@@ -30,9 +30,15 @@ export default class Content extends React.Component {
                 this.setState({ purchases: purchases });
             }
         }, this);
+        preferences.subscribe({
+            preferences: preferences => {
+                this.setState({ preferences: preferences });
+            }
+        }, this);
     }
     componentWillUnmount() {
         identity.unsubscribe(this);
         purchases.unsubscribe(this);
+        preferences.unsubscribe(this);
     }
 }

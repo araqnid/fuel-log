@@ -1,24 +1,17 @@
-import $ from "jquery";
-import MemoBus from "app/MemoBus";
-import {identity} from "app/stores";
 import BUS from "app/message-bus";
+import BaseStore from "app/stores/BaseStore";
 
-export default class PurchasesStore {
-    constructor() {
-        this.bus = new MemoBus("Purchases");
+export default class PurchasesStore extends BaseStore {
+    constructor(identity) {
+        super("Purchases");
+        this.identity = identity;
         this.userId = null;
         this.refreshInterval = 30 * 1000;
         this._loading = null;
         this._sleeping = null;
     }
-    subscribe(handlers, owner) {
-        this.bus.subscribeAll(handlers, owner);
-    }
-    unsubscribe(owner) {
-        this.bus.unsubscribe(owner);
-    }
     start() {
-        identity.subscribe({
+        this.identity.subscribe({
             localIdentity: user => {
                 if (user) {
                     this.userId = user.userId;
@@ -35,12 +28,34 @@ export default class PurchasesStore {
                 }
             }
         }, this);
-        BUS.subscribe("NewFuelPurchaseEntry.PurchaseSubmitted", id => {
-            this.kick();
-        }, this)
     }
     kick() {
         if (this.userId) this._startLoading();
+    }
+    submit(newPurchase) {
+        this._ajax({
+            url: "/_api/fuel",
+            method: "POST",
+            data: newPurchase,
+            success: (data, status, xhr) => {
+                if (xhr.status !== 201) {
+                    BUS.broadcast("NewFuelPurchaseEntry.PurchaseSubmissionFailed", {status: xhr.status, exception: null, data: data});
+                    return;
+                }
+                const location = xhr.getResponseHeader('Location');
+                const matches = location.match(/\/_api\/fuel\/(.+)$/);
+                if (!matches) {
+                    console.warn("invalid creation URI", location);
+                    return;
+                }
+                const fuelPurchaseId = matches[1];
+                this.kick();
+                BUS.broadcast("NewFuelPurchaseEntry.PurchaseSubmitted", fuelPurchaseId);
+            },
+            error: (xhr, status, ex) => {
+                BUS.broadcast("NewFuelPurchaseEntry.PurchaseSubmissionFailed", {status: status, exception: ex});
+            }
+        });
     }
     _stopLoading() {
         if (this._loading) {
@@ -54,8 +69,7 @@ export default class PurchasesStore {
     }
     _startLoading() {
         this._stopLoading();
-        this._loading = $.ajax({
-            headers: { accept: 'application/json' },
+        this._loading = this._ajax({
             url: "/_api/fuel",
             success: (data, status, xhr) => {
                 this.bus.dispatch("purchaseList", data);
