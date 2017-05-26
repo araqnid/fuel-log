@@ -1,7 +1,6 @@
 package org.araqnid.fuellog
 
 import com.google.common.util.concurrent.AbstractIdleService
-import org.eclipse.jetty.security.SecurityHandler
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
@@ -26,7 +25,9 @@ import javax.inject.Singleton
 import javax.servlet.DispatcherType
 
 @Singleton
-class JettyService @Inject constructor(@Named("PORT") port: Int, @Named("DOCUMENT_ROOT") documentRoot: String, resteasyBootstrap: GuiceResteasyBootstrapServletContextListener) : AbstractIdleService() {
+class JettyService @Inject constructor(@Named("PORT") port: Int,
+                                       @Named("DOCUMENT_ROOT") documentRoot: String,
+                                       resteasyBootstrap: GuiceResteasyBootstrapServletContextListener) : AbstractIdleService() {
     val threadPool = QueuedThreadPool().apply {
         name = "Jetty"
     }
@@ -41,7 +42,7 @@ class JettyService @Inject constructor(@Named("PORT") port: Int, @Named("DOCUMEN
             logLatency = true
         }
         handler = GzipHandler() wrapping StatisticsHandler() wrapping ContextHandlerCollection().apply {
-            val apiContext = ServletContextHandler().apply {
+            addHandler(ServletContextHandler().apply {
                 contextPath = "/_api"
                 sessionHandler = SessionHandler().apply {
                     httpOnly = true
@@ -50,8 +51,7 @@ class JettyService @Inject constructor(@Named("PORT") port: Int, @Named("DOCUMEN
                 addFilter(FilterHolder(Filter30Dispatcher()), "/*", EnumSet.of(DispatcherType.REQUEST))
                 addServlet(DefaultServlet::class.java, "/")
                 addEventListener(resteasyBootstrap)
-            }
-            addHandler(apiContext)
+            })
             addContext("/", documentRoot).apply {
                 handler = ResourceHandler()
             }
@@ -69,10 +69,5 @@ class JettyService @Inject constructor(@Named("PORT") port: Int, @Named("DOCUMEN
     private infix fun <T : HandlerWrapper> T.wrapping(handler: Handler): T {
         this.handler = handler
         return this
-    }
-
-    private fun <First : HandlerWrapper, Next: Handler> First.andThen(nextHandler: Next): Next {
-        handler = nextHandler
-        return nextHandler
     }
 }
