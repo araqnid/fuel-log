@@ -5,7 +5,7 @@ apply plugin: 'application'
 mainClassName = 'org.araqnid.fuellog.boot.Main'
 
 ext {
-    jettyVersion = '9.4.4.v20170414'
+    jettyVersion = '9.4.6.v20170531'
     jacksonVersion = '2.8.7'
     resteasyVersion = '3.1.2.Final'
     guiceVersion = '4.1.0'
