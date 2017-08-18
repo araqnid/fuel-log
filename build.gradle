@@ -12,18 +12,8 @@ ext {
     guavaVersion = '21.0'
 }
 
-sourceSets {
-    tools {
-        java {
-            compileClasspath += main.output
-        }
-    }
-}
-
 configurations {
     runtime.exclude module: 'jsr305'
-    toolsCompile.extendsFrom compile
-    toolsRuntime.extendsFrom runtime
 }
 
 allprojects {
@@ -136,8 +126,6 @@ task runtimeDeps(dependsOn: 'processResources') {
 }
 
 jar.dependsOn(runtimeDeps)
-
-check.dependsOn(toolsClasses)
 
 buildscript {
     ext.kotlinVersion = '1.1.4'
