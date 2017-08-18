@@ -7,7 +7,7 @@ data class RequestMetadata(val clientIp: String, val userAgent: String?) : Event
     companion object {
         fun fromServletRequest(servletRequest: HttpServletRequest): RequestMetadata {
             return RequestMetadata(servletRequest.remoteAddr,
-                    servletRequest.getHeader("User-Agent") as String?)
+                    servletRequest.getHeader("User-Agent"))
         }
     }
 }

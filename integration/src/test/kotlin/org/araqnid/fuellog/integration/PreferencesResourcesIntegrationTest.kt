@@ -14,7 +14,7 @@ class PreferencesResourcesIntegrationTest : IntegrationTest() {
     }
 
     @Test fun returns_default_preferences_for_user() {
-        val user = loginAsNewUser()
+        loginAsNewUser()
         execute(HttpGet("/_api/user/preferences"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType("application/json"))
