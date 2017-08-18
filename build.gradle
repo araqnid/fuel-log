@@ -9,7 +9,7 @@ ext {
     jacksonVersion = '2.8.7'
     resteasyVersion = '3.1.2.Final'
     guiceVersion = '4.1.0'
-    guavaVersion = '21.0'
+    guavaVersion = '23.0'
 }
 
 configurations {
