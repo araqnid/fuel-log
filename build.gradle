@@ -90,6 +90,7 @@ dependencies {
     testCompile "junit:junit:4.12"
     testCompile "org.hamcrest:hamcrest-library:1.3"
     testCompile project(":test-utils")
+    testCompile "com.timgroup:clocks-testing:1.0.1070"
     runtime "ch.qos.logback:logback-classic:1.2.2"
     runtime "org.slf4j:jcl-over-slf4j:1.7.25"
 }
