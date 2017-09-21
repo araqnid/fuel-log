@@ -44,7 +44,7 @@ export default class BaseStore {
             if (code >= 200 && code < 300) {
                 if (code === 200) {
                     const contentType = xhr.getResponseHeader("Content-Type");
-                    const data = contentType === "application/json" ? JSON.parse(responseText) : responseText;
+                    const data = contentType.toLowerCase().startsWith("application/json") ? JSON.parse(responseText) : responseText;
                     onSuccess(data, code, xhr);
                 }
                 else {
