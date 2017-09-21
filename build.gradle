@@ -5,9 +5,9 @@ apply plugin: 'application'
 mainClassName = 'org.araqnid.fuellog.boot.Main'
 
 ext {
-    jettyVersion = '9.4.6.v20170531'
+    jettyVersion = '9.4.7.v20170914'
     jacksonVersion = '2.8.7'
-    resteasyVersion = '3.1.2.Final'
+    resteasyVersion = '3.1.4.Final'
     guiceVersion = '4.1.0'
     guavaVersion = '23.0'
 }
@@ -63,8 +63,8 @@ configurations {
 }
 
 dependencies {
-    compile "org.araqnid:app-status:0.0.5"
-    compile "org.araqnid:eventstore:0.0.8"
+    compile "org.araqnid:app-status:0.0.7"
+    compile "org.araqnid:eventstore:0.0.11"
     compile "com.google.guava:guava:$guavaVersion"
     compile "com.google.inject:guice:$guiceVersion"
     compile "com.google.inject.extensions:guice-servlet:$guiceVersion"
@@ -127,7 +127,7 @@ task runtimeDeps(dependsOn: 'processResources') {
 jar.dependsOn(runtimeDeps)
 
 buildscript {
-    ext.kotlinVersion = '1.1.4'
+    ext.kotlinVersion = '1.1.4-3'
 
     repositories {
         mavenCentral()
