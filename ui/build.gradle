@@ -17,8 +17,6 @@ task webpack(type: Exec, dependsOn: npmInstall) {
 task staticFiles(type: Copy) {
     from 'src/main/web'
     into 'build/site'
-    include 'index.html'
-    include 'images/**'
 }
 
 task appStatusUi {
