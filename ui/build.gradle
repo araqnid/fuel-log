@@ -1,25 +1,28 @@
 apply plugin: 'base'
 
-task npmInstall(type: Exec) {
+task npmInstall(type: Exec, group: "compile", description: "Runs NPM to fetch javascript packages") {
     inputs.file "package.json"
     outputs.dir "node_modules"
     commandLine "npm", "install"
 }
 
-task webpack(type: Exec, dependsOn: npmInstall) {
+task webpack(type: Exec, dependsOn: npmInstall, group: "compile", description: "Runs Webpack to produce bundle files") {
     outputs.dir "build/site"
     inputs.dir "src/main/javascript"
+    inputs.dir "src/main/web"
     inputs.file 'webpack.config.js'
     environment("NODE_ENV", "production")
     commandLine "node_modules/.bin/webpack", "-p", "--devtool", "source-map"
+
+    doLast {
+        project.copy {
+            from 'src/main/web'
+            into 'build/site'
+        }
+    }
 }
 
-task staticFiles(type: Copy) {
-    from 'src/main/web'
-    into 'build/site'
-}
-
-task appStatusUi {
+task appStatusUi(group: "distribution", description: "Includes the app-status UI") {
     outputs.dir "build/site/_status"
     doLast {
         def cfg = rootProject.configurations.compile.copy()
@@ -42,6 +45,6 @@ clean {
     delete "node_modules"
 }
 
-task site(dependsOn: [webpack, staticFiles, appStatusUi])
+task site(dependsOn: [webpack, appStatusUi])
 
 assemble.dependsOn(site)
