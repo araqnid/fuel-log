@@ -71,7 +71,7 @@ module.exports = {
             template: "./template.html.ejs"
         }),
         new FaviconsWebpackPlugin({
-            logo: contentFile("images/if_fuel_103260.png"),
+            logo: "./if_fuel_103260.png",
             title: "Fuel Log"
         })
     ]
