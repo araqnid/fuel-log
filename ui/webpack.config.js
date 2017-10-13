@@ -7,20 +7,25 @@ function relative(p) {
     return path.resolve(__dirname, p);
 }
 
-const assetsdir = relative("src/main/web");
-const mainSourceDir = relative("src/main/javascript");
+const contentBaseDir = relative("src/main/web");
+const sourceDir = relative("src/main/javascript");
+const outputDir = relative('build/site');
+
+function contentFile(p) {
+    return path.resolve(contentBaseDir, p);
+}
 
 const production = process.env.NODE_ENV === "production";
 
 module.exports = {
-    context: mainSourceDir,
-    entry: ["bootstrap", path.resolve(assetsdir, "css/styles.css"), "./main"],
+    context: sourceDir,
+    entry: ["bootstrap", contentFile("css/styles.css"), "./main"],
     output: {
-        path: path.resolve(__dirname, 'build/site'),
+        path: outputDir,
         filename: production ? "[name]-[hash].js" : "[name].js"
     },
     devServer: {
-        contentBase: assetsdir,
+        contentBase: contentBaseDir,
         port: 3000,
         proxy: {
             "/_api": "http://localhost:64064"
@@ -43,17 +48,12 @@ module.exports = {
                 use: [ 'style-loader', 'css-loader' ]
             },
             {
-                test: /jquery\.ba-hashchange\.js/,
-                loader: "imports-loader?this=>global"
-            },
-            {
                 test: /\.(png|woff|woff2|eot|ttf|svg)$/,
                 loader: 'url-loader?limit=100000'
             }
         ]
     },
     resolve: {
-        // root: [assetsdir + "/js/lib", assetsdir],
         extensions: ['.webpack.js', '.web.js', '.js'],
         alias: {
             "lodash$": "lodash/index.js",
@@ -71,12 +71,8 @@ module.exports = {
             template: "./template.html.ejs"
         }),
         new FaviconsWebpackPlugin({
-            logo: path.resolve(assetsdir, "images/if_fuel_103260.png"),
+            logo: contentFile("images/if_fuel_103260.png"),
             title: "Fuel Log"
         })
     ]
 };
-
-// Local Variables:
-// compile-command: "node_modules/.bin/webpack -d"
-// End:
