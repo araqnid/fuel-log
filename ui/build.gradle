@@ -1,20 +1,15 @@
+apply plugin: 'base'
+
 task npmInstall(type: Exec) {
-    inputs.file project.file("package.json")
-    outputs.files fileTree(project.file("node_modules")) { include '**/package.json' }
+    inputs.file "package.json"
+    outputs.dir "node_modules"
     commandLine "npm", "install"
 }
 
 task webpack(type: Exec, dependsOn: npmInstall) {
-    outputs.files fileTree(project.file("build/site")) {
-        include 'index.html'
-        include 'main*.js'
-        include 'main*.js.map'
-    }
-    inputs.files fileTree(project.file("src/main/web")) {
-        include '**/*.js'
-        include '**/*.jsx'
-    }
-    inputs.files project.file('webpack.config.js')
+    outputs.dir "build/site"
+    inputs.dir "src/main/javascript"
+    inputs.file 'webpack.config.js'
     environment("NODE_ENV", "production")
     commandLine "node_modules/.bin/webpack", "-p", "--devtool", "source-map"
 }
@@ -27,9 +22,7 @@ task staticFiles(type: Copy) {
 }
 
 task appStatusUi {
-    outputs.files fileTree(project.file("build/site")) {
-        include "_status/**"
-    }
+    outputs.dir "build/site/_status"
     doLast {
         def cfg = rootProject.configurations.compile.copy()
         cfg.transitive = false
@@ -47,15 +40,10 @@ task appStatusUi {
     }
 }
 
-task clean {
-    doLast {
-        delete project.file("node_modules")
-        delete project.file("build")
-    }
+clean {
+    delete "node_modules"
 }
 
-task site(dependsOn: [webpack, staticFiles, appStatusUi]) {
-}
+task site(dependsOn: [webpack, staticFiles, appStatusUi])
 
-task build(dependsOn: [site]) {
-}
+assemble.dependsOn(site)
