@@ -1,11 +1,16 @@
-var webpack = require("webpack");
-var path = require('path');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require("webpack");
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
 
-var assetsdir = path.resolve(__dirname, "src/main/web");
-var mainSourceDir = path.resolve(__dirname, "src/main/javascript");
+function relative(p) {
+    return path.resolve(__dirname, p);
+}
 
-var production = process.env.NODE_ENV === "production";
+const assetsdir = relative("src/main/web");
+const mainSourceDir = relative("src/main/javascript");
+
+const production = process.env.NODE_ENV === "production";
 
 module.exports = {
     context: mainSourceDir,
@@ -64,6 +69,10 @@ module.exports = {
         new HtmlWebpackPlugin({
             title: "Fuel Log",
             template: "./template.html.ejs"
+        }),
+        new FaviconsWebpackPlugin({
+            logo: path.resolve(assetsdir, "images/if_fuel_103260.png"),
+            title: "Fuel Log"
         })
     ]
 };
