@@ -1,4 +1,4 @@
-import BaseStore from "app/stores/BaseStore";
+import BaseStore from "./BaseStore";
 
 export default class PreferencesStore extends BaseStore {
     constructor(identity) {

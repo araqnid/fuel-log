@@ -1,6 +1,6 @@
 import React from "react";
-import routing from "app/routing";
-import BUS from "app/message-bus";
+import routing from "./routing";
+import BUS from "./message-bus";
 
 export default class Menu extends React.Component {
     constructor(props) {

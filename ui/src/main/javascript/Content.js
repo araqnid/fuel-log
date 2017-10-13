@@ -1,8 +1,8 @@
 import React from "react";
-import {identity, preferences, purchases} from "app/stores";
-import NewFuelPurchaseEntry from "app/NewFuelPurchaseEntry";
-import FuelPurchaseList from "app/FuelPurchaseList";
-import Facade from "app/Facade";
+import {identity, preferences, purchases} from "./stores";
+import NewFuelPurchaseEntry from "./NewFuelPurchaseEntry";
+import FuelPurchaseList from "./FuelPurchaseList";
+import Facade from "./Facade";
 
 export default class Content extends React.Component {
     constructor() {

@@ -3,20 +3,28 @@ var path = require('path');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 
 var assetsdir = path.resolve(__dirname, "src/main/web");
+var mainSourceDir = path.resolve(__dirname, "src/main/javascript");
 
 var production = process.env.NODE_ENV === "production";
 
 module.exports = {
-    context: assetsdir,
-    entry: ["bootstrap", path.resolve(assetsdir, "css/styles.css"), "app/main"],
+    context: mainSourceDir,
+    entry: ["bootstrap", path.resolve(assetsdir, "css/styles.css"), "./main"],
     output: {
         path: path.resolve(__dirname, 'build/site'),
         filename: production ? "[name]-[hash].js" : "[name].js"
     },
+    devServer: {
+        contentBase: assetsdir,
+        port: 3000,
+        proxy: {
+            "/_api": "http://localhost:64064"
+        }
+    },
     module: {
         rules: [
             {
-                test: /\.jsx?$/,
+                test: /\.js$/,
                 exclude: /(node_modules|bower_components)/,
                 use: {
                     loader: 'babel-loader',
@@ -41,27 +49,21 @@ module.exports = {
     },
     resolve: {
         // root: [assetsdir + "/js/lib", assetsdir],
-        extensions: ['.webpack.js', '.web.js', '.js', '.jsx'],
+        extensions: ['.webpack.js', '.web.js', '.js'],
         alias: {
-            "app": assetsdir + "/js/app",
             "lodash$": "lodash/index.js",
             "jquery$": "jquery/dist/jquery.js",
-            "bootstrap$": "bootstrap/dist/js/bootstrap.js",
-            "react$": "react/react.js",
-            "react-addons-css-transition-group$": "react-addons-css-transition-group/index.js",
-            "jquery.ba-hashchange$": assetsdir + "/js/lib/jquery.ba-hashchange.js"
+            "bootstrap$": "bootstrap/dist/js/bootstrap.js"
         }
     },
     plugins: [
         new webpack.ProvidePlugin({
-            // needed by hashchange plugin
-            $: "jquery",
-            jQuery: "jquery",
-            "window.jQuery": "jquery"
+            // required by bootstrap
+            jQuery: "jquery"
         }),
         new HtmlWebpackPlugin({
             title: "Fuel Log",
-            template: "template.html.ejs"
+            template: "./template.html.ejs"
         })
     ]
 };

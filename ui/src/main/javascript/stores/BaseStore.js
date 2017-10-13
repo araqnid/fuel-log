@@ -1,4 +1,4 @@
-import MemoBus from "app/MemoBus";
+import MemoBus from "../MemoBus";
 import nanoajax from "nanoajax";
 
 function emptyCallback() {}

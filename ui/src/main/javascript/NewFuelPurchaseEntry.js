@@ -1,6 +1,6 @@
 import React from "react";
-import BUS from "app/message-bus";
-import {purchases} from "app/stores";
+import BUS from "./message-bus";
+import {purchases} from "./stores";
 
 const currencies = { 'GBP': { symbol: '£', places: 2 } };
 const volumeUnits = { LITRES: "l", GALLONS: "gal" };

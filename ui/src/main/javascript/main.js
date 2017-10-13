@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import Root from "app/Root";
-import BUS from "app/message-bus";
+import Root from "./Root";
+import BUS from "./message-bus";
 import _ from "lodash";
-import * as stores from "app/stores";
+import * as stores from "./stores";
 
 window.BUS = BUS;
 

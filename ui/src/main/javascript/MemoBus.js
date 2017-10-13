@@ -1,5 +1,5 @@
 import _ from "lodash";
-import Bus from "app/Bus";
+import Bus from "./Bus";
 
 export default class MemoBus {
     constructor(name) {

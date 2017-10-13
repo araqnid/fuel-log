@@ -1,3 +1,3 @@
-import Bus from "app/Bus";
+import Bus from "./Bus";
 
 export default new Bus();

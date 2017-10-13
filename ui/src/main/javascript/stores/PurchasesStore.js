@@ -1,5 +1,5 @@
-import BUS from "app/message-bus";
-import BaseStore from "app/stores/BaseStore";
+import BUS from "../message-bus";
+import BaseStore from "./BaseStore";
 
 export default class PurchasesStore extends BaseStore {
     constructor(identity) {

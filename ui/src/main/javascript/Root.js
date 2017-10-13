@@ -1,6 +1,6 @@
 import React from "react";
-import Content from "app/Content";
-import Identity from "app/Identity";
+import Content from "./Content";
+import Identity from "./Identity";
 
 export default function Root() {
     return <div>
