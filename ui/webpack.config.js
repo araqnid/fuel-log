@@ -19,7 +19,7 @@ const production = process.env.NODE_ENV === "production";
 
 module.exports = {
     context: sourceDir,
-    entry: ["bootstrap", contentFile("css/styles.css"), "./main"],
+    entry: ["bootstrap", "./styles.css", "./main"],
     output: {
         path: outputDir,
         filename: production ? "[name]-[hash].js" : "[name].js"
