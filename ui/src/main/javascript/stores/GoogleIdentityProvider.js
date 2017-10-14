@@ -1,6 +1,5 @@
 import {Datum, StoreBase} from "../util/Stores";
 import {logFactory} from "../util/ConsoleLog";
-import BUS from "../message-bus";
 
 const log = logFactory("GoogleIdentityProvider");
 
@@ -8,21 +7,9 @@ export default class GoogleIdentityProvider extends StoreBase {
     constructor() {
         super();
         this._available = new Datum(this, "available");
-        let apiLoaded;
-        if ('gapi' in window) {
-            log.info("Google API loaded early");
-            apiLoaded = Promise.resolve(true);
-        }
-        else {
-            apiLoaded = new Promise(resolve => {
-                BUS.subscribe('GoogleApi.Loaded', () => {
-                    log.info("Google API loaded late");
-                    resolve(true);
-                });
-            });
-        }
-        const authLoaded = new Promise(resolve => {
-            apiLoaded.then(() => {
+        const apiLoaded = __api_hooks.googleApi.promise;
+        const authLoaded = apiLoaded.then(() => {
+            return new Promise(resolve => {
                 log.info("start loading auth2");
                 gapi.load('auth2', () => {
                     log.info("auth2 loaded");

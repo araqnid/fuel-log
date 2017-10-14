@@ -1,6 +1,5 @@
 import {Datum, StoreBase} from "../util/Stores";
 import {logFactory} from "../util/ConsoleLog";
-import BUS from "../message-bus";
 
 const log = logFactory("FacebookIdentityProvider");
 
@@ -8,21 +7,10 @@ export default class FacebookIdentityProvider extends StoreBase {
     constructor() {
         super();
         this._available = new Datum(this, "available");
-        if ('FB' in window) {
-            log.info("Facebook API loaded early");
-            this._fbSdkLoaded = Promise.resolve();
-        }
-        else {
-            this._fbSdkLoaded = new Promise(resolve => {
-                BUS.subscribe('FacebookSdk.Loaded', () => {
-                    log.info("Facebook API loaded late");
-                    resolve();
-                });
+        this._fbSdkLoaded = __api_hooks.facebookSdk.promise
+            .then(() => {
+                this._available.value = true;
             });
-        }
-        this._fbSdkLoaded.then(() => {
-            this._available.value = true;
-        });
     }
 
     get available() {

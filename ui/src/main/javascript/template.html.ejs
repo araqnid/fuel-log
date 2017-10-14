@@ -12,15 +12,23 @@
 
 <div id="component.Root"></div>
 
-<!--<div class="g-signin2"></div>-->
-<!--<div class="fb-like" data-share="true" data-width="450" data-show-faces="true"></div>-->
-<!--<div class="fb-login-button" data-max-rows="1" data-size="medium" data-show-faces="false" data-auto-logout-link="true"></div>-->
-
 <script>
-function _triggerNotification(name) {
-    if ('BUS' in window) window.BUS.broadcast(name);
-}
-function onGapiLoad() { _triggerNotification('GoogleApi.Loaded') }
+window.__api_hooks = (function() {
+    function Trigger() {
+        var resolve;
+        return {
+            promise: new Promise(function(r) {
+                resolve = r;
+            }),
+            trigger: function() {
+                resolve();
+            }
+        };
+    }
+
+    return { googleApi: new Trigger(), facebookSdk: new Trigger() };
+})();
+function onGapiLoad() { __api_hooks.googleApi.trigger() }
 </script>
 
 <script src="https://apis.google.com/js/platform.js?onload=onGapiLoad" async defer></script>
@@ -35,7 +43,7 @@ function onGapiLoad() { _triggerNotification('GoogleApi.Loaded') }
             version: 'v2.8'
         });
         FB.AppEvents.logPageView();
-        _triggerNotification('FacebookSdk.Loaded');
+        __api_hooks.facebookSdk.trigger();
     };
     (function(d, s, id) {
         var js, fjs = d.getElementsByTagName(s)[0];
