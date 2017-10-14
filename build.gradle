@@ -1,7 +1,8 @@
-apply plugin: 'java'
-apply plugin: 'kotlin'
-apply plugin: 'application'
-
+plugins {
+    id "java"
+    id "application"
+    id "org.jetbrains.kotlin.jvm" version "1.1.51"
+}
 mainClassName = 'org.araqnid.fuellog.boot.Main'
 
 ext {
@@ -38,7 +39,7 @@ allprojects {
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         kotlinOptions {
             jvmTarget = "1.8"
-            freeCompilerArgs = ["-Xjsr305-annotations=enable"]
+            freeCompilerArgs = ["-Xjsr305=strict"]
         }
     }
 }
@@ -125,15 +126,3 @@ task runtimeDeps(dependsOn: 'processResources') {
 }
 
 jar.dependsOn(runtimeDeps)
-
-buildscript {
-    ext.kotlinVersion = '1.1.4-3'
-
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-    }
-}
