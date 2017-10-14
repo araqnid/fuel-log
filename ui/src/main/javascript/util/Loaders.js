@@ -37,7 +37,12 @@ export class LoaderBase {
             const req = microajax({ ...options,
                 success: (data, status, xhr) => {
                     completed = true;
-                    resolve(data);
+                    if (options.includeXhr) {
+                        resolve({ data: data, status: status, xhr: xhr });
+                    }
+                    else {
+                        resolve(data);
+                    }
                 },
                 error: (xhr, status, e) => {
                     completed = true;
@@ -63,16 +68,16 @@ export class LoaderBase {
         }
         if (options.success) {
             const underlying = options.success;
-            options.success = data => {
+            options.success = (data, status, xhr) => {
                 if (this._aborted) return;
-                underlying(data);
+                underlying(data, status, xhr);
             };
         }
         if (options.error) {
             const underlying = options.error;
-            options.error = data => {
+            options.error = (xhr, code, ex) => {
                 if (this._aborted) return;
-                underlying(data);
+                underlying(xhr, code, ex);
             };
         }
         const req = microajax(options);

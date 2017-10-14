@@ -47,7 +47,8 @@ export default class PurchasesStore extends StoreBase {
     submit(newPurchase) {
         this._ajax({
             url: "/_api/fuel",
-            method: "POST",
+            type: "POST",
+            contentType: "application/json",
             data: newPurchase,
             success: (data, status, xhr) => {
                 if (xhr.status !== 201) {
