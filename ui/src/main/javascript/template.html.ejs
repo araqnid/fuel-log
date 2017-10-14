@@ -17,8 +17,12 @@
 <!--<div class="fb-login-button" data-max-rows="1" data-size="medium" data-show-faces="false" data-auto-logout-link="true"></div>-->
 
 <script>
-function onGapiLoad() { if ('BUS' in window) window.BUS.broadcast('GoogleApi.Loaded') }
+function _triggerNotification(name) {
+    if ('BUS' in window) window.BUS.broadcast(name);
+}
+function onGapiLoad() { _triggerNotification('GoogleApi.Loaded') }
 </script>
+
 <script src="https://apis.google.com/js/platform.js?onload=onGapiLoad" async defer></script>
 
 <script>
@@ -31,7 +35,7 @@ function onGapiLoad() { if ('BUS' in window) window.BUS.broadcast('GoogleApi.Loa
             version: 'v2.8'
         });
         FB.AppEvents.logPageView();
-        if ('BUS' in window) window.BUS.broadcast('FacebookSdk.Loaded');
+        _triggerNotification('FacebookSdk.Loaded');
     };
     (function(d, s, id) {
         var js, fjs = d.getElementsByTagName(s)[0];
