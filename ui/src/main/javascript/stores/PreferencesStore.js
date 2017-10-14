@@ -10,15 +10,13 @@ export default class PreferencesStore extends BaseStore {
         this.refreshInterval = 30 * 1000;
     }
     start() {
-        this.identity.subscribe({
-            localIdentity: user => {
-                this.bus.dispatch("preferences", null);
-                this._cancel();
-                this.user = user;
-                if (user)
-                    this._requesting = this._beginRequest();
-            }
-        }, this);
+        this.identity.localUserIdentity.subscribe(this, user => {
+            this.bus.dispatch("preferences", null);
+            this._cancel();
+            this.user = user;
+            if (user)
+                this._requesting = this._beginRequest();
+        });
     }
     stop() {
         this._cancel();

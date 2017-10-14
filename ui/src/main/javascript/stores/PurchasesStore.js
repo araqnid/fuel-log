@@ -11,23 +11,24 @@ export default class PurchasesStore extends BaseStore {
         this._sleeping = null;
     }
     start() {
-        this.identity.subscribe({
-            localIdentity: user => {
-                if (user) {
-                    this.userId = user.userId;
-                }
-                else {
-                    this.userId = null;
-                }
-                this.bus.dispatch("purchaseList", null);
-                if (this.userId) {
-                    this._startLoading();
-                }
-                else {
-                    this._stopLoading();
-                }
+        this.identity.localUserIdentity.subscribe(this, user => {
+            if (user) {
+                this.userId = user.user_id;
             }
-        }, this);
+            else {
+                this.userId = null;
+            }
+            this.bus.dispatch("purchaseList", null);
+            if (this.userId) {
+                this._startLoading();
+            }
+            else {
+                this._stopLoading();
+            }
+        });
+    }
+    stop() {
+        this.identity.unsubscribe(this);
     }
     kick() {
         if (this.userId) this._startLoading();
