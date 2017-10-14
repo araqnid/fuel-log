@@ -49,7 +49,7 @@ export default class GoogleIdentityProvider extends StoreBase {
     }
 
     get available() {
-        return this._available.value;
+        return this._available.facade();
     }
 
     probe() {

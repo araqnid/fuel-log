@@ -23,15 +23,15 @@ export class RealmIdentityStore extends StoreBase {
     }
 
     get localUserIdentity() {
-        return this._localUserIdentity.value();
+        return this._localUserIdentity.facade();
     }
 
     get googleAvailable() {
-        return this._googleAvailable.value();
+        return this._googleAvailable.facade();
     }
 
     get facebookAvailable() {
-        return this._facebookAvailable.value();
+        return this._facebookAvailable.facade();
     }
 
     begin() {
@@ -144,22 +144,6 @@ export default class IdentityStore extends BaseStore {
     }
 
     start() {
-        this._underlying.subscribe(this, "localUserIdentity", v => {
-            if (v) {
-                this._storeLocalIdentity(v);
-            }
-            else {
-                this._clearLocalIdentity();
-            }
-        });
-        this._underlying.subscribe(this, "googleAvailable", v => {
-            this.bus.dispatch("googleAvailable", v);
-        });
-        this._underlying.subscribe(this, "facebookAvailable", v => {
-            this.bus.dispatch("facebookAvailable", v);
-        });
-        this.bus.dispatch("googleAvailable", false);
-        this.bus.dispatch("facebookAvailable", false);
         this._underlying.begin();
     }
     beginGoogleSignIn() {
@@ -171,11 +155,29 @@ export default class IdentityStore extends BaseStore {
     beginSignOut() {
         this._underlying.signOut();
     }
-    _storeLocalIdentity(data) {
-        const localIdentity = { userId: data.user_id, name: data.name, picture: data.picture, realm: data.realm };
-        this.bus.dispatch('localIdentity', localIdentity);
+
+    get localUserIdentity() {
+        return this._underlying.localUserIdentity;
     }
-    _clearLocalIdentity() {
-        this.bus.dispatch('localIdentity', null);
+
+    get facebookAvailable() {
+        return this._underlying.facebookAvailable;
+    }
+
+    get googleAvailable() {
+        return this._underlying.googleAvailable;
+    }
+
+    subscribe(handlers, owner) {
+        if (handlers.localIdentity) this.localUserIdentity.subscribe(owner, data => {
+            handlers.localIdentity({
+                userId: data.user_id, name: data.name, picture: data.picture, realm: data.realm
+            });
+        });
+        if (handlers.facebookAvailable) this.facebookAvailable.subscribe(owner, handlers.localIdentity);
+        if (handlers.googleAvailable) this.googleAvailable.subscribe(owner, handlers.localIdentity);
+    }
+    unsubscribe(owner) {
+        this._underlying.unsubscribeAll(owner);
     }
 }

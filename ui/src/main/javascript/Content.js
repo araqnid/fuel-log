@@ -20,11 +20,9 @@ export default class Content extends React.Component {
         </div>;
     }
     componentDidMount() {
-        identity.subscribe({
-            localIdentity: user => {
-                this.setState({ user: user });
-            }
-        }, this);
+        identity._underlying.localUserIdentity.subscribe(this, user => {
+            this.setState({ user: user });
+        });
         purchases.subscribe({
             purchaseList: purchases => {
                 this.setState({ purchases: purchases });

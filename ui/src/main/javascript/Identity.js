@@ -48,24 +48,22 @@ export default class Identity extends React.Component {
         }
     }
     componentDidMount() {
-        identity.subscribe({
-            googleAvailable: () => {
-                this.setState({ offerGoogle: true });
-            },
-            facebookAvailable: () => {
-                this.setState({ offerFacebook: true });
-            },
-            localIdentity: user => {
-                if (user) {
-                    this.setState({ signedInState: 'signed-in', user: user })
-                }
-                else {
-                    this.setState({ signedInState: 'signed-out', user: null });
-                }
+        identity._underlying.googleAvailable.subscribe(this, v => {
+            this.setState({ offerGoogle: v });
+        });
+        identity._underlying.facebookAvailable.subscribe(this, v => {
+            this.setState({ offerFacebook: v });
+        });
+        identity._underlying.localUserIdentity.subscribe(this, user => {
+            if (user) {
+                this.setState({ signedInState: 'signed-in', user: user })
             }
-        }, this);
+            else {
+                this.setState({ signedInState: 'signed-out', user: null });
+            }
+        });
     }
     componentWillUnmount() {
-        identity.unsubscribe(this);
+        identity._underlying.unsubscribeAll(this);
     }
 }
