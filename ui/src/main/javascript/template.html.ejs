@@ -15,16 +15,12 @@
 <script>
 window.__api_hooks = (function() {
     function Trigger() {
-        var resolve;
-        return {
-            promise: new Promise(function(r) {
-                resolve = r;
-            }),
-            trigger: function() {
-                resolve();
-            }
-        };
+        var that = this;
+        this.promise = new Promise(function (r) {
+            that.resolve = r;
+        });
     }
+    Trigger.prototype.trigger = function() { this.resolve(); }
 
     return { googleApi: new Trigger(), facebookSdk: new Trigger() };
 })();
