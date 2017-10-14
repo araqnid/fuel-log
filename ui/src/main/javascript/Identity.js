@@ -44,15 +44,15 @@ export default class Identity extends React.Component {
             return <SignedOut {...state} />
         }
         else {
-            return <div></div>;
+            return <div/>;
         }
     }
     componentDidMount() {
         identity.subscribe({
-            googleUser: googleUser => {
+            googleAvailable: () => {
                 this.setState({ offerGoogle: true });
             },
-            facebookLoginStatus: facebookLoginStatus => {
+            facebookAvailable: () => {
                 this.setState({ offerFacebook: true });
             },
             localIdentity: user => {
