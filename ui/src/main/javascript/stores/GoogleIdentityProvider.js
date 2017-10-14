@@ -7,32 +7,30 @@ export default class GoogleIdentityProvider extends StoreBase {
     constructor() {
         super();
         this._available = new Datum(this, "available");
-        const apiLoaded = __api_hooks.googleApi.promise;
-        const authLoaded = apiLoaded.then(() => {
-            return new Promise(resolve => {
+        this._authInitialised = __api_hooks.googleApi.promise
+            .then(() => new Promise(resolve => {
                 log.info("start loading auth2");
                 gapi.load('auth2', () => {
                     log.info("auth2 loaded");
                     resolve();
                 });
+            }))
+            .then(() => {
+                this._googleAuth = gapi.auth2.getAuthInstance();
+                if (this._googleAuth === null) {
+                    log.info("Initialising GoogleAuth instance");
+                    this._googleAuth = gapi.auth2.init({});
+                }
+                else {
+                    log.info("Using existing GoogleAuth instance");
+                }
+            })
+            .then(() => {
+                log.info("GoogleAuth initialised");
+                this._available.value = true;
+            }, () => {
+                log.info("GoogleAuth initialisation failed");
             });
-        });
-        const authInitStarted = authLoaded.then(() => {
-            this._googleAuth = gapi.auth2.getAuthInstance();
-            if (this._googleAuth === null) {
-                log.info("Initialising GoogleAuth instance");
-                this._googleAuth = gapi.auth2.init({});
-            }
-            else {
-                log.info("Using existing GoogleAuth instance");
-            }
-        });
-        this._authInitialised = authInitStarted.then(() => {
-            log.info("GoogleAuth initialised");
-            this._available.value = true;
-        }, () => {
-            log.info("GoogleAuth initialisation failed");
-        });
     }
 
     get available() {
