@@ -1,16 +1,26 @@
-import BUS from "../message-bus";
-import BaseStore from "./BaseStore";
+import {Datum, StoreBase} from "../util/Stores";
 
-export default class PurchasesStore extends BaseStore {
+export default class PurchasesStore extends StoreBase {
     constructor(identity) {
-        super("Purchases");
+        super();
         this.identity = identity;
         this.userId = null;
         this.refreshInterval = 30 * 1000;
         this._loading = null;
         this._sleeping = null;
+        this._purchaseList = new Datum(this, "purchaseList");
+        this._loadFailure = new Datum(this, "loadFailure");
     }
-    start() {
+
+    get purchaseList() {
+        return this._purchaseList.facade();
+    }
+
+    get loadFailure() {
+        return this._loadFailure.facade();
+    }
+
+    begin() {
         this.identity.localUserIdentity.subscribe(this, user => {
             if (user) {
                 this.userId = user.user_id;
@@ -18,7 +28,7 @@ export default class PurchasesStore extends BaseStore {
             else {
                 this.userId = null;
             }
-            this.bus.dispatch("purchaseList", null);
+            this._purchaseList.value = null;
             if (this.userId) {
                 this._startLoading();
             }
@@ -27,7 +37,8 @@ export default class PurchasesStore extends BaseStore {
             }
         });
     }
-    stop() {
+    abort() {
+        super.abort();
         this.identity.unsubscribe(this);
     }
     kick() {
@@ -40,7 +51,7 @@ export default class PurchasesStore extends BaseStore {
             data: newPurchase,
             success: (data, status, xhr) => {
                 if (xhr.status !== 201) {
-                    BUS.broadcast("NewFuelPurchaseEntry.PurchaseSubmissionFailed", {status: xhr.status, exception: null, data: data});
+                    this.emit("purchaseSubmissionFailed", {status: xhr.status, exception: null, data: data});
                     return;
                 }
                 const location = xhr.getResponseHeader('Location');
@@ -51,10 +62,10 @@ export default class PurchasesStore extends BaseStore {
                 }
                 const fuelPurchaseId = matches[1];
                 this.kick();
-                BUS.broadcast("NewFuelPurchaseEntry.PurchaseSubmitted", fuelPurchaseId);
+                this.emit("purchaseSubmitted", fuelPurchaseId);
             },
             error: (xhr, status, ex) => {
-                BUS.broadcast("NewFuelPurchaseEntry.PurchaseSubmissionFailed", {status: status, exception: ex});
+                this.emit("purchaseSubmissionFailed", {status: status, exception: ex});
             }
         });
     }
@@ -73,10 +84,12 @@ export default class PurchasesStore extends BaseStore {
         this._loading = this._ajax({
             url: "/_api/fuel",
             success: (data, status, xhr) => {
-                this.bus.dispatch("purchaseList", data);
+                this._purchaseList.value = data;
+                this._loadFailure.value = null;
             },
             error: (xhr, status, ex) => {
-                this.bus.dispatch("loadFailure", { status: status, exception: ex });
+                this._purchaseList.value = null;
+                this._loadFailure.value = { status: status, exception: ex };
             },
             complete: (xhr, status) => {
                 this._loading = null;

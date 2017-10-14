@@ -1,7 +1,7 @@
 import React from "react";
 import {identity} from "./stores";
 
-const identity_beginSignOut = identity.beginSignOut.bind(identity);
+const identity_beginSignOut = identity.signOut.bind(identity);
 const identity_beginGoogleSignIn = identity.beginGoogleSignIn.bind(identity);
 const identity_beginFacebookSignIn = identity.beginFacebookSignIn.bind(identity);
 const suppress = (e) => {
@@ -48,13 +48,13 @@ export default class Identity extends React.Component {
         }
     }
     componentDidMount() {
-        identity._underlying.googleAvailable.subscribe(this, v => {
+        identity.googleAvailable.subscribe(this, v => {
             this.setState({ offerGoogle: v });
         });
-        identity._underlying.facebookAvailable.subscribe(this, v => {
+        identity.facebookAvailable.subscribe(this, v => {
             this.setState({ offerFacebook: v });
         });
-        identity._underlying.localUserIdentity.subscribe(this, user => {
+        identity.localUserIdentity.subscribe(this, user => {
             if (user) {
                 this.setState({ signedInState: 'signed-in', user: user })
             }
@@ -64,6 +64,6 @@ export default class Identity extends React.Component {
         });
     }
     componentWillUnmount() {
-        identity._underlying.unsubscribeAll(this);
+        identity.unsubscribeAll(this);
     }
 }

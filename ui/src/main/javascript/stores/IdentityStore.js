@@ -1,4 +1,3 @@
-import BaseStore from "./BaseStore";
 import {Datum, StoreBase} from "../util/Stores";
 import {logFactory} from "../util/ConsoleLog";
 import GoogleIdentityProvider from "./GoogleIdentityProvider";
@@ -11,9 +10,9 @@ import FacebookIdentityProvider from "./FacebookIdentityProvider";
 //  signOut() // Promise<?>
 //  signIn() // Promise<LocalIdentity>
 
-const log = logFactory("RealmIdentityStore");
+const log = logFactory("IdentityStore");
 
-export class RealmIdentityStore extends StoreBase {
+export default class IdentityStore extends StoreBase {
     constructor() {
         super();
         this._realmProviders = {GOOGLE: new GoogleIdentityProvider(), FACEBOOK: new FacebookIdentityProvider()};
@@ -134,50 +133,5 @@ export class RealmIdentityStore extends StoreBase {
     abort() {
         super.abort();
         Object.values(this._realmProviders).forEach(p => p.abort());
-    }
-}
-
-export default class IdentityStore extends BaseStore {
-    constructor() {
-        super("Identity");
-        this._underlying = new RealmIdentityStore();
-    }
-
-    start() {
-        this._underlying.begin();
-    }
-    beginGoogleSignIn() {
-        this._underlying.beginGoogleSignIn();
-    }
-    beginFacebookSignIn() {
-        this._underlying.beginFacebookSignIn();
-    }
-    beginSignOut() {
-        this._underlying.signOut();
-    }
-
-    get localUserIdentity() {
-        return this._underlying.localUserIdentity;
-    }
-
-    get facebookAvailable() {
-        return this._underlying.facebookAvailable;
-    }
-
-    get googleAvailable() {
-        return this._underlying.googleAvailable;
-    }
-
-    subscribe(handlers, owner) {
-        if (handlers.localIdentity) this.localUserIdentity.subscribe(owner, data => {
-            handlers.localIdentity({
-                userId: data.user_id, name: data.name, picture: data.picture, realm: data.realm
-            });
-        });
-        if (handlers.facebookAvailable) this.facebookAvailable.subscribe(owner, handlers.localIdentity);
-        if (handlers.googleAvailable) this.googleAvailable.subscribe(owner, handlers.localIdentity);
-    }
-    unsubscribe(owner) {
-        this._underlying.unsubscribeAll(owner);
     }
 }

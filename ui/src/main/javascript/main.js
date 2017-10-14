@@ -9,7 +9,7 @@ window.BUS = BUS;
 
 _.forEach(stores, store => {
     if (process.env.NODE_ENV !== "production") console.log("starting store", store);
-    store.start();
+    store.begin();
 });
 
 ReactDOM.render(React.createElement(Root), document.getElementById("component.Root"));

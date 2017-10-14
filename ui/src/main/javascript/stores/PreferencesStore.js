@@ -1,24 +1,35 @@
-import BaseStore from "./BaseStore";
+import {Datum, StoreBase} from "../util/Stores";
 
-export default class PreferencesStore extends BaseStore {
+export default class PreferencesStore extends StoreBase {
     constructor(identity) {
-        super("Preferences");
+        super();
         this._requesting = null;
         this._sleeping = null;
         this.user = null;
         this.identity = identity;
         this.refreshInterval = 30 * 1000;
+        this._preferences = new Datum(this, "preferences");
+        this._loadFailure = new Datum(this, "loadFailure");
     }
-    start() {
+
+    get preferences() {
+        return this._preferences.facade();
+    }
+
+    get loadFailure() {
+        return this._loadFailure.facade();
+    }
+
+    begin() {
         this.identity.localUserIdentity.subscribe(this, user => {
-            this.bus.dispatch("preferences", null);
+            this._preferences.value = null;
             this._cancel();
             this.user = user;
             if (user)
                 this._requesting = this._beginRequest();
         });
     }
-    stop() {
+    abort() {
         this._cancel();
         this.identity.unsubscribe(this);
     }
@@ -36,10 +47,12 @@ export default class PreferencesStore extends BaseStore {
         this._ajax({
             url: "/_api/user/preferences",
             success: (data, code, xhr) => {
-                this.bus.dispatch("preferences", data);
+                this._preferences.value = data;
+                this._loadFailure.value = null;
             },
             error: (xhr, code, ex) => {
-                this.bus.dispatch("loadingError", code, ex);
+                this._preferences.value = null;
+                this._loadFailure = { status: status, exception: ex };
             },
             complete: (xhr, code) => {
                 this._requesting = null;

@@ -20,23 +20,19 @@ export default class Content extends React.Component {
         </div>;
     }
     componentDidMount() {
-        identity._underlying.localUserIdentity.subscribe(this, user => {
+        identity.localUserIdentity.subscribe(this, user => {
             this.setState({ user: user });
         });
-        purchases.subscribe({
-            purchaseList: purchases => {
-                this.setState({ purchases: purchases });
-            }
-        }, this);
-        preferences.subscribe({
-            preferences: preferences => {
-                this.setState({ preferences: preferences });
-            }
-        }, this);
+        purchases.purchaseList.subscribe(this, purchases => {
+            this.setState({ purchases: purchases });
+        });
+        preferences.preferences.subscribe(this, preferences => {
+            this.setState({ preferences: preferences });
+        });
     }
     componentWillUnmount() {
-        identity.unsubscribe(this);
-        purchases.unsubscribe(this);
-        preferences.unsubscribe(this);
+        identity.unsubscribeAll(this);
+        purchases.unsubscribeAll(this);
+        preferences.unsubscribeAll(this);
     }
 }

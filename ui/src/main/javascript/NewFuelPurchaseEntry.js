@@ -1,5 +1,4 @@
 import React from "react";
-import BUS from "./message-bus";
 import {purchases} from "./stores";
 
 const currencies = { 'GBP': { symbol: '£', places: 2 } };
@@ -70,15 +69,15 @@ export default class NewFuelPurchaseEntry extends React.Component {
         </div>;
     }
     componentDidMount() {
-        BUS.subscribe("NewFuelPurchaseEntry.PurchaseSubmitted", (fuelPurchaseId) => {
+        purchases.subscribe(this, 'purchaseSubmitted', (fuelPurchaseId) => {
             this.setState(this._defaultState);
-        }, this);
-        BUS.subscribe("NewFuelPurchaseEntry.PurchaseSubmissionFailed", (code, ex) => {
+        });
+        purchases.subscribe(this, 'purchaseSubmissionFailed', ({status, exception}) => {
             this.setState({ registering: false });
-        }, this);
+        });
     }
     componentWillUnmount() {
-        BUS.unsubscribe(this);
+        purchases.unsubscribeAll(this);
     }
     onInputChange(e) {
         const target = e.target;
