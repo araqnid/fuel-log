@@ -1,5 +1,4 @@
 import React from "react";
-import _ from "lodash";
 import {Instant, ZonedDateTime, ZoneId} from "js-joda";
 
 function formatDistance(value, preferences) {
@@ -21,24 +20,24 @@ function formatCost(value, preferences) {
     return definition.symbol + value.amount.toFixed(definition.places);
 }
 
+const FuelPurchase = ({purchase, preferences}) => {
+    const purchaseInstant = Instant.ofEpochMilli(purchase.purchased_at * 1000);
+    const purchaseDateTime = ZonedDateTime.ofInstant(purchaseInstant, ZoneId.SYSTEM);
+    const purchaseDate = purchaseDateTime.toLocalDate();
+    return <tr>
+        <td>{ purchaseDate.toString() }</td>
+        <td>{ formatDistance(purchase.odometer, preferences) }</td>
+        <td>{ formatFuelVolume(purchase.fuel_volume, preferences) }</td>
+        <td>{ purchase.full_fill ? "Yes" : "" }</td>
+        <td>{ formatCost(purchase.cost, preferences) }</td>
+        <td>{ purchase.location_string }</td>
+    </tr>
+};
+
 const FuelPurchaseList = ({purchases, preferences}) => {
     if (!purchases) {
         return <div className="col-sm-8" />;
     }
-
-    const toRow = purchase => {
-        const purchaseInstant = Instant.ofEpochMilli(purchase.purchased_at * 1000);
-        const purchaseDateTime = ZonedDateTime.ofInstant(purchaseInstant, ZoneId.SYSTEM);
-        const purchaseDate = purchaseDateTime.toLocalDate();
-        return <tr key={ purchase.fuel_purchase_id }>
-            <td>{ purchaseDate.toString() }</td>
-            <td>{ formatDistance(purchase.odometer, preferences) }</td>
-            <td>{ formatFuelVolume(purchase.fuel_volume, preferences) }</td>
-            <td>{ purchase.full_fill ? "Yes" : "" }</td>
-            <td>{ formatCost(purchase.cost, preferences) }</td>
-            <td>{ purchase.location_string }</td>
-        </tr>
-    };
 
     const distanceUnit = preferences.distance_unit || "KM";
     const distanceLabel = distanceUnit === "MILES" ? "Miles" : "Km";
@@ -60,7 +59,9 @@ const FuelPurchaseList = ({purchases, preferences}) => {
             </tr>
             </thead>
             <tbody>
-            { _(purchases).sortBy( p => p.purchased_at ).reverse().map(toRow).value() }
+            { purchases.map(purchase => (
+                <FuelPurchase key={ purchase.fuel_purchase_id } purchase={purchase} preferences={preferences} />
+            )) }
             </tbody>
         </table>
     </div>;

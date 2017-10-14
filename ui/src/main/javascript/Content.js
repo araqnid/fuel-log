@@ -1,4 +1,5 @@
 import React from "react";
+import _ from "lodash";
 import {identity, preferences, purchases} from "./stores";
 import NewFuelPurchaseEntry from "./NewFuelPurchaseEntry";
 import FuelPurchaseList from "./FuelPurchaseList";
@@ -24,7 +25,7 @@ export default class Content extends React.Component {
             this.setState({ user: user });
         });
         purchases.purchaseList.subscribe(this, purchases => {
-            this.setState({ purchases: purchases });
+            this.setState({ purchases: _(purchases).sortBy("purchased_at").reverse().value() });
         });
         preferences.preferences.subscribe(this, preferences => {
             this.setState({ preferences: preferences });
