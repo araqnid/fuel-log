@@ -21,8 +21,8 @@ function formatCost(value, preferences) {
     return definition.symbol + value.amount.toFixed(definition.places);
 }
 
-export default function FuelPurchaseList(props) {
-    if (!props.purchases) {
+const FuelPurchaseList = ({purchases, preferences}) => {
+    if (!purchases) {
         return <div className="col-sm-8" />;
     }
 
@@ -32,18 +32,18 @@ export default function FuelPurchaseList(props) {
         const purchaseDate = purchaseDateTime.toLocalDate();
         return <tr key={ purchase.fuel_purchase_id }>
             <td>{ purchaseDate.toString() }</td>
-            <td>{ formatDistance(purchase.odometer, props.preferences) }</td>
-            <td>{ formatFuelVolume(purchase.fuel_volume, props.preferences) }</td>
+            <td>{ formatDistance(purchase.odometer, preferences) }</td>
+            <td>{ formatFuelVolume(purchase.fuel_volume, preferences) }</td>
             <td>{ purchase.full_fill ? "Yes" : "" }</td>
-            <td>{ formatCost(purchase.cost, props.preferences) }</td>
+            <td>{ formatCost(purchase.cost, preferences) }</td>
             <td>{ purchase.location_string }</td>
         </tr>
     };
 
-    const distanceUnit = props.preferences.distance_unit || "KM";
+    const distanceUnit = preferences.distance_unit || "KM";
     const distanceLabel = distanceUnit === "MILES" ? "Miles" : "Km";
 
-    const fuelVolumeUnit = props.preferences.fuel_unit || "LITRES";
+    const fuelVolumeUnit = preferences.fuel_unit || "LITRES";
     const fuelVolumeLabel = fuelVolumeUnit === "GALLONS" ? "Gallons" : "Litres";
 
     return <div className="col-sm-8">
@@ -60,8 +60,10 @@ export default function FuelPurchaseList(props) {
             </tr>
             </thead>
             <tbody>
-            { _(props.purchases).sortBy( p => p.purchased_at ).reverse().map(toRow).value() }
+            { _(purchases).sortBy( p => p.purchased_at ).reverse().map(toRow).value() }
             </tbody>
         </table>
     </div>;
 };
+
+export default FuelPurchaseList;
