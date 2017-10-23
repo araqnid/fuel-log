@@ -13,4 +13,7 @@ if (process.env.NODE_ENV !== "production") {
     window.STORES = stores;
 }
 
-ReactDOM.render(React.createElement(Root), document.getElementById("component.Root"));
+const componentRootElt = document.createElement("div");
+document.body.appendChild(componentRootElt);
+
+ReactDOM.render(React.createElement(Root), componentRootElt);
