@@ -16,4 +16,14 @@ if (process.env.NODE_ENV !== "production") {
 const componentRootElt = document.createElement("div");
 document.body.appendChild(componentRootElt);
 
+(function(fontFamily, fallback) {
+    document.head.appendChild((function() {
+        const linkElt = document.createElement("link");
+        linkElt.setAttribute("href", "https://fonts.googleapis.com/css?family=" + encodeURIComponent(fontFamily));
+        linkElt.setAttribute("rel", "stylesheet");
+        return linkElt;
+    })());
+    componentRootElt.style.cssText = "font-family: " + fontFamily + ", " + fallback;
+})("Roboto", "sans-serif");
+
 ReactDOM.render(React.createElement(Root), componentRootElt);
