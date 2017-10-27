@@ -2,6 +2,7 @@ plugins {
     id "java"
     id "application"
     id "org.jetbrains.kotlin.jvm" version "1.1.51"
+    id "com.timgroup.webpack" version "1.0.1" apply false
 }
 mainClassName = 'org.araqnid.fuellog.boot.Main'
 
@@ -55,7 +56,7 @@ jar {
     }
 }
 
-jar.dependsOn(':ui:site');
+jar.dependsOn(':ui:webpack')
 
 configurations {
     runtime.exclude group: 'commons-logging', module: 'commons-logging'

@@ -1,50 +1,19 @@
-apply plugin: 'base'
+apply plugin: 'com.timgroup.webpack'
 
-task npmInstall(type: Exec, group: "compile", description: "Runs NPM to fetch javascript packages") {
-    inputs.file "package.json"
-    outputs.dir "node_modules"
-    commandLine "npm", "install"
-}
-
-task webpack(type: Exec, dependsOn: npmInstall, group: "compile", description: "Runs Webpack to produce bundle files") {
-    outputs.dir "build/site"
-    inputs.dir "src/main/javascript"
-    inputs.dir "src/main/web"
-    inputs.file 'webpack.config.js'
-    environment("NODE_ENV", "production")
-    commandLine "node_modules/.bin/webpack", "-p", "--devtool", "source-map"
-
-    doLast {
-        project.copy {
-            from 'src/main/web'
-            into 'build/site'
-        }
-    }
-}
-
-task appStatusUi(group: "distribution", description: "Includes the app-status UI") {
-    outputs.dir "build/site/_status"
-    doLast {
+webpack {
+    doFirst {
         def cfg = rootProject.configurations.compile.copy()
         cfg.transitive = false
-        def jarfile = cfg.files { dep -> dep.group == "org.araqnid" && dep.name == "app-status" }[0]
+        def jarFile = cfg.files { dep -> dep.group == "org.araqnid" && dep.name == "app-status" }[0]
         def tmpdir = new File(buildDir, "appStatus")
         copy {
-            from zipTree(jarfile)
-            include 'org/araqnid/appstatus/site/**'
             into tmpdir
+            from zipTree(jarFile)
+            include 'org/araqnid/appstatus/site/**'
         }
         copy {
-            from new File(tmpdir, "org/araqnid/appstatus/site")
             into project.file("build/site/_status")
+            from new File(tmpdir, "org/araqnid/appstatus/site")
         }
     }
 }
-
-clean {
-    delete "node_modules"
-}
-
-task site(dependsOn: [webpack, appStatusUi])
-
-assemble.dependsOn(site)
