@@ -65,7 +65,7 @@ configurations {
 
 dependencies {
     compile "org.araqnid:app-status:0.0.7"
-    compile "org.araqnid:eventstore:0.0.11"
+    compile "org.araqnid:eventstore:0.0.14"
     compile "com.google.guava:guava:$guavaVersion"
     compile "com.google.inject:guice:$guiceVersion"
     compile "com.google.inject.extensions:guice-servlet:$guiceVersion"

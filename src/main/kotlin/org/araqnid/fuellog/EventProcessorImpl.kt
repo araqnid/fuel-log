@@ -10,7 +10,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.araqnid.eventstore.EventReader
 import org.araqnid.eventstore.EventRecord
-import org.araqnid.eventstore.PositionCodec
 import org.araqnid.eventstore.subscription.SnapshotEventProcessor
 import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.FuelPurchased
@@ -26,10 +25,9 @@ private val snapshotCompatibilityVersion = System.currentTimeMillis()
 
 @Singleton
 class EventProcessorImpl @Inject constructor(@Named("SNAPSHOT_SPOOL") baseDirectory: String,
-                                             positionCodec: PositionCodec,
                                              storeReader: EventReader,
                                              clock: Clock)
-    : SnapshotEventProcessor(Paths.get(baseDirectory), objectMapper, positionCodec, storeReader.emptyStorePosition, snapshotCompatibilityVersion, clock) {
+    : SnapshotEventProcessor(Paths.get(baseDirectory), objectMapper, storeReader.positionCodec, storeReader.emptyStorePosition, snapshotCompatibilityVersion, clock) {
     private val logger = LoggerFactory.getLogger(EventProcessorImpl::class.java)
 
     companion object {
