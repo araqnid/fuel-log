@@ -19,6 +19,9 @@ for jarfile in "$@"; do
             mkdir "$version_output_dir"
             unzip -q -d "$version_output_dir" "$jarfile" 'www/*'
             mv "$version_output_dir"/www/* "$version_output_dir"
+            if [ -f "$version_output_dir"/www/.MANIFEST ]; then
+                mv "$version_output_dir"/www/.MANIFEST "$version_output_dir"
+            fi
             rmdir "$version_output_dir/www"
             ( cd $version_output_dir && find . -type f \( -name MANIFEST -o -print \) | while read filename; do
                 shasum "$filename" | sed -e 's/\.\///'
