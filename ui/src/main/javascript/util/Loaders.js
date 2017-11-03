@@ -9,6 +9,10 @@ function asArray(x) {
         return [x];
 }
 
+function appendArray(x, y) {
+    return [ ...asArray(x), y ];
+}
+
 const INITIAL = Symbol("INITIAL");
 const RUNNING = Symbol("RUNNING");
 const ABORTED = Symbol("ABORTED");
@@ -91,30 +95,20 @@ export class AjaxLoaderBase extends LoaderBase {
     }
 
     _ajax(options) {
-        if (!options.complete) {
-            options.complete = this._ajaxComplete.bind(this);
-        }
-        else if (_.isArray(options.complete)) {
-            options.complete.push(this._ajaxComplete.bind(this));
-        }
-        else {
-            options.complete = [options.complete, this._ajaxComplete.bind(this)];
-        }
-        if (options.success) {
-            const underlying = options.success;
-            options.success = (data, status, xhr) => {
-                if (this.aborted) return;
-                underlying(data, status, xhr);
-            };
-        }
-        if (options.error) {
-            const underlying = options.error;
-            options.error = (xhr, code, ex) => {
-                if (this.aborted) return;
-                underlying(xhr, code, ex);
-            };
-        }
-        const req = microajax(options);
+        const { complete: underlyingComplete, success: underlyingSuccess, error: underlyingError, ...otherOptions } = options;
+        const complete = appendArray(underlyingComplete, xhr => _.remove(this._ajaxOngoing, xhr));
+
+        const success = underlyingSuccess ? (data => {
+            if (this.aborted) return;
+            underlyingSuccess(data);
+        }) : null;
+
+        const error = underlyingError ? (data => {
+            if (this.aborted) return;
+            underlyingError(data);
+        }) : null;
+
+        const req = microajax({ success, error, complete, ...otherOptions });
         this._ajaxOngoing.push(req);
     }
 
