@@ -60,6 +60,9 @@ export class AjaxLoaderBase extends LoaderBase {
             const req = microajax({ ...options,
                 success: (data, status, xhr) => {
                     completed = true;
+                    if (this.aborted) {
+                        reject("Aborted")
+                    }
                     if (options.includeXhr) {
                         resolve({ data: data, status: status, xhr: xhr });
                     }
@@ -69,10 +72,18 @@ export class AjaxLoaderBase extends LoaderBase {
                 },
                 error: (xhr, status, e) => {
                     completed = true;
+                    if (this.aborted) {
+                        reject("Aborted")
+                    }
                     reject(e);
                 },
                 complete: (xhr, status) => {
-                    if (!completed) reject(null);
+                    if (!completed) {
+                        if (this.aborted) {
+                            reject("Aborted")
+                        }
+                        reject("Completed without calling success/error");
+                    }
                 }
             });
             this._ajaxOngoing.push(req);
