@@ -9,26 +9,49 @@ function asArray(x) {
         return [x];
 }
 
+const INITIAL = Symbol("INITIAL");
+const RUNNING = Symbol("RUNNING");
+const ABORTED = Symbol("ABORTED");
+
 export class LoaderBase {
     constructor() {
-        this._aborted = false;
-        this._ajaxOngoing = [];
-        this._timer = null;
+        this._state = INITIAL;
     }
 
     begin() {
+        this._state = RUNNING;
     }
 
     abort() {
-        this._aborted = true;
-        _.clone(this._ajaxOngoing).forEach(req => req.abort());
-        if (this._timer) {
-            clearTimeout(this._timer);
-        }
+        this._state = ABORTED;
+    }
+
+    get state() {
+        return this._state;
+    }
+
+    get running() {
+        return this._state === RUNNING;
     }
 
     get aborted() {
-        return this._aborted;
+        return this._state === ABORTED;
+    }
+}
+
+export class AjaxLoaderBase extends LoaderBase {
+    constructor() {
+        super();
+        this._ajaxOngoing = [];
+    }
+
+    begin() {
+        super.begin();
+    }
+
+    abort() {
+        super.abort();
+        _.clone(this._ajaxOngoing).forEach(req => req.abort());
     }
 
     callAjax(options) {
@@ -69,14 +92,14 @@ export class LoaderBase {
         if (options.success) {
             const underlying = options.success;
             options.success = (data, status, xhr) => {
-                if (this._aborted) return;
+                if (this.aborted) return;
                 underlying(data, status, xhr);
             };
         }
         if (options.error) {
             const underlying = options.error;
             options.error = (xhr, code, ex) => {
-                if (this._aborted) return;
+                if (this.aborted) return;
                 underlying(xhr, code, ex);
             };
         }
@@ -84,20 +107,12 @@ export class LoaderBase {
         this._ajaxOngoing.push(req);
     }
 
-    _ajaxComplete(xhr, status) {
+    _ajaxComplete(xhr) {
         _.remove(this._ajaxOngoing, xhr);
-    }
-
-    setTimeout(callback, interval) {
-        this._timer = setTimeout(() => {
-            this._timer = null;
-            if (this._aborted) return;
-            callback.call(this);
-        }, interval);
     }
 }
 
-export class OneShotLoader extends LoaderBase {
+export class OneShotLoader extends AjaxLoaderBase {
     constructor(url, found) {
         super();
         this._dispatchFound = found;

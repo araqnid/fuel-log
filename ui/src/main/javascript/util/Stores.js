@@ -1,4 +1,4 @@
-import {LoaderBase} from "./Loaders";
+import {AjaxLoaderBase} from "./Loaders";
 
 export class Datum {
     constructor(owner, name) {
@@ -35,7 +35,7 @@ export class Datum {
     }
 }
 
-export class StoreBase extends LoaderBase {
+export class StoreBase extends AjaxLoaderBase {
     constructor() {
         super();
         this._listeners = [];
