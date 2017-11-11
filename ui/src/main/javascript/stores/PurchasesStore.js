@@ -1,8 +1,16 @@
-import {Datum, StoreBase} from "../util/Stores";
+import {combineReducers} from "redux";
+import {bindActionPayload, Datum, StoreBase} from "../util/Stores";
 
-export const reducer = (state = null, action) => state;
+export const reducer = combineReducers({
+    purchaseList: bindActionPayload("PurchasesStore/purchaseList"),
+    loadFailure: bindActionPayload("PurchasesStore/loadFailure")
+});
 
 export const actions = dispatch => ({
+    begin(purchasesStore) {
+        purchasesStore.purchaseList.listen(v => dispatch({ type: "PurchasesStore/purchaseList", payload: v }));
+        purchasesStore.loadFailure.listen(v => dispatch({ type: "PurchasesStore/loadFailure", payload: v }));
+    }
 });
 
 export default class PurchasesStore extends StoreBase {

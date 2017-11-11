@@ -1,8 +1,16 @@
-import {Datum, StoreBase} from "../util/Stores";
+import {combineReducers} from "redux";
+import {bindActionPayload, Datum, StoreBase} from "../util/Stores";
 
-export const reducer = (state = null, action) => state;
+export const reducer = combineReducers({
+    preferences: bindActionPayload("PreferencesStore/preferences"),
+    loadFailure: bindActionPayload("PreferencesStore/loadFailure")
+});
 
 export const actions = dispatch => ({
+    begin(preferencesStore) {
+        preferencesStore.preferences.listen(v => dispatch({ type: "PreferencesStore/preferences", payload: v }));
+        preferencesStore.loadFailure.listen(v => dispatch({ type: "PreferencesStore/loadFailure", payload: v }));
+    }
 });
 
 export default class PreferencesStore extends StoreBase {
