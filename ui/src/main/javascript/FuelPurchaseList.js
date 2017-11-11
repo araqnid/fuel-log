@@ -1,4 +1,5 @@
 import React from "react";
+import {connect} from "react-redux";
 import {Instant, ZonedDateTime, ZoneId} from "js-joda";
 
 function formatDistance(value, preferences) {
@@ -67,4 +68,10 @@ const FuelPurchaseList = ({purchases, preferences}) => {
     </div>;
 };
 
-export default FuelPurchaseList;
+export default connect(
+    ({ purchases: { purchaseList }, preferences: { preferences } }) => ({
+        purchases: _(purchaseList).sortBy("purchased_at").reverse().value(),
+        preferences
+    }),
+    dispatch => ({})
+)(FuelPurchaseList);

@@ -1,4 +1,5 @@
 import React from "react";
+import {connect} from "react-redux";
 import {purchases} from "./stores";
 
 const currencies = { 'GBP': { symbol: '£', places: 2 } };
@@ -13,7 +14,7 @@ function formatDistanceUnit(key) {
     return distanceUnits[key] || key + "?";
 }
 
-export default class NewFuelPurchaseEntry extends React.Component {
+class NewFuelPurchaseEntry extends React.Component {
     constructor() {
         super();
         this._onSubmit = this.onSubmit.bind(this);
@@ -107,3 +108,8 @@ export default class NewFuelPurchaseEntry extends React.Component {
         });
     }
 }
+
+export default connect(
+    ({ preferences: { preferences }}) => ({ preferences }),
+    dispatch => ({})
+)(NewFuelPurchaseEntry);
