@@ -60,4 +60,21 @@ export class StoreBase extends AjaxLoaderBase {
             }
         });
     }
+
+    callAjax({ url, type, data, method = "GET", contentType = "application/json" }) {
+        const typeOrMethod = type ? type : method;
+        switch (typeOrMethod) {
+            case "GET":
+                return this.get(url).then(({data}) => data);
+            case "POST":
+                if (contentType === "application/json" && typeof data === "object") {
+                    return this.post(url, data).then(({data}) => data);
+                }
+                else {
+                    return this.post(url, data, { headers: { 'Content-Type': contentType } }).then(({data}) => data);
+                }
+            default:
+                throw new Error("Not supported method: " + typeOrMethod);
+        }
+    }
 }

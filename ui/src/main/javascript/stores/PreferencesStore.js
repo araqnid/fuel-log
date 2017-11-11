@@ -44,21 +44,19 @@ export default class PreferencesStore extends StoreBase {
         }
     }
     _beginRequest() {
-        this._ajax({
-            url: "/_api/user/preferences",
-            success: (data, code, xhr) => {
+        this.get("_api/user/preferences")
+            .then(({data}) => {
                 this._preferences.value = data;
                 this._loadFailure.value = null;
-            },
-            error: (xhr, code, ex) => {
+            })
+            .catch((ex) => {
                 this._preferences.value = null;
-                this._loadFailure = { status: status, exception: ex };
-            },
-            complete: (xhr, code) => {
+                this._loadFailure = { status: ex.status, exception: ex };
+            })
+            .then(() => {
                 this._requesting = null;
                 this._sleeping = setTimeout(this._tick.bind(this), this.refreshInterval);
-            }
-        })
+            });
     }
     _tick() {
         this._sleeping = null;

@@ -25,7 +25,8 @@
     "ramda": "0.23.0",
     "nanoajax": "0.4.3",
     "js-joda": "1.5.1",
-    "styled-components": "2.1.2"
+    "styled-components": "2.1.2",
+    "axios": "0.17.0"
   },
   "devDependencies": {
     "favicons-webpack-plugin": "0.0.7"

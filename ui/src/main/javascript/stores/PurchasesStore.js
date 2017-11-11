@@ -45,17 +45,13 @@ export default class PurchasesStore extends StoreBase {
         if (this.userId) this._startLoading();
     }
     submit(newPurchase) {
-        this._ajax({
-            url: "/_api/fuel",
-            type: "POST",
-            contentType: "application/json",
-            data: newPurchase,
-            success: (data, status, xhr) => {
-                if (xhr.status !== 201) {
-                    this.emit("purchaseSubmissionFailed", {status: xhr.status, exception: null, data: data});
+        this.post("_api/fuel", newPurchase)
+            .then(({data, status, headers}) => {
+                if (status !== 201) {
+                    this.emit("purchaseSubmissionFailed", {status, exception: null, data});
                     return;
                 }
-                const location = xhr.getResponseHeader('Location');
+                const location = headers.location;
                 const matches = location.match(/\/_api\/fuel\/(.+)$/);
                 if (!matches) {
                     console.warn("invalid creation URI", location);
@@ -64,11 +60,10 @@ export default class PurchasesStore extends StoreBase {
                 const fuelPurchaseId = matches[1];
                 this.kick();
                 this.emit("purchaseSubmitted", fuelPurchaseId);
-            },
-            error: (xhr, status, ex) => {
-                this.emit("purchaseSubmissionFailed", {status: status, exception: ex});
-            }
-        });
+            })
+            .catch(response => {
+                this.emit("purchaseSubmissionFailed", {status: response.status, exception: response});
+            });
     }
     _stopLoading() {
         if (this._loading) {
@@ -82,23 +77,21 @@ export default class PurchasesStore extends StoreBase {
     }
     _startLoading() {
         this._stopLoading();
-        this._loading = this._ajax({
-            url: "/_api/fuel",
-            success: (data, status, xhr) => {
+        this._loading = this.get("/_api/fuel")
+            .then(({data}) => {
                 this._purchaseList.value = data;
                 this._loadFailure.value = null;
-            },
-            error: (xhr, status, ex) => {
+            })
+            .catch((response) => {
                 this._purchaseList.value = null;
-                this._loadFailure.value = { status: status, exception: ex };
-            },
-            complete: (xhr, status) => {
+                this._loadFailure.value = { status: response.status, exception: response };
+            })
+            .then(() => {
                 this._loading = null;
                 if (this.userId) {
                     this._sleeping = setTimeout(this._tick.bind(this), this.refreshInterval);
                 }
-            }
-        })
+            });
     }
     _tick() {
         this._sleeping = null;
