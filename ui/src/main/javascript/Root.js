@@ -2,8 +2,8 @@ import React from "react";
 import Content from "./Content";
 import Identity from "./Identity";
 
-export default function Root() {
-    return <div>
+const Root = ({}) => (
+    <div>
         <div className="navbar navbar-inverse navbar-fixed-top" role="navigation">
             <div className="container">
                 <div className="navbar-header">
@@ -21,5 +21,7 @@ export default function Root() {
             </div>
         </div>
         <Content />
-    </div>;
-}
+    </div>
+);
+
+export default Root;

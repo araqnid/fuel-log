@@ -1,4 +1,5 @@
 import React from "react";
+import {connect} from "react-redux";
 import {identity} from "./stores";
 
 const identity_beginSignOut = identity.signOut.bind(identity);
@@ -30,40 +31,23 @@ export const SignedOut = ({offerGoogle, offerFacebook}) => {
     return <div><form className="navbar-form navbar-right" onSubmit={suppress}>{signInButtons}</form></div>;
 };
 
-export default class Identity extends React.Component {
-    constructor() {
-        super();
-        this.state = { signedInState: 'pending', user: null, offerGoogle: false, offerFacebook: false };
+const Identity = ({ signedInState, user, offerGoogle, offerFacebook }) => {
+    switch (signedInState) {
+        case "signed-in":
+            return <SignedIn {...user} />;
+        case "signed-out":
+            return <SignedOut offerGoogle={offerGoogle} offerFacebook={offerFacebook}/>;
+        default:
+            return null;
     }
-    render() {
-        const state = this.state;
-        if (state.signedInState === 'signed-in') {
-            return <SignedIn {...state.user}/>;
-        }
-        else if (state.signedInState === 'signed-out') {
-            return <SignedOut {...state} />
-        }
-        else {
-            return <div/>;
-        }
-    }
-    componentDidMount() {
-        identity.googleAvailable.subscribe(this, v => {
-            this.setState({ offerGoogle: v });
-        });
-        identity.facebookAvailable.subscribe(this, v => {
-            this.setState({ offerFacebook: v });
-        });
-        identity.localUserIdentity.subscribe(this, user => {
-            if (user) {
-                this.setState({ signedInState: 'signed-in', user: user })
-            }
-            else {
-                this.setState({ signedInState: 'signed-out', user: null });
-            }
-        });
-    }
-    componentWillUnmount() {
-        identity.unsubscribeAll(this);
-    }
-}
+};
+
+export default connect(
+    ({ identity: { googleAvailable, facebookAvailable, localUserIdentity } }) => ({
+        offerGoogle: googleAvailable,
+        offerFacebook: facebookAvailable,
+        user: localUserIdentity,
+        signedInState: localUserIdentity ? 'signed-in' : 'signed-out'
+    }),
+    (dispatch) => ({})
+)(Identity);
