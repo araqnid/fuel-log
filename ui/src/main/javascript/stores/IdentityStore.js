@@ -1,5 +1,5 @@
 import {combineReducers} from "redux";
-import {Datum, StoreBase} from "../util/Stores";
+import {bindActionPayload, Datum, StoreBase} from "../util/Stores";
 import {logFactory} from "../util/ConsoleLog";
 import GoogleIdentityProvider from "./GoogleIdentityProvider";
 import FacebookIdentityProvider from "./FacebookIdentityProvider";
@@ -13,33 +13,14 @@ import FacebookIdentityProvider from "./FacebookIdentityProvider";
 
 const log = logFactory("IdentityStore");
 
-function resetOn(resetEventType) {
-    return reducer => {
-        const initialState = reducer(undefined, { type: "@@INIT" });
-        return (state, action) => action.type === resetEventType ? initialState : reducer(state, action);
-    }
-}
-
-function bindActionPayload(type, initialValue = null) {
-    const reducer = (state = initialValue, action) => action.type === type && !action.error ? action.payload : state;
-    reducer.resetOn = resetEventType => resetOn(resetEventType)(reducer);
-    return reducer;
-}
-
 export const reducer = combineReducers({
     googleAvailable: bindActionPayload("IdentityStore/googleAvailable", false),
     facebookAvailable: bindActionPayload("IdentityStore/facebookAvailable", false),
     localUserIdentity: bindActionPayload("IdentityStore/localUserIdentity", null),
 });
 
-export const realms = {
-    GOOGLE: new GoogleIdentityProvider(),
-    FACEBOOK: new FacebookIdentityProvider()
-};
-
 export const actions = dispatch => ({
     begin(identityStore) {
-        Object.values(realms).forEach(p => p.begin());
         identityStore.googleAvailable.listen(v => dispatch({ type: "IdentityStore/googleAvailable", payload: v }));
         identityStore.facebookAvailable.listen(v => dispatch({ type: "IdentityStore/facebookAvailable", payload: v }));
         identityStore.localUserIdentity.listen(v => dispatch({ type: "IdentityStore/localUserIdentity", payload: v }));
@@ -49,7 +30,10 @@ export const actions = dispatch => ({
 export default class IdentityStore extends StoreBase {
     constructor() {
         super();
-        this._realmProviders = realms;
+        this._realmProviders = {
+            GOOGLE: new GoogleIdentityProvider(),
+            FACEBOOK: new FacebookIdentityProvider()
+        };
         this._localUserIdentity = new Datum(this, 'localUserIdentity');
         this._googleAvailable = new Datum(this, 'googleAvailable');
         this._facebookAvailable = new Datum(this, 'facebookAvailable');
