@@ -37,10 +37,7 @@ export default class IdentityStore extends StoreBase {
         this._realmProviders.GOOGLE.subscribe(this, 'available', v => this._googleAvailable.value = v);
         this._realmProviders.FACEBOOK.subscribe(this, 'available', v => this._facebookAvailable.value = v);
         Object.values(this._realmProviders).forEach(p => p.begin());
-        this.callAjax({
-            url: '/_api/user/identity',
-            method: 'GET',
-        }).then(data => {
+        this.get("_api/user/identity").then(({data}) => {
             const userInfo = data.user_info;
             if (userInfo) {
                 const realm = this._realmProviders[userInfo.realm];
@@ -54,11 +51,7 @@ export default class IdentityStore extends StoreBase {
                         else {
                             log.info("User details not confirmed");
                             this._localUserIdentity.value = null;
-                            this.callAjax({
-                                url: '/_api/user/identity',
-                                method: 'DELETE'
-                            });
-                            return null;
+                            return this.callDelete("_api/user/identity").then(() => null);
                         }
                     });
                 }
@@ -104,12 +97,7 @@ export default class IdentityStore extends StoreBase {
         if (!userInfo) return;
         log.info("Sign out", userInfo);
         this._realmProviders[userInfo.realm].signOut()
-            .then(() => {
-                return this.callAjax({
-                    url: '/_api/user/identity',
-                    method: 'DELETE'
-                });
-            })
+            .then(() => this.callDelete("/_api/user/identity"))
             .then(() => {
                 this._localUserIdentity.value = null;
             });

@@ -106,12 +106,8 @@ export default class GoogleIdentityProvider extends StoreBase {
     }
 
     _associate(idToken) {
-        return this.callAjax({
-            url: '/_api/user/identity/google',
-            type: 'POST',
-            contentType: 'text/plain',
-            data: idToken
-        });
+        return this.post('/_api/user/identity/google', idToken, { headers: { "Content-Type": "text/plain" } })
+            .then(({data}) => data);
     }
 
     _currentUser() {
