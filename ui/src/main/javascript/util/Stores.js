@@ -1,6 +1,6 @@
 import {AjaxLoaderBase} from "./Loaders";
 
-function resetOn(resetEventType) {
+export function resetOn(resetEventType) {
     return reducer => {
         const initialState = reducer(undefined, { type: "@@INIT" });
         return (state, action) => action.type === resetEventType ? initialState : reducer(state, action);
