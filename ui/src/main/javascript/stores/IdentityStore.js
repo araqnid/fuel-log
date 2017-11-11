@@ -13,10 +13,23 @@ import FacebookIdentityProvider from "./FacebookIdentityProvider";
 
 const log = logFactory("IdentityStore");
 
+function resetOn(resetEventType) {
+    return reducer => {
+        const initialState = reducer(undefined, { type: "@@INIT" });
+        return (state, action) => action.type === resetEventType ? initialState : reducer(state, action);
+    }
+}
+
+function bindActionPayload(type, initialValue = null) {
+    const reducer = (state = initialValue, action) => action.type === type && !action.error ? action.payload : state;
+    reducer.resetOn = resetEventType => resetOn(resetEventType)(reducer);
+    return reducer;
+}
+
 export const reducer = combineReducers({
-    googleAvailable: (state = false, action) => state,
-    facebookAvailable: (state = false, action) => state,
-    localUserIdentity: (state = null, action) => state,
+    googleAvailable: bindActionPayload("IdentityStore/googleAvailable", false),
+    facebookAvailable: bindActionPayload("IdentityStore/facebookAvailable", false),
+    localUserIdentity: bindActionPayload("IdentityStore/localUserIdentity", null),
 });
 
 export const realms = {
@@ -25,8 +38,11 @@ export const realms = {
 };
 
 export const actions = dispatch => ({
-    begin() {
+    begin(identityStore) {
         Object.values(realms).forEach(p => p.begin());
+        identityStore.googleAvailable.listen(v => dispatch({ type: "IdentityStore/googleAvailable", payload: v }));
+        identityStore.facebookAvailable.listen(v => dispatch({ type: "IdentityStore/facebookAvailable", payload: v }));
+        identityStore.localUserIdentity.listen(v => dispatch({ type: "IdentityStore/localUserIdentity", payload: v }));
     }
 });
 

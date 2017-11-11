@@ -24,6 +24,8 @@ if (process.env.NODE_ENV !== "production") {
     window.STORES = stores;
 }
 
+identityActions(redux.dispatch).begin(stores.identity);
+
 const componentRootElt = document.createElement("div");
 document.body.appendChild(componentRootElt);
 
@@ -38,5 +40,3 @@ document.body.appendChild(componentRootElt);
 })("Roboto", "sans-serif");
 
 ReactDOM.render(<Provider store={redux}><Root /></Provider>, componentRootElt);
-
-identityActions(redux.dispatch).begin();
