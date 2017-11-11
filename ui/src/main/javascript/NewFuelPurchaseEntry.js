@@ -23,10 +23,12 @@ class NewFuelPurchaseEntry extends React.Component {
         this.state = this._defaultState;
     }
     render() {
-        const currencyDefinition = currencies[this.props.preferences.currency] || { symbol: this.props.preferences.currency, places: 2 };
+        const { preferences: { currency, fuel_volume_unit: fuelVolumeUnit, distance_unit: distanceUnit } } = this.props;
+
+        const currencyDefinition = currencies[currency] || { symbol: currency, places: 2 };
         const costLabel = "Cost (" + currencyDefinition.symbol + ")";
-        const fuelVolumeLabel = "Fuel volume (" + formatVolumeUnit(this.props.preferences.fuel_volume_unit) + ")";
-        const odoLabel = "Odometer reading (" + formatDistanceUnit(this.props.preferences.distance_unit) + ")";
+        const fuelVolumeLabel = "Fuel volume (" + formatVolumeUnit(fuelVolumeUnit) + ")";
+        const odoLabel = "Odometer reading (" + formatDistanceUnit(distanceUnit) + ")";
 
         return <div className="col-sm-4">
             <h2>Enter purchase</h2>
