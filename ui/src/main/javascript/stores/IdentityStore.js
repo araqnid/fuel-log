@@ -1,3 +1,4 @@
+import {combineReducers} from "redux";
 import {Datum, StoreBase} from "../util/Stores";
 import {logFactory} from "../util/ConsoleLog";
 import GoogleIdentityProvider from "./GoogleIdentityProvider";
@@ -12,10 +13,27 @@ import FacebookIdentityProvider from "./FacebookIdentityProvider";
 
 const log = logFactory("IdentityStore");
 
+export const reducer = combineReducers({
+    googleAvailable: (state = false, action) => state,
+    facebookAvailable: (state = false, action) => state,
+    localUserIdentity: (state = null, action) => state,
+});
+
+export const realms = {
+    GOOGLE: new GoogleIdentityProvider(),
+    FACEBOOK: new FacebookIdentityProvider()
+};
+
+export const actions = dispatch => ({
+    begin() {
+        Object.values(realms).forEach(p => p.begin());
+    }
+});
+
 export default class IdentityStore extends StoreBase {
     constructor() {
         super();
-        this._realmProviders = {GOOGLE: new GoogleIdentityProvider(), FACEBOOK: new FacebookIdentityProvider()};
+        this._realmProviders = realms;
         this._localUserIdentity = new Datum(this, 'localUserIdentity');
         this._googleAvailable = new Datum(this, 'googleAvailable');
         this._facebookAvailable = new Datum(this, 'facebookAvailable');

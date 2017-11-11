@@ -1,7 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import {createStore} from "redux";
+import {Provider} from "react-redux";
 import Root from "./Root";
+import reducers from "./reducers";
 import * as stores from "./stores";
+import {actions as identityActions} from "./stores/IdentityStore";
+
+const redux = createStore(reducers, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
+
+if (process.env.NODE_ENV !== "production") {
+    window.REDUX = redux;
+    console.log("Redux store available as REDUX");
+}
 
 Object.values(stores).forEach(store => {
     if (process.env.NODE_ENV !== "production") console.log("starting store", store);
@@ -26,4 +37,6 @@ document.body.appendChild(componentRootElt);
     componentRootElt.style.cssText = "font-family: " + fontFamily + ", " + fallback;
 })("Roboto", "sans-serif");
 
-ReactDOM.render(React.createElement(Root), componentRootElt);
+ReactDOM.render(<Provider store={redux}><Root /></Provider>, componentRootElt);
+
+identityActions(redux.dispatch).begin();

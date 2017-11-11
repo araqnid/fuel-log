@@ -26,7 +26,9 @@
     "nanoajax": "0.4.3",
     "js-joda": "1.5.1",
     "styled-components": "2.1.2",
-    "axios": "0.17.0"
+    "axios": "0.17.0",
+    "redux": "3.7.2",
+    "react-redux": "5.0.6"
   },
   "devDependencies": {
     "favicons-webpack-plugin": "0.0.7"

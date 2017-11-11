@@ -1,5 +1,10 @@
 import {Datum, StoreBase} from "../util/Stores";
 
+export const reducer = (state = null, action) => state;
+
+export const actions = dispatch => ({
+});
+
 export default class PurchasesStore extends StoreBase {
     constructor(identity) {
         super();
