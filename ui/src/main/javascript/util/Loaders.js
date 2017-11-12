@@ -1,6 +1,7 @@
 import React from "react";
 import _ from "lodash";
 import axios from "axios";
+import PropTypes from "prop-types";
 
 const INITIAL = Symbol("INITIAL");
 const RUNNING = Symbol("RUNNING");
@@ -222,6 +223,73 @@ export function withLoaders(resetState, shouldComponentReload, createLoaders) {
         if (process.env.NODE_ENV !== "production") {
             wrapper.displayName = "withLoaders(" + (WrappedComponent.displayName || WrappedComponent.name || "Component") + ")";
         }
+
+        return wrapper;
+    };
+}
+
+// https://facebook.github.io/react/docs/higher-order-components.html
+export function withLoadersForRedux(actionPrefix, shouldComponentReload, createLoaders) {
+    const reloadPredicate = implementShouldComponentReload(shouldComponentReload);
+
+    return WrappedComponent => {
+        const wrapper = class extends React.Component {
+            constructor(props) {
+                super(props);
+                this._loader = null;
+            }
+
+            componentDidMount() {
+                this._beginLoading(this.props);
+            }
+
+            componentWillReceiveProps(newProps) {
+                if (reloadPredicate(this.props, newProps)) {
+                    this._abortLoading();
+                    this._beginLoading(newProps);
+                }
+            }
+
+            componentWillUnmount() {
+                this._abortLoading();
+            }
+
+            render() {
+                return <WrappedComponent { ...this.props } />;
+            }
+
+            _beginLoading(props) {
+                if (this._loader) return;
+                const autoDispatch = subEvent => {
+                    if (_.isArray(subEvent)) {
+                        return subEvent.reduce((dispatchers, subEventName) => ({ ...dispatchers, [subEventName]: autoDispatch(subEventName) }), {});
+                    }
+                    else {
+                        return payload => {
+                            this.props.dispatch({ type: `${actionPrefix}/${subEvent}`, payload });
+                        };
+                    }
+                };
+                const newLoaders = createLoaders(props, autoDispatch);
+                props.dispatch({ type: `${actionPrefix}/_reset` });
+                this._loader = _.isArray(newLoaders) ? combineLoaders(newLoaders) : newLoaders;
+                this._loader.begin();
+            }
+
+            _abortLoading() {
+                if (!this._loader) return;
+                this._loader.abort();
+                this._loader = null;
+            }
+        };
+
+        if (process.env.NODE_ENV !== "production") {
+            wrapper.displayName = "withLoadersForRedux(" + (WrappedComponent.displayName || WrappedComponent.name || "Component") + ")";
+        }
+
+        wrapper.propTypes = {
+            dispatch: PropTypes.func.isRequired
+        };
 
         return wrapper;
     };
