@@ -7,6 +7,7 @@ import {purchases} from "./stores";
 const currencies = { 'GBP': { symbol: '£', places: 2 } };
 const volumeUnits = { LITRES: "l", GALLONS: "gal" };
 const distanceUnits = { MILES: "miles", KM: "km" };
+const apiKey = "AIzaSyBcWvaL2aftj6o1PK3Jq5Hqm2lgUoh6amk";
 
 function formatVolumeUnit(key) {
     return volumeUnits[key] || key + "?";
@@ -30,7 +31,7 @@ export const reducer = combineReducers({
 
 const GeoLocation = ({latitude, longitude}) => (
     <div>Geo-location available:
-        <img src={"https://maps.googleapis.com/maps/api/staticmap?center=" + latitude + "," + longitude + "&zoom=13&size=300x300&sensor=false"} />
+        <img src={"https://maps.googleapis.com/maps/api/staticmap?center=" + latitude + "," + longitude + "&zoom=13&size=300x300&sensor=false&key=" + apiKey} />
     </div>
 );
 
