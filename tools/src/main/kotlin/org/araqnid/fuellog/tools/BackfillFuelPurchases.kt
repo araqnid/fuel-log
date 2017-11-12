@@ -51,7 +51,7 @@ object BackfillFuelPurchases {
             val parts = Splitter.onPattern("[\t ]+").limit(6).splitToList(line)
             val timestamp = LocalDate.parse(parts[0]).atStartOfDay(ZoneId.of("Europe/London")).toInstant()
             val purchaseEvent = FuelPurchased(timestamp, userId, parts[2].toDouble(), MonetaryAmount("GBP", parts[4].toDouble()),
-                    parts[1].toDouble() * KM_PER_MILE, parts[3].isYes(), parts[5])
+                    parts[1].toDouble() * KM_PER_MILE, parts[3].isYes(), parts[5], null)
             val purchaseId = Generators.nameBasedGenerator(NameBasedGenerator.NAMESPACE_URL)
                     .generate("https://fuel.araqnid.org/fuel/?user_id=$userId&timestamp=${purchaseEvent.timestamp}&odometer=${purchaseEvent.odometer}")
             FilesystemEventSource(eventsDirectory, Clock.fixed(timestamp, ZoneId.of("Europe/London")))
