@@ -29,7 +29,8 @@ module.exports = {
         port: 3000,
         proxy: {
             "/_api": "http://localhost:64064"
-        }
+        },
+        hot: true
     },
     module: {
         rules: [
@@ -62,18 +63,32 @@ module.exports = {
             "bootstrap$": "bootstrap/dist/js/bootstrap.js"
         }
     },
-    plugins: [
-        new webpack.ProvidePlugin({
-            // required by bootstrap
-            jQuery: "jquery"
-        }),
-        new HtmlWebpackPlugin({
-            title: "Fuel Log",
-            template: "./template.html.ejs"
-        }),
-        new FaviconsWebpackPlugin({
-            logo: "./if_fuel_103260.png",
-            title: "Fuel Log"
-        })
-    ]
+    plugins: (function() {
+        const plugins = [
+            new webpack.ProvidePlugin({
+                // required by bootstrap
+                jQuery: "jquery"
+            }),
+            new HtmlWebpackPlugin({
+                title: "Fuel Log",
+                template: "template.html.ejs"
+            }),
+            new FaviconsWebpackPlugin({
+                logo: "./if_fuel_103260.png",
+                title: "Fuel Log"
+            })
+        ];
+
+        if (production) {
+
+        }
+        else {
+            plugins.push(
+                new webpack.NamedModulesPlugin(),
+                new webpack.HotModuleReplacementPlugin()
+            );
+        }
+
+        return plugins;
+    })()
 };

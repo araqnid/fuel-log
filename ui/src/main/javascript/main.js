@@ -43,4 +43,21 @@ document.body.appendChild(componentRootElt);
     componentRootElt.style.cssText = "font-family: " + fontFamily + ", " + fallback;
 })("Roboto", "sans-serif");
 
-ReactDOM.render(<Provider store={redux}><Root /></Provider>, componentRootElt);
+let RootComponent = Root;
+
+function render() {
+    ReactDOM.render(<Provider store={redux}><RootComponent /></Provider>, componentRootElt);
+}
+
+if (process.env.NODE_ENV !== "production" && module.hot) {
+    module.hot.accept('./Root.js', () => {
+        RootComponent = require("./Root.js")["default"];
+        render();
+    });
+    module.hot.accept('./reducers.js', () => {
+        const updatedReducers = require("./reducers.js")["default"];
+        redux.replaceReducer(updatedReducers);
+    });
+}
+
+render();
