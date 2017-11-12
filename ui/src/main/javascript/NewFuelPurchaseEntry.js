@@ -28,6 +28,12 @@ export const reducer = combineReducers({
     registering: resetOn("NewFuelPurchaseEntry/_reset")(bindActionPayload("NewFuelPurchaseEntry/_registering", false))
 });
 
+const GeoLocation = ({latitude, longitude}) => (
+    <div>Geo-location available:
+        <img src={"https://maps.googleapis.com/maps/api/staticmap?center=" + latitude + "," + longitude + "&zoom=13&size=300x300&sensor=false"} />
+    </div>
+);
+
 class NewFuelPurchaseEntry extends React.Component {
     constructor() {
         super();
@@ -81,11 +87,9 @@ class NewFuelPurchaseEntry extends React.Component {
                            name="location" id="inputLocation" value={newPurchase.location} placeholder="Tesco Elmers End" />
                 </div>
 
-                <div>
-                    {geoLocation ? "geo-location available" : "no geo-location"}
-                </div>
-
                 <button type="submit" className="btn btn-primary" disabled={registering}>Submit</button>
+
+                {geoLocation ? <GeoLocation latitude={geoLocation.latitude} longitude={geoLocation.longitude} /> : null}
             </form>
         </div>;
     }
