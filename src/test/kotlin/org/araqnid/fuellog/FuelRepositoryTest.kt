@@ -4,7 +4,12 @@ import com.timgroup.clocks.testing.ManualClock
 import org.araqnid.eventstore.InMemoryEventSource
 import org.araqnid.eventstore.NoSuchStreamException
 import org.araqnid.eventstore.StreamId
-import org.araqnid.fuellog.events.*
+import org.araqnid.fuellog.events.Coordinates
+import org.araqnid.fuellog.events.Event
+import org.araqnid.fuellog.events.EventCodecs
+import org.araqnid.fuellog.events.EventMetadata
+import org.araqnid.fuellog.events.FuelPurchased
+import org.araqnid.fuellog.events.MonetaryAmount
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.equalTo
@@ -13,7 +18,7 @@ import org.junit.Test
 import org.junit.rules.ExpectedException
 import java.time.Clock
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 class FuelRepositoryTest {
     @Rule @JvmField val thrown: ExpectedException = ExpectedException.none()
@@ -33,9 +38,10 @@ class FuelRepositoryTest {
         val amount = 62.13
         val odometer = 111023.0
         val location = "Someplace"
+        val coords = Coordinates(51.4, 0.02)
 
         submit(StreamId("fuel", purchaseId.toString()),
-                FuelPurchased(timestamp, userId, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location))
+                FuelPurchased(timestamp, userId, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location, coords))
 
         val purchase = repo[purchaseId]
         assertThat(purchase.fuelPurchaseId, equalTo(purchaseId))
@@ -44,6 +50,7 @@ class FuelRepositoryTest {
         assertThat(purchase.fuelVolume, equalTo(fuelVolume))
         assertThat(purchase.odometer, equalTo(odometer))
         assertThat(purchase.locationString, equalTo(location))
+        assertThat(purchase.geoLocation, equalTo(coords))
     }
 
     @Test fun unknown_purchase_throws_error() {
@@ -65,11 +72,11 @@ class FuelRepositoryTest {
         val location = "Someplace"
 
         submit(StreamId("fuel", purchaseId1.toString()),
-                FuelPurchased(Instant.parse("2017-06-08T16:54:00Z"), userId1, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location))
+                FuelPurchased(Instant.parse("2017-06-08T16:54:00Z"), userId1, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location, null))
         submit(StreamId("fuel", purchaseId2.toString()),
-                FuelPurchased(Instant.parse("2017-06-09T16:54:00Z"), userId1, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location))
+                FuelPurchased(Instant.parse("2017-06-09T16:54:00Z"), userId1, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location, null))
         submit(StreamId("fuel", purchaseId3.toString()),
-                FuelPurchased(Instant.parse("2017-06-10T16:54:00Z"), userId2, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location))
+                FuelPurchased(Instant.parse("2017-06-10T16:54:00Z"), userId2, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location, null))
 
         assertThat(repo.byUserId(userId1).map { it.fuelPurchaseId }, containsInAnyOrder(purchaseId1, purchaseId2))
         assertThat(repo.byUserId(userId2).map { it.fuelPurchaseId }, containsInAnyOrder(purchaseId3))

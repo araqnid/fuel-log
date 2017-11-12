@@ -16,24 +16,28 @@ function formatDistanceUnit(key) {
     return distanceUnits[key] || key + "?";
 }
 
-export const reducer = resetOn("NewFuelPurchaseEntry/_reset")(combineReducers({
-    fuelVolume: bindActionPayload("NewFuelPurchaseEntry/fuelVolume", ""),
-    odometer: bindActionPayload("NewFuelPurchaseEntry/odometer", ""),
-    location: bindActionPayload("NewFuelPurchaseEntry/location", ""),
-    cost: bindActionPayload("NewFuelPurchaseEntry/cost", ""),
-    fullFill: bindActionPayload("NewFuelPurchaseEntry/fullFill", false),
-    _registering: bindActionPayload("NewFuelPurchaseEntry/_registering", false)
-}));
+export const reducer = combineReducers({
+    attributes: resetOn("NewFuelPurchaseEntry/_reset")(combineReducers({
+        fuelVolume: bindActionPayload("NewFuelPurchaseEntry/fuelVolume", ""),
+        odometer: bindActionPayload("NewFuelPurchaseEntry/odometer", ""),
+        location: bindActionPayload("NewFuelPurchaseEntry/location", ""),
+        cost: bindActionPayload("NewFuelPurchaseEntry/cost", ""),
+        fullFill: bindActionPayload("NewFuelPurchaseEntry/fullFill", false)
+    })),
+    geoLocation: bindActionPayload("NewFuelPurchaseEntry/geolocation", null),
+    registering: resetOn("NewFuelPurchaseEntry/_reset")(bindActionPayload("NewFuelPurchaseEntry/_registering", false))
+});
 
 class NewFuelPurchaseEntry extends React.Component {
     constructor() {
         super();
         this._onSubmit = this.onSubmit.bind(this);
         this._onInputChange = this.onInputChange.bind(this);
+        this._geolocationWatchId = null;
     }
 
     render() {
-        const { preferences: { currency, fuel_volume_unit: fuelVolumeUnit, distance_unit: distanceUnit }, newPurchase } = this.props;
+        const { preferences: { currency, fuel_volume_unit: fuelVolumeUnit, distance_unit: distanceUnit }, newPurchase, geoLocation, registering } = this.props;
 
         const currencyDefinition = currencies[currency] || { symbol: currency, places: 2 };
         const costLabel = "Cost (" + currencyDefinition.symbol + ")";
@@ -77,7 +81,11 @@ class NewFuelPurchaseEntry extends React.Component {
                            name="location" id="inputLocation" value={newPurchase.location} placeholder="Tesco Elmers End" />
                 </div>
 
-                <button type="submit" className="btn btn-primary" disabled={newPurchase.registering}>Submit</button>
+                <div>
+                    {geoLocation ? "geo-location available" : "no geo-location"}
+                </div>
+
+                <button type="submit" className="btn btn-primary" disabled={registering}>Submit</button>
             </form>
         </div>;
     }
@@ -90,9 +98,18 @@ class NewFuelPurchaseEntry extends React.Component {
             this.props.dispatch({ type: "NewFuelPurchaseEntry/purchaseSubmitted", payload: exception, error: true });
             this.props.dispatch({ type: "NewFuelPurchaseEntry/_registering", payload: false });
         });
+        if (navigator.geolocation) {
+            const options = {
+                maximumAge: 60000
+            };
+            this._geolocationWatchId = navigator.geolocation.watchPosition(this.onGeolocationResult.bind(this), this.onGeolocationError.bind(this), options);
+        }
     }
     componentWillUnmount() {
         purchases.unsubscribeAll(this);
+        if (this._geolocationWatchId) {
+            navigator.geolocation.clearWatch(this._geolocationWatchId);
+        }
     }
     onInputChange(e) {
         const target = e.target;
@@ -120,11 +137,18 @@ class NewFuelPurchaseEntry extends React.Component {
             },
             fuel_volume: newPurchase.fuelVolume * fuelVolumeFactor,
             full_fill: newPurchase.fullFill,
-            location: newPurchase.location
+            location: newPurchase.location,
+            geo_location: this.props.geoLocation
         });
+    }
+    onGeolocationResult(position) {
+        this.props.dispatch({ type: "NewFuelPurchaseEntry/geolocation", payload: { latitude: position.coords.latitude, longitude: position.coords.longitude } });
+    }
+    onGeolocationError(error) {
+        this.props.dispatch({ type: "NewFuelPurchaseEntry/geolocation", payload: error, error: true });
     }
 }
 
 export default connect(
-    ({ preferences: { preferences }, newPurchase }) => ({ preferences, newPurchase })
+    ({ preferences: { preferences }, newPurchase: { attributes: newPurchase, geoLocation, registering } }) => ({ preferences, newPurchase, geoLocation, registering })
 )(NewFuelPurchaseEntry);

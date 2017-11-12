@@ -4,6 +4,7 @@ import org.araqnid.eventstore.EventStreamWriter
 import org.araqnid.eventstore.NoSuchStreamException
 import org.araqnid.eventstore.StreamId
 import org.araqnid.eventstore.emptyStreamEventNumber
+import org.araqnid.fuellog.events.Coordinates
 import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
@@ -58,10 +59,12 @@ class FuelResources @Inject constructor(val streamWriter: EventStreamWriter, val
                 cost = fuelPurchased.cost,
                 odometer = fuelPurchased.odometer,
                 fullFill = fuelPurchased.fullFill,
-                location = fuelPurchased.location)
+                location = fuelPurchased.location,
+                geoLocation = fuelPurchased.geoLocation)
         streamWriter.write(streamId, emptyStreamEventNumber, listOf(EventCodecs.encode(event, RequestMetadata.fromServletRequest(servletRequest))))
         return Response.created(uriInfo.requestUriBuilder.path(purchaseId.toString()).build()).build()
     }
 
-    data class NewFuelPurchase(val fuelVolume: Double, val cost: MonetaryAmount, val location: String, val odometer: Double, val fullFill: Boolean)
+    data class NewFuelPurchase(val fuelVolume: Double, val cost: MonetaryAmount, val location: String, val odometer: Double, val fullFill: Boolean,
+                               val geoLocation: Coordinates?)
 }

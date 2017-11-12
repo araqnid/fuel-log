@@ -10,6 +10,8 @@ data class FuelPurchased(
         val cost: MonetaryAmount,
         val odometer: Double /* km */,
         val fullFill: Boolean,
-        val location: String) : Event
+        val location: String,
+        val geoLocation: Coordinates?) : Event
 
 data class MonetaryAmount(val currency: String, val amount: Double)
+data class Coordinates(val latitude: Double, val longitude: Double) /* degrees */

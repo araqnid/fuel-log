@@ -15,6 +15,7 @@ import org.araqnid.eventstore.EventStreamWriter
 import org.araqnid.eventstore.StreamId
 import org.araqnid.fuellog.FuelRecord
 import org.araqnid.fuellog.FuelResources
+import org.araqnid.fuellog.events.Coordinates
 import org.araqnid.fuellog.events.Event
 import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.EventMetadata
@@ -55,7 +56,8 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                         MonetaryAmount("GBP", 100.0),
                         110000.0,
                         true,
-                        "Some place"
+                        "Some place",
+                        geoLocation = Coordinates(51.2, 0.02)
                 ), emptyMetadata)
         ))
 
@@ -65,6 +67,7 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
         assertThat(fuelRecord.userId, equalTo(user.userId))
         assertThat(fuelRecord.fuelPurchaseId, equalTo(purchaseId))
         assertThat(fuelRecord.fuelVolume, equalTo(50.0))
+        assertThat(fuelRecord.geoLocation, equalTo(Coordinates(51.2, 0.02)))
     }
 
     @Test fun post_new_fuel_purchase() {
@@ -75,7 +78,8 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 cost = MonetaryAmount("GBP", 99.87),
                 odometer = 111234.0,
                 fullFill = true,
-                location = "Somewhere"
+                location = "Somewhere",
+                geoLocation = Coordinates(51.2, 0.02)
         )
 
         execute(HttpPost("/_api/fuel").apply { entity = JacksonEntity(newFuelPurchase, objectMapper) })
@@ -88,7 +92,8 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 cost = MonetaryAmount("GBP", 99.87),
                 odometer = 111234.0,
                 fullFill = true,
-                location = "Somewhere")
+                location = "Somewhere",
+                geoLocation = Coordinates(51.2, 0.02))
 
         assertThat(serverEvents(), contains(
                 DecodedEvent.matcher(equalTo("fuel"), equalTo(fuelPurchasedEvent), hasEntry("client_ip", "127.0.0.1"))
@@ -107,7 +112,8 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 cost = MonetaryAmount("GBP", 99.87),
                 odometer = 111234.0,
                 fullFill = true,
-                location = "Somewhere"
+                location = "Somewhere",
+                geoLocation = null
         )
 
         execute(HttpPost(server.uri("/_api/fuel")).apply {
@@ -127,7 +133,8 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                         cost = MonetaryAmount("GBP", 99.87),
                         odometer = 111234.0,
                         fullFill = true,
-                        location = "Somewhere")
+                        location = "Somewhere",
+                        geoLocation = null)
                         , emptyMetadata)
         ))
 
@@ -147,7 +154,8 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                         MonetaryAmount("GBP", 100.0),
                         110000.0,
                         true,
-                        "Some place"
+                        "Some place",
+                        geoLocation = null
                 ), emptyMetadata)
         ))
 
