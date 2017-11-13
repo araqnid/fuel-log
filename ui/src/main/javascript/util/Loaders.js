@@ -55,7 +55,7 @@ export class AjaxLoaderBase extends LoaderBase {
         return promise;
     }
 
-    callDelete(url, requestConfig) {
+    ["delete"](url, requestConfig) {
         const cancelSource = axios.CancelToken.source();
         const promise = axios.delete(url, { ...requestConfig, cancelToken: cancelSource.token });
         this._registerCancellation(cancelSource, promise);

@@ -69,7 +69,7 @@ export default class IdentityStore extends StoreBase {
                         else {
                             log.info("User details not confirmed");
                             this._localUserIdentity.value = null;
-                            return this.callDelete("_api/user/identity").then(() => null);
+                            return this.delete("_api/user/identity").then(() => null);
                         }
                     });
                 }
@@ -115,7 +115,7 @@ export default class IdentityStore extends StoreBase {
         if (!userInfo) return;
         log.info("Sign out", userInfo);
         this._realmProviders[userInfo.realm].signOut()
-            .then(() => this.callDelete("/_api/user/identity"))
+            .then(() => this.delete("/_api/user/identity"))
             .then(() => {
                 this._localUserIdentity.value = null;
             });
