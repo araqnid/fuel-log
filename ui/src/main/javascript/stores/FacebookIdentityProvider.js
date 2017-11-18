@@ -48,7 +48,7 @@ export default class FacebookIdentityProvider {
 
     autoLogin() {
         log.info("Go ahead with auto-login");
-        return this._pullUserData();
+        return this._pullUserData(FB.getAuthResponse());
     }
 
     confirmUser(userInfo) {
@@ -59,7 +59,7 @@ export default class FacebookIdentityProvider {
             .then(facebookStatus => {
                 log.info("Got Facebook user", facebookStatus);
                 if (facebookStatus.status === "connected") {
-                    return this._pullUserData();
+                    return this._pullUserData(facebookStatus.authResponse);
                 }
                 else {
                     return null;
@@ -71,7 +71,7 @@ export default class FacebookIdentityProvider {
         return this._fbLogin().then(facebookStatus => {
             log.info("Signed in; got Facebook status", facebookStatus);
             if (facebookStatus.status === "connected") {
-                return this._pullUserData();
+                return this._pullUserData(facebookStatus.authResponse);
             }
             else {
                 return null;
@@ -84,10 +84,10 @@ export default class FacebookIdentityProvider {
         return this._fbLogout();
     }
 
-    _pullUserData() {
+    _pullUserData(authResponse) {
         return Promise.all([this._fbApi("/me"), this._fbApi("/me/picture")]).then(([me, myPicture]) => {
-            log.info("me", me, myPicture);
-            return axios.post('/_api/user/identity/facebook', serialise({ id: me.id, name: me.name, picture: myPicture.data.url })).then(({data}) => data)
+            log.info("me", me, myPicture, authResponse);
+            return axios.post('/_api/user/identity/facebook', serialise({ id: me.id, name: me.name, token: authResponse.accessToken, picture: myPicture.data.url })).then(({data}) => data)
         });
     }
 
