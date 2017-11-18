@@ -85,7 +85,17 @@ export default class FacebookIdentityProvider {
 
     _associate(authResponse) {
         return axios.post('/_api/user/identity/facebook', authResponse.accessToken, { headers: { "Content-Type": "text/plain" } })
-            .then(({data}) => data);
+            .then(({data}) => {
+                return this._fbApi("/me/picture").then(({ data: pictureData }) => {
+                    if (pictureData.url !== data.picture) {
+                        log.info("got a different picture over JS API", data.picture, pictureData.url);
+                        return { ...data, picture: pictureData.url };
+                    }
+                    else {
+                        return data;
+                    }
+                })
+            });
     }
 
     _fbGetLoginStatus() {
