@@ -1,24 +1,19 @@
 package org.araqnid.fuellog
 
 import com.fasterxml.jackson.annotation.JsonAnySetter
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpUriRequest
-import org.apache.http.client.utils.URIBuilder
 import org.apache.http.concurrent.FutureCallback
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.nio.client.HttpAsyncClient
-import org.apache.http.util.EntityUtils
 import org.araqnid.fuellog.events.FacebookProfileData
 import org.araqnid.fuellog.events.GoogleProfileData
 import org.slf4j.LoggerFactory
@@ -86,34 +81,23 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     fun associateFacebookUser(@FormParam("id") identifier: String, @FormParam("name") name: String, @FormParam("picture") picture: URI,
                               @FormParam("token") token: String,
                               @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
+        FacebookClient(facebookClientConfig, asyncHttpClient)
+                .validateUserAccessToken(token)
+                .thenApply { parsed ->
+                    if (parsed.userId != identifier)
+                        throw BadRequestException("Different user ID in request compared to access token")
 
-        fetchFacebookAppToken().thenCompose { appToken ->
-            val request = HttpGet(URIBuilder(URI.create("https://graph.facebook.com/debug_token"))
-                    .setParameters(listOf(
-                            BasicNameValuePair("input_token", token),
-                            BasicNameValuePair("access_token", appToken) // or "${facebookClientConfig.id}|${facebookClientConfig.secret}"
-                    ))
-                    .build())
-
-            executeAsyncHttpRequest(request)
-        }.thenApply { response ->
-            if (response.statusLine.statusCode != HttpStatus.SC_OK) throw BadRequestException("Failed to validate Facebook access token: ${response.statusLine}")
-
-            val content = EntityUtils.toString(response.entity)
-            val parsed = objectMapperForFacebookEndpoint
-                    .readerFor(FacebookDebugTokenResponse::class.java)
-                    .withRootName("data")
-                    .readValue<FacebookDebugTokenResponse>(content)
-
-            if (parsed.userId != identifier)
-                throw BadRequestException("Different user ID in request compared to access token")
-
-            val user = associateUser(servletRequest, URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/$identifier"))
-            user.name = name
-            user.facebookProfileData = FacebookProfileData(picture)
-            userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
-            UserInfo.from(user)
-        }.thenRespondTo(asyncResponse)
+                    val user = associateUser(servletRequest, URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/$identifier"))
+                    user.name = name
+                    user.facebookProfileData = FacebookProfileData(picture)
+                    userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
+                    UserInfo.from(user)
+                }
+                .exceptionally { ex ->
+                    logger.warn("Failed to verify Facebook token", ex)
+                    throw BadRequestException("Failed to verify Facebook token")
+                }
+                .thenRespondTo(asyncResponse)
     }
 
     @POST
@@ -131,8 +115,8 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
         executeAsyncHttpRequest(request).thenApply { response ->
             if (response.statusLine.statusCode != HttpStatus.SC_OK)
                 throw BadRequestException("$tokenInfoUri: ${response.statusLine}")
-            val tokenInfo = objectMapperForGoogleEndpoint.readerFor(TokenInfo::class.java)
-                    .readValue<TokenInfo>(response.entity.content)!!
+            val tokenInfo = objectMapperForGoogleEndpoint.readerFor(GoogleTokenInfo::class.java)
+                    .readValue<GoogleTokenInfo>(response.entity.content)!!
             if (tokenInfo.clientId != googleClientConfig.id)
                 throw BadRequestException("Token is not for our client ID: $tokenInfo")
             if (tokenInfo.expiresAt < Instant.now(clock))
@@ -178,23 +162,18 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     private val objectMapperForGoogleEndpoint = ObjectMapper()
             .registerModule(KotlinModule())
             .registerModule(JavaTimeModule())
-
-    private val objectMapperForFacebookEndpoint = ObjectMapper()
-            .registerModule(KotlinModule())
-            .registerModule(JavaTimeModule())
             .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
 
-    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy::class)
-    data class TokenInfo(val name: String,
-                         @JsonProperty("iat") val issuedAt: Instant,
-                         @JsonProperty("exp") val expiresAt: Instant,
-                         @JsonProperty("aud") val clientId: String,
-                         @JsonProperty("sub") val userId: String,
-                         @JsonProperty("iss") val issuedBy: String,
-                         val givenName: String?,
-                         val familyName: String?,
-                         val picture: URI?,
-                         private val others: MutableMap<String, Any> = LinkedHashMap<String, Any>()) {
+    data class GoogleTokenInfo(val name: String,
+                               @JsonProperty("iat") val issuedAt: Instant,
+                               @JsonProperty("exp") val expiresAt: Instant,
+                               @JsonProperty("aud") val clientId: String,
+                               @JsonProperty("sub") val userId: String,
+                               @JsonProperty("iss") val issuedBy: String,
+                               val givenName: String?,
+                               val familyName: String?,
+                               val picture: URI?,
+                               private val others: MutableMap<String, Any> = LinkedHashMap<String, Any>()) {
         @JsonAnySetter
         fun addOther(name: String, value: Any) {
             others[name] = value
@@ -202,12 +181,6 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
 
         fun toProfileData(): GoogleProfileData = GoogleProfileData(givenName, familyName, picture)
     }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    data class FacebookAccessTokenResponse(val accessToken: String, val tokenType: String)
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    data class FacebookDebugTokenResponse(val userId: String, val type: String, val appId: String, val application: String,
-                                          val expires_at: Instant, val isValid: Boolean, val scopes: Set<String>)
 
     private fun <T> apacheCallback(target: CompletableFuture<T>) = object : FutureCallback<T> {
         override fun completed(result: T) {
@@ -227,21 +200,6 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
         return CompletableFuture<HttpResponse>().apply {
             asyncHttpClient.execute(request, apacheCallback(this))
         }.withContextData()
-    }
-
-    private fun fetchFacebookAppToken(): CompletionStage<String> {
-        val request = HttpGet(URIBuilder(URI.create("https://graph.facebook.com/oauth/access_token")).setParameters(listOf(
-                BasicNameValuePair("client_id", facebookClientConfig.id),
-                BasicNameValuePair("client_secret", facebookClientConfig.secret),
-                BasicNameValuePair("grant_type", "client_credentials")
-        )).build())
-        return executeAsyncHttpRequest(request).thenApply { response ->
-            if (response.statusLine.statusCode != HttpStatus.SC_OK) throw RuntimeException("Failed to fetch app access token from Facebook: ${response.statusLine}")
-            objectMapperForFacebookEndpoint
-                    .readerFor(FacebookAccessTokenResponse::class.java)
-                    .readValue<FacebookAccessTokenResponse>(response.entity.content)
-                    .accessToken
-        }
     }
 
     private fun <T> CompletionStage<T>.thenRespondTo(asyncResponse: AsyncResponse): CompletionStage<T> {
