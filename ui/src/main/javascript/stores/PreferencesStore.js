@@ -1,5 +1,4 @@
-import _ from "lodash";
-import {AjaxLoaderBase} from "../util/Loaders";
+import {AutoRefreshLoader} from "../util/Loaders";
 
 export const reducer = (state = { preferences: null, loadFailure: null }, action) => {
     switch (action.type) {
@@ -18,47 +17,6 @@ export const reducer = (state = { preferences: null, loadFailure: null }, action
             return state;
     }
 };
-
-class PreferencesLoader extends AjaxLoaderBase {
-    constructor({ foundData = _.noop, loadError = _.noop, finishedLoading = _.noop, startingRefresh = _.noop }) {
-        super();
-        this._sleeping = null;
-        this._refreshInterval = 30 * 1000;
-        this._dispatch = { foundData, loadError, finishedLoading, startingRefresh };
-    }
-
-    begin() {
-        super.begin();
-        this._beginRequest();
-    }
-
-    abort() {
-        if (this._sleeping) {
-            clearTimeout(this._sleeping);
-        }
-        super.abort();
-    }
-
-    _beginRequest() {
-        this.get("_api/user/preferences")
-            .then(({data}) => {
-                this._dispatch.foundData(data);
-            })
-            .catch((ex) => {
-                this._dispatch.loadError(ex);
-            })
-            .then(() => {
-                this._dispatch.finishedLoading();
-                this._sleeping = setTimeout(this._tick.bind(this), this._refreshInterval);
-            });
-    }
-
-    _tick() {
-        this._sleeping = null;
-        this._dispatch.startingRefresh();
-        this._beginRequest();
-    }
-}
 
 export default class PreferencesStore {
     constructor(redux) {
@@ -101,7 +59,7 @@ export default class PreferencesStore {
             }
             this._userId = nextUserId;
             if (nextUserId) {
-                this._loader = new PreferencesLoader({
+                this._loader = new AutoRefreshLoader("_api/user/preferences", 30 * 1000, {
                     foundData: data => {
                         this._redux.dispatch({ type: "PreferencesStore/loaded", payload: data });
                     },

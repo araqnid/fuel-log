@@ -123,6 +123,48 @@ export class OneShotLoader extends AjaxLoaderBase {
     }
 }
 
+export class AutoRefreshLoader extends AjaxLoaderBase {
+    constructor(url, refreshInterval, { foundData = _.noop, loadError = _.noop, finishedLoading = _.noop, startingRefresh = _.noop }) {
+        super();
+        this._url = url;
+        this._refreshInterval = refreshInterval;
+        this._sleeping = null;
+        this._dispatch = { foundData, loadError, finishedLoading, startingRefresh };
+    }
+
+    begin() {
+        super.begin();
+        this._beginRequest();
+    }
+
+    abort() {
+        if (this._sleeping) {
+            clearTimeout(this._sleeping);
+        }
+        super.abort();
+    }
+
+    _beginRequest() {
+        this.get(this._url)
+            .then(({data}) => {
+                this._dispatch.foundData(data);
+            })
+            .catch((ex) => {
+                this._dispatch.loadError(ex);
+            })
+            .then(() => {
+                this._dispatch.finishedLoading();
+                this._sleeping = setTimeout(this._tick.bind(this), this._refreshInterval);
+            });
+    }
+
+    _tick() {
+        this._sleeping = null;
+        this._dispatch.startingRefresh();
+        this._beginRequest();
+    }
+}
+
 export class DelegatingLoader extends LoaderBase {
     constructor() {
         super();
