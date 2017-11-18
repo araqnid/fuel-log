@@ -1,11 +1,10 @@
-import {StoreBase} from "../util/Stores";
+import axios from "axios";
 import {logFactory} from "../util/ConsoleLog";
 
 const log = logFactory("GoogleIdentityProvider");
 
-export default class GoogleIdentityProvider extends StoreBase {
+export default class GoogleIdentityProvider {
     constructor() {
-        super();
         this._available = false;
         this._availableListeners = [];
         this._authInitialised = __api_hooks.googleApi.promise
@@ -32,6 +31,12 @@ export default class GoogleIdentityProvider extends StoreBase {
             }, () => {
                 log.info("GoogleAuth initialisation failed");
             });
+    }
+
+    start() {
+    }
+
+    stop() {
     }
 
     onAvailable(listener) {
@@ -117,7 +122,7 @@ export default class GoogleIdentityProvider extends StoreBase {
     }
 
     _associate(idToken) {
-        return this.post('/_api/user/identity/google', idToken, { headers: { "Content-Type": "text/plain" } })
+        return axios.post('/_api/user/identity/google', idToken, { headers: { "Content-Type": "text/plain" } })
             .then(({data}) => data);
     }
 

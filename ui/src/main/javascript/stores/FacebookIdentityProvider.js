@@ -1,17 +1,22 @@
-import {StoreBase} from "../util/Stores";
+import axios from "axios";
 import {logFactory} from "../util/ConsoleLog";
 
 const log = logFactory("FacebookIdentityProvider");
 
-export default class FacebookIdentityProvider extends StoreBase {
+export default class FacebookIdentityProvider {
     constructor() {
-        super();
         this._available = false;
         this._availableListeners = [];
         this._fbSdkLoaded = __api_hooks.facebookSdk.promise
             .then(() => {
                 this._markAvailable();
             });
+    }
+
+    start() {
+    }
+
+    stop() {
     }
 
     onAvailable(listener) {
@@ -81,7 +86,7 @@ export default class FacebookIdentityProvider extends StoreBase {
     _pullUserData() {
         return Promise.all([this._fbApi("/me"), this._fbApi("/me/picture")]).then(([me, myPicture]) => {
             log.info("me", me, myPicture);
-            return this.post('/_api/user/identity/facebook', { id: me.id, name: me.name, picture: myPicture.data.url }).then(({data}) => data)
+            return axios.post('/_api/user/identity/facebook', { id: me.id, name: me.name, picture: myPicture.data.url }).then(({data}) => data)
         });
     }
 

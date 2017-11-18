@@ -6,6 +6,8 @@ import GoogleIdentityProvider from "./GoogleIdentityProvider";
 import FacebookIdentityProvider from "./FacebookIdentityProvider";
 
 // IdentityProvider interface:
+//  start() // void
+//  stop() // void
 //  probe() // Promise<Boolean>
 //  autoLogin() // Promise<LocalIdentity>
 //  confirmUser(userInfo) // Promise<LocalIdentity>
@@ -55,7 +57,7 @@ export default class IdentityStore {
         this._reduxUnsubscribe = this._redux.subscribe(this.onReduxAction.bind(this));
         this._realmProviders.GOOGLE.onAvailable(() => this.dispatch({ type: "IdentityStore/googleAvailable", payload: true }));
         this._realmProviders.FACEBOOK.onAvailable(() => this.dispatch({ type: "IdentityStore/facebookAvailable", payload: true }));
-        Object.values(this._realmProviders).forEach(p => p.begin());
+        Object.values(this._realmProviders).forEach(p => p.start());
         axios.get("_api/user/identity")
             .then(({data: {user_info: userInfo}}) => {
                 if (userInfo) {
@@ -111,7 +113,7 @@ export default class IdentityStore {
     }
 
     stop() {
-        Object.values(this._realmProviders).forEach(p => p.abort());
+        Object.values(this._realmProviders).forEach(p => p.stop());
         if (this._reduxUnsubscribe) {
             this._reduxUnsubscribe();
             this._reduxUnsubscribe = null;
