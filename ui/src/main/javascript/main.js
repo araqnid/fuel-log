@@ -7,7 +7,7 @@ import reducers from "./reducers";
 import * as stores from "./stores";
 import {actions as identityActions} from "./stores/IdentityStore";
 import {actions as purchasesActions} from "./stores/PurchasesStore";
-import {actions as preferencesActions} from "./stores/PreferencesStore";
+import PreferencesStore from "./stores/PreferencesStore";
 
 const redux = createStore(reducers, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
 
@@ -28,7 +28,8 @@ if (process.env.NODE_ENV !== "production") {
 
 identityActions(redux.dispatch).begin(stores.identity);
 purchasesActions(redux.dispatch).begin(stores.purchases);
-preferencesActions(redux.dispatch).begin(stores.preferences);
+
+new PreferencesStore(redux).begin();
 
 const componentRootElt = document.createElement("div");
 document.body.appendChild(componentRootElt);
