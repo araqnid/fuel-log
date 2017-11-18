@@ -59,9 +59,10 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
 
     @POST
     @Path("facebook")
+    @Consumes("text/plain")
     @Produces("application/json")
     @PermitAll
-    fun associateFacebookUser(@FormParam("token") token: String,
+    fun associateFacebookUser(token: String,
                               @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
         FacebookClient(facebookClientConfig, asyncHttpClient)
                 .fetchUsersOwnProfile(token)
