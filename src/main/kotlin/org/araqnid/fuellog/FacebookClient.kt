@@ -33,7 +33,7 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
                                   val expiresAt: Instant, val isValid: Boolean, val scopes: Set<String>)
     data class UserIdentity(val name: String, val id: String, val picture: Picture)
     data class Picture(val data: PictureData)
-    data class PictureData(val width: Int, val height: Int, val url: String, @JsonProperty("is_silhouette") val silhouette: Boolean)
+    data class PictureData(val width: Int, val height: Int, val url: URI, @JsonProperty("is_silhouette") val silhouette: Boolean)
 
     private val objectMapperForFacebookEndpoint = ObjectMapper()
             .registerModule(KotlinModule())

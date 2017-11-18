@@ -5,7 +5,6 @@ import org.araqnid.fuellog.events.FacebookProfileData
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock
-import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CompletionStage
 import java.util.function.BiConsumer
@@ -62,20 +61,15 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @Path("facebook")
     @Produces("application/json")
     @PermitAll
-    fun associateFacebookUser(@FormParam("name") name: String, @FormParam("picture") picture: URI,
-                              @FormParam("token") token: String,
+    fun associateFacebookUser(@FormParam("token") token: String,
                               @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
         FacebookClient(facebookClientConfig, asyncHttpClient)
-                .validateUserAccessToken(token)
+                .fetchUsersOwnProfile(token)
                 .thenApply { parsed ->
-                    if (parsed.expiresAt < Instant.now(clock))
-                        throw BadRequestException("User access token has expired")
-                    if (!parsed.isValid)
-                        throw BadRequestException("User access token is not valid")
 
-                    val user = associateUser(servletRequest, URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.userId}"))
-                    user.name = name
-                    user.facebookProfileData = FacebookProfileData(picture)
+                    val user = associateUser(servletRequest, URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.id}"))
+                    user.name = parsed.name
+                    user.facebookProfileData = FacebookProfileData(parsed.picture.data.url)
                     userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
                     UserInfo.from(user)
                 }
