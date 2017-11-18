@@ -24,13 +24,17 @@ export default class GoogleIdentityProvider {
                 else {
                     log.info("Using existing GoogleAuth instance");
                 }
+                this._googleAuth.then(
+                    v => {
+                        log.info("GoogleAuth initialised");
+                        this._markAvailable();
+                    },
+                    err => {
+                        log.info("GoogleAuth initialisation failed", err);
+                    }
+                );
+                return null;
             })
-            .then(() => {
-                log.info("GoogleAuth initialised");
-                this._markAvailable();
-            }, () => {
-                log.info("GoogleAuth initialisation failed");
-            });
     }
 
     start() {
