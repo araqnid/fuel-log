@@ -12,7 +12,7 @@ export const reducer = (state = initialState, action) => {
             else {
                 return { preferences: action.payload, loadFailure: null };
             }
-        case "IdentityStore/localUserIdentity":
+        case "PreferencesStore/reset":
             return initialState;
         default:
             return state;
@@ -22,6 +22,10 @@ export const reducer = (state = initialState, action) => {
 export default class PreferencesStore extends UserDataStore {
     constructor(redux) {
         super(redux);
+    }
+
+    reset() {
+        this.dispatch({ type: "PreferencesStore/reset" });
     }
 
     newLoader() {

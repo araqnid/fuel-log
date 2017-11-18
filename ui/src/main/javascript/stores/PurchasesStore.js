@@ -13,7 +13,7 @@ export const reducer = (state = initialState, action) => {
             else {
                 return { purchaseList: action.payload, loadFailure: null };
             }
-        case "IdentityStore/localUserIdentity":
+        case "PurchasesStore/reset":
             return initialState;
         default:
             return state;
@@ -25,6 +25,10 @@ export const actions = exposeStoreMethodsViaDispatch("purchases", ["submit"]);
 export default class PurchasesStore extends UserDataStore {
     constructor(redux) {
         super(redux);
+    }
+
+    reset() {
+        this.dispatch({ type: "PurchasesStore/reset" });
     }
 
     newLoader() {

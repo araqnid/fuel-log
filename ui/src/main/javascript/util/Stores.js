@@ -37,6 +37,9 @@ export class UserDataStore {
         }
     }
 
+    reset () {
+    }
+
     newLoader() {
         return new DelegatingLoader(); // effectively no-op loader
     }
@@ -74,6 +77,7 @@ export class UserDataStore {
                 this._loader = null;
             }
             this._userId = nextUserId;
+            this.reset();
             if (nextUserId) {
                 this._loader = this.newLoader();
                 this._loader.begin();
