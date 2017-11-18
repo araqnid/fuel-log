@@ -1,5 +1,6 @@
 import axios from "axios";
 import {logFactory} from "../util/ConsoleLog";
+import {serialise} from "../util/Loaders";
 
 const log = logFactory("FacebookIdentityProvider");
 
@@ -86,7 +87,7 @@ export default class FacebookIdentityProvider {
     _pullUserData() {
         return Promise.all([this._fbApi("/me"), this._fbApi("/me/picture")]).then(([me, myPicture]) => {
             log.info("me", me, myPicture);
-            return axios.post('/_api/user/identity/facebook', { id: me.id, name: me.name, picture: myPicture.data.url }).then(({data}) => data)
+            return axios.post('/_api/user/identity/facebook', serialise({ id: me.id, name: me.name, picture: myPicture.data.url })).then(({data}) => data)
         });
     }
 
