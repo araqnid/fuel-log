@@ -10,6 +10,7 @@ import org.junit.Assume.assumeThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
+import java.net.URI
 import javax.ws.rs.BadRequestException
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -54,7 +55,7 @@ class FacebookClientIntegrationTest {
 
         val facebookClient = FacebookClient(server.instance<FacebookClientConfig>(), server.instance<HttpAsyncClient>())
         val result = facebookClient.fetchUserProfile("10155233566049669").toCompletableFuture().join()
-        assertEquals(FacebookClient.UserIdentity("Steve Haslam", "10155233566049669", FacebookClient.Picture(FacebookClient.PictureData(50, 50, "https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/22365519_10155849960609669_4611817305999182053_n.jpg?oh=dbbd4324f5adf21776510ed0cd5dd3b9&oe=5A9F07D2", false))), result)
+        assertEquals(FacebookClient.UserIdentity("Steve Haslam", "10155233566049669", FacebookClient.Picture(FacebookClient.PictureData(50, 50, URI.create("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/22365519_10155849960609669_4611817305999182053_n.jpg?oh=dbbd4324f5adf21776510ed0cd5dd3b9&oe=5A9F07D2"), false))), result)
     }
 
     // tests that can be performed only with a current, valid, user access token
@@ -68,6 +69,6 @@ class FacebookClientIntegrationTest {
 
         val facebookClient = FacebookClient(server.instance<FacebookClientConfig>(), server.instance<HttpAsyncClient>())
         val result = facebookClient.fetchUsersOwnProfile(accessToken).toCompletableFuture().join()
-        assertEquals(FacebookClient.UserIdentity("Steve Haslam", "10155233566049669", FacebookClient.Picture(FacebookClient.PictureData(50, 50, "https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/22365519_10155849960609669_4611817305999182053_n.jpg?oh=dbbd4324f5adf21776510ed0cd5dd3b9&oe=5A9F07D2", false))), result)
+        assertEquals(FacebookClient.UserIdentity("Steve Haslam", "10155233566049669", FacebookClient.Picture(FacebookClient.PictureData(50, 50, URI.create("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/22365519_10155849960609669_4611817305999182053_n.jpg?oh=dbbd4324f5adf21776510ed0cd5dd3b9&oe=5A9F07D2"), false))), result)
     }
 }
