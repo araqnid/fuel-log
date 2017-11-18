@@ -49,7 +49,7 @@ import javax.ws.rs.core.Context
 @Singleton
 @Path("/user/identity")
 class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClient: HttpAsyncClient, val jettyService: JettyService, val userRepository: UserRepository,
-                                            val facebookClientConfig: FacebookClientConfig) {
+                                            val facebookClientConfig: FacebookClientConfig, val googleClientConfig: GoogleClientConfig) {
     private val logger = LoggerFactory.getLogger(IdentityResources::class.java)
 
     @GET
@@ -122,7 +122,6 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @Produces("application/json")
     @PermitAll
     fun associateGoogleUserAsync(idToken: String, @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
-        val ourClientId = "515812716745-t7hno1i869lv1fc127j36r3shcgfr76g.apps.googleusercontent.com"
         val tokenInfoUri = URI.create("https://www.googleapis.com/oauth2/v3/tokeninfo")
 
         val request = HttpPost(tokenInfoUri).apply {
@@ -134,7 +133,7 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
                 throw BadRequestException("$tokenInfoUri: ${response.statusLine}")
             val tokenInfo = objectMapperForGoogleEndpoint.readerFor(TokenInfo::class.java)
                     .readValue<TokenInfo>(response.entity.content)!!
-            if (tokenInfo.clientId != ourClientId)
+            if (tokenInfo.clientId != googleClientConfig.id)
                 throw BadRequestException("Token is not for our client ID: $tokenInfo")
             if (tokenInfo.expiresAt < Instant.now(clock))
                 throw BadRequestException("Token already expired: $tokenInfo")

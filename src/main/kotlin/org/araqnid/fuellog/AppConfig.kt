@@ -75,7 +75,10 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
     }
 
     @Provides
-    fun facebookClientConfig(@Named("FACEBOOK_APP_ID") id: String, @Named("FACEBOOK_APP_SECRET") secret: String): FacebookClientConfig = FacebookClientConfig(id, secret)
+    fun facebookClientConfig(@Named("FACEBOOK_APP_ID") id: String, @Named("FACEBOOK_APP_SECRET") secret: String) = FacebookClientConfig(id, secret)
+
+    @Provides
+    fun googleClientConfig(@Named("GOOGLE_CLIENT_ID") id: String, @Named("GOOGLE_CLIENT_SECRET") secret: String) = GoogleClientConfig(id, secret)
 
     @Provides
     @Singleton
@@ -145,3 +148,5 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
 annotation class StatusSource
 
 data class FacebookClientConfig(val id: String, val secret: String)
+
+data class GoogleClientConfig(val id: String, val secret: String)
