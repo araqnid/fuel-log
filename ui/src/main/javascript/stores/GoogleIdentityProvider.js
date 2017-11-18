@@ -127,10 +127,15 @@ export default class GoogleIdentityProvider {
     }
 
     _currentUser() {
-        return new Promise(resolve => {
-            this._googleAuth.currentUser.listen(v => {
-                log.info("currentUser <=", v);
-                resolve(v);
+        return new Promise((resolve, reject) => {
+            this._googleAuth.then(v => {
+                log.info("_googleAuth finished initialising", v);
+                const user = v.currentUser.get();
+                log.info("produced current user", user);
+                resolve(user);
+            }, err => {
+                log.info("_googleAuth threw error while initialising", err);
+                reject(err);
             });
         });
     }
