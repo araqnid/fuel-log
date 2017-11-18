@@ -53,8 +53,8 @@ export default class IdentityStore {
 
     start() {
         this._reduxUnsubscribe = this._redux.subscribe(this.onReduxAction.bind(this));
-        this._realmProviders.GOOGLE.subscribe(this, 'available', v => this.dispatch({ type: "IdentityStore/googleAvailable", payload: v }));
-        this._realmProviders.FACEBOOK.subscribe(this, 'available', v => this.dispatch({ type: "IdentityStore/facebookAvailable", payload: v }));
+        this._realmProviders.GOOGLE.onAvailable(() => this.dispatch({ type: "IdentityStore/googleAvailable", payload: true }));
+        this._realmProviders.FACEBOOK.onAvailable(() => this.dispatch({ type: "IdentityStore/facebookAvailable", payload: true }));
         Object.values(this._realmProviders).forEach(p => p.begin());
         axios.get("_api/user/identity")
             .then(({data: {user_info: userInfo}}) => {

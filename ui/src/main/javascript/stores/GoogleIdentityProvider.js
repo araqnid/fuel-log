@@ -1,4 +1,4 @@
-import {Datum, StoreBase} from "../util/Stores";
+import {StoreBase} from "../util/Stores";
 import {logFactory} from "../util/ConsoleLog";
 
 const log = logFactory("GoogleIdentityProvider");
@@ -6,7 +6,8 @@ const log = logFactory("GoogleIdentityProvider");
 export default class GoogleIdentityProvider extends StoreBase {
     constructor() {
         super();
-        this._available = new Datum(this, "available");
+        this._available = false;
+        this._availableListeners = [];
         this._authInitialised = __api_hooks.googleApi.promise
             .then(() => new Promise(resolve => {
                 log.info("start loading auth2");
@@ -27,14 +28,24 @@ export default class GoogleIdentityProvider extends StoreBase {
             })
             .then(() => {
                 log.info("GoogleAuth initialised");
-                this._available.value = true;
+                this._markAvailable();
             }, () => {
                 log.info("GoogleAuth initialisation failed");
             });
     }
 
-    get available() {
-        return this._available.facade();
+    onAvailable(listener) {
+        if (this._available)
+            listener();
+        else
+            this._availableListeners.push(listener);
+    }
+
+    _markAvailable() {
+        this._available = true;
+        this._availableListeners.forEach(listener => {
+            listener();
+        });
     }
 
     probe() {

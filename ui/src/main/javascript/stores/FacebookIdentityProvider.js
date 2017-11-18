@@ -1,4 +1,4 @@
-import {Datum, StoreBase} from "../util/Stores";
+import {StoreBase} from "../util/Stores";
 import {logFactory} from "../util/ConsoleLog";
 
 const log = logFactory("FacebookIdentityProvider");
@@ -6,15 +6,26 @@ const log = logFactory("FacebookIdentityProvider");
 export default class FacebookIdentityProvider extends StoreBase {
     constructor() {
         super();
-        this._available = new Datum(this, "available");
+        this._available = false;
+        this._availableListeners = [];
         this._fbSdkLoaded = __api_hooks.facebookSdk.promise
             .then(() => {
-                this._available.value = true;
+                this._markAvailable();
             });
     }
 
-    get available() {
-        return this._available.facade();
+    onAvailable(listener) {
+        if (this._available)
+            listener();
+        else
+            this._availableListeners.push(listener);
+    }
+
+    _markAvailable() {
+        this._available = true;
+        this._availableListeners.forEach(listener => {
+            listener();
+        });
     }
 
     probe() {
