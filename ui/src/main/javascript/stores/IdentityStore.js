@@ -1,5 +1,6 @@
+import axios from "axios";
 import {combineReducers} from "redux";
-import {bindActionPayload, Datum, StoreBase} from "../util/Stores";
+import {bindActionPayload} from "../util/Stores";
 import {logFactory} from "../util/ConsoleLog";
 import GoogleIdentityProvider from "./GoogleIdentityProvider";
 import FacebookIdentityProvider from "./FacebookIdentityProvider";
@@ -17,127 +18,160 @@ export const reducer = combineReducers({
     googleAvailable: bindActionPayload("IdentityStore/googleAvailable", false),
     facebookAvailable: bindActionPayload("IdentityStore/facebookAvailable", false),
     localUserIdentity: bindActionPayload("IdentityStore/localUserIdentity", null),
-});
-
-export const actions = dispatch => ({
-    begin(identityStore) {
-        identityStore.googleAvailable.listen(v => dispatch({ type: "IdentityStore/googleAvailable", payload: v }));
-        identityStore.facebookAvailable.listen(v => dispatch({ type: "IdentityStore/facebookAvailable", payload: v }));
-        identityStore.localUserIdentity.listen(v => dispatch({ type: "IdentityStore/localUserIdentity", payload: v }));
+    realmChange: (state = null, action) => {
+        switch (action.type) {
+            case "IdentityStore/realmChange":
+                return action.payload;
+            case "IdentityStore/localUserIdentity":
+                const userInfo = action.error ? null : action.payload;
+                if (userInfo) {
+                    return userInfo.realm;
+                }
+                else {
+                    return null;
+                }
+            default:
+                return state;
+        }
     }
 });
 
-export default class IdentityStore extends StoreBase {
-    constructor() {
-        super();
+export const actions = dispatch => ({
+    beginGoogleSignIn() {
+        dispatch({ type: "IdentityStore/realmChange", payload: "GOOGLE" });
+    },
+
+    beginFacebookSignIn() {
+        dispatch({ type: "IdentityStore/realmChange", payload: "FACEBOOK" });
+    },
+
+    beginSignOut() {
+        dispatch({ type: "IdentityStore/realmChange", payload: null });
+    }
+});
+
+export default class IdentityStore {
+    constructor(redux) {
+        this._redux = redux;
+        this._reduxUnsubscribe = null;
         this._realmProviders = {
             GOOGLE: new GoogleIdentityProvider(),
             FACEBOOK: new FacebookIdentityProvider()
         };
-        this._localUserIdentity = new Datum(this, 'localUserIdentity');
-        this._googleAvailable = new Datum(this, 'googleAvailable');
-        this._facebookAvailable = new Datum(this, 'facebookAvailable');
+        this._inProgress = false;
     }
 
-    get localUserIdentity() {
-        return this._localUserIdentity.facade();
-    }
-
-    get googleAvailable() {
-        return this._googleAvailable.facade();
-    }
-
-    get facebookAvailable() {
-        return this._facebookAvailable.facade();
-    }
-
-    begin() {
-        this._realmProviders.GOOGLE.subscribe(this, 'available', v => this._googleAvailable.value = v);
-        this._realmProviders.FACEBOOK.subscribe(this, 'available', v => this._facebookAvailable.value = v);
+    start() {
+        this._reduxUnsubscribe = this._redux.subscribe(this.onReduxAction.bind(this));
+        this._realmProviders.GOOGLE.subscribe(this, 'available', v => this.dispatch({ type: "IdentityStore/googleAvailable", payload: v }));
+        this._realmProviders.FACEBOOK.subscribe(this, 'available', v => this.dispatch({ type: "IdentityStore/facebookAvailable", payload: v }));
         Object.values(this._realmProviders).forEach(p => p.begin());
-        this.get("_api/user/identity").then(({data}) => {
-            const userInfo = data.user_info;
-            if (userInfo) {
-                const realm = this._realmProviders[userInfo.realm];
-                if (realm) {
-                    return realm.confirmUser(userInfo).then(confirmed => {
-                        if (confirmed) {
-                            log.info("User details confirmed", confirmed);
-                            this._localUserIdentity.value = confirmed;
-                            return confirmed;
-                        }
-                        else {
-                            log.info("User details not confirmed");
-                            this._localUserIdentity.value = null;
-                            return this.delete("_api/user/identity").then(() => null);
-                        }
-                    });
+        axios.get("_api/user/identity")
+            .then(({data: {user_info: userInfo}}) => {
+                if (userInfo) {
+                    const realm = this._realmProviders[userInfo.realm];
+                    if (realm) {
+                        log.info("last known user identity is in known realm, confirm it", userInfo);
+                        return realm.confirmUser(userInfo).then(confirmed => {
+                            if (confirmed) {
+                                log.info("User details confirmed");
+                                return confirmed;
+                            }
+                            else {
+                                log.info("User details not confirmed");
+                                return axios.delete("_api/user/identity").then(() => null);
+                            }
+                        });
+                    }
+                    else {
+                        log.warn("last known user identity is in unknown realm");
+                        return axios.delete("_api/user/identity").then(() => null);
+                    }
                 }
                 else {
-                    log.warn("user in unknown realm", userInfo);
-                    return Promise.resolve(null);
-                }
-            }
-            else {
-                log.info("Asking realm providers to probe for identity");
-                const names = Object.keys(this._realmProviders);
-                return Promise.all(names.map(name => this._realmProviders[name].probe()))
-                    .then(values => {
-                        log.info("Collected probe results", values);
-                        const result = {};
-                        names.forEach((name, index) => {
-                            result[name] = values[index];
+                    log.info("Asking realm providers to probe for identity");
+                    const names = Object.keys(this._realmProviders);
+                    return Promise.all(names.map(name => this._realmProviders[name].probe()))
+                        .then(values => {
+                            log.info("Collected probe results", values);
+                            const result = {};
+                            names.forEach((name, index) => {
+                                result[name] = values[index];
+                            });
+                            return result;
+                        })
+                        .then(result => {
+                            log.info("Assembled probe results", result);
+                            if (result.GOOGLE) {
+                                return this._realmProviders.GOOGLE.autoLogin();
+                            }
+                            else if (result.FACEBOOK) {
+                                return this._realmProviders.FACEBOOK.autoLogin();
+                            }
+                            else {
+                                return null;
+                            }
                         });
-                        return result;
-                    })
-                    .then(result => {
-                        log.info("Assembled probe results", result);
-                        if (result.GOOGLE) {
-                            return this._realmProviders.GOOGLE.autoLogin();
-                        }
-                        else if (result.FACEBOOK) {
-                            return this._realmProviders.FACEBOOK.autoLogin();
-                        }
-                        else {
-                            return null;
-                        }
-                    })
-                    .then(userInfo => {
-                        log.info("User after auto-login", userInfo);
-                        this._localUserIdentity.value = userInfo;
-                    });
-            }
-        });
+                }
+            })
+            .then(userInfo => {
+                log.info("final user: ", userInfo);
+                this.dispatch({ type: "IdentityStore/localUserIdentity", payload: userInfo });
+            })
     }
 
-    signOut() {
-        const userInfo = this._localUserIdentity.value;
+    stop() {
+        Object.values(this._realmProviders).forEach(p => p.abort());
+        if (this._reduxUnsubscribe) {
+            this._reduxUnsubscribe();
+            this._reduxUnsubscribe = null;
+        }
+    }
+
+    get _reduxUserInfo() {
+        const userIdentity = this._redux.getState().identity;
+        return userIdentity ? userIdentity.localUserIdentity : null;
+    }
+
+    get _reduxRealmChange() {
+        const userIdentity = this._redux.getState().identity;
+        return userIdentity ? userIdentity.realmChange : null;
+    }
+
+    onReduxAction() {
+        const userInfo = this._reduxUserInfo;
+        const currentRealm = userInfo ? userInfo.realm : null;
+
+        if (this._reduxRealmChange !== currentRealm && !this._inProgress) {
+            log.info("Change realm", this._reduxRealmChange);
+            this._inProgress = true;
+            const realmChange = this._reduxRealmChange ? this._beginSignIn(this._realmProviders[this._reduxRealmChange]) : this._beginSignOut();
+            realmChange.then(() => {
+                log.info("Finished realm change");
+                this._inProgress = false;
+            })
+        }
+    }
+
+    _beginSignOut() {
+        const userInfo = this._reduxUserInfo;
         if (!userInfo) return;
         log.info("Sign out", userInfo);
-        this._realmProviders[userInfo.realm].signOut()
-            .then(() => this.delete("/_api/user/identity"))
+        return this._realmProviders[userInfo.realm].signOut()
+            .then(() => axios.delete("/_api/user/identity"))
             .then(() => {
-                this._localUserIdentity.value = null;
+                this.dispatch({ type: "IdentityStore/localUserIdentity", payload: null });
             });
     }
 
-    beginGoogleSignIn() {
-        this._beginSignIn(this._realmProviders.GOOGLE);
-    }
-
-    beginFacebookSignIn() {
-        this._beginSignIn(this._realmProviders.FACEBOOK);
-    }
-
     _beginSignIn(realm) {
-        realm.signIn().then(userInfo => {
+        return realm.signIn().then(userInfo => {
             log.info("completed realm sign in", userInfo);
-            this._localUserIdentity.value = userInfo;
+            this.dispatch({ type: "IdentityStore/localUserIdentity", payload: userInfo });
         });
     }
 
-    abort() {
-        super.abort();
-        Object.values(this._realmProviders).forEach(p => p.abort());
+    dispatch(action) {
+        this._redux.dispatch(action);
     }
 }

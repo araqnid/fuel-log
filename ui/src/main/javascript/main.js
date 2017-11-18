@@ -4,10 +4,7 @@ import {createStore} from "redux";
 import {Provider} from "react-redux";
 import Root from "./Root";
 import reducers from "./reducers";
-import * as stores from "./stores";
-import {actions as identityActions} from "./stores/IdentityStore";
-import PurchasesStore from "./stores/PurchasesStore";
-import PreferencesStore from "./stores/PreferencesStore";
+import storeFactory from "./stores";
 
 const redux = createStore(reducers, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
 
@@ -16,20 +13,17 @@ if (process.env.NODE_ENV !== "production") {
     console.log("Redux store available as REDUX");
 }
 
+let stores = storeFactory(redux);
+
 Object.values(stores).forEach(store => {
     if (process.env.NODE_ENV !== "production") console.log("starting store", store);
-    store.begin();
+    store.start();
 });
 
 if (process.env.NODE_ENV !== "production") {
     console.log("stores available as STORES");
     window.STORES = stores;
 }
-
-identityActions(redux.dispatch).begin(stores.identity);
-
-new PreferencesStore(redux).start();
-new PurchasesStore(redux).start();
 
 const componentRootElt = document.createElement("div");
 document.body.appendChild(componentRootElt);
