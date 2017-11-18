@@ -12,7 +12,6 @@ export const reducer = (state = initialState, action) => {
             else {
                 return { preferences: action.payload, loadFailure: null };
             }
-        case "PreferencesStore/reset":
         case "IdentityStore/localUserIdentity":
             return initialState;
         default:

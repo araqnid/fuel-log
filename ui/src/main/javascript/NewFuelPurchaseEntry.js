@@ -2,7 +2,6 @@ import React from "react";
 import {combineReducers} from "redux";
 import {connect} from "react-redux";
 import {bindActionPayload, resetOn} from "./util/Stores";
-import {purchases} from "./stores";
 
 const currencies = { 'GBP': { symbol: '£', places: 2 } };
 const volumeUnits = { LITRES: "l", GALLONS: "gal" };
@@ -95,14 +94,6 @@ class NewFuelPurchaseEntry extends React.Component {
         </div>;
     }
     componentDidMount() {
-        purchases.subscribe(this, 'purchaseSubmitted', (fuelPurchaseId) => {
-            this.props.dispatch({ type: "NewFuelPurchaseEntry/purchaseSubmitted", payload: fuelPurchaseId });
-            this.props.dispatch({ type: "NewFuelPurchaseEntry/_reset" });
-        });
-        purchases.subscribe(this, 'purchaseSubmissionFailed', ({status, exception}) => {
-            this.props.dispatch({ type: "NewFuelPurchaseEntry/purchaseSubmitted", payload: exception, error: true });
-            this.props.dispatch({ type: "NewFuelPurchaseEntry/_registering", payload: false });
-        });
         if (navigator.geolocation) {
             const options = {
                 maximumAge: 60000
@@ -111,7 +102,6 @@ class NewFuelPurchaseEntry extends React.Component {
         }
     }
     componentWillUnmount() {
-        purchases.unsubscribeAll(this);
         if (this._geolocationWatchId) {
             navigator.geolocation.clearWatch(this._geolocationWatchId);
         }

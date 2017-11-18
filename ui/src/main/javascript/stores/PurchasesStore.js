@@ -1,67 +1,48 @@
-import {combineReducers} from "redux";
-import {bindActionPayload, Datum, StoreBase} from "../util/Stores";
+import {UserDataStore} from "../util/Stores";
+import {AutoRefreshLoader} from "../util/Loaders";
 
-export const reducer = combineReducers({
-    purchaseList: bindActionPayload("PurchasesStore/purchaseList"),
-    loadFailure: bindActionPayload("PurchasesStore/loadFailure")
-});
+const initialState = { purchaseList: null, loadFailure: null };
 
-export const actions = dispatch => ({
-    begin(purchasesStore) {
-        purchasesStore.purchaseList.listen(v => dispatch({ type: "PurchasesStore/purchaseList", payload: v }));
-        purchasesStore.loadFailure.listen(v => dispatch({ type: "PurchasesStore/loadFailure", payload: v }));
-    }
-});
-
-export default class PurchasesStore extends StoreBase {
-    constructor(identity) {
-        super();
-        this.identity = identity;
-        this.userId = null;
-        this.refreshInterval = 30 * 1000;
-        this._loading = null;
-        this._sleeping = null;
-        this._purchaseList = new Datum(this, "purchaseList");
-        this._loadFailure = new Datum(this, "loadFailure");
-    }
-
-    get purchaseList() {
-        return this._purchaseList.facade();
-    }
-
-    get loadFailure() {
-        return this._loadFailure.facade();
-    }
-
-    begin() {
-        this.identity.localUserIdentity.subscribe(this, user => {
-            if (user) {
-                this.userId = user.user_id;
+export const reducer = (state = initialState, action) => {
+    switch (action.type) {
+        case "PurchasesStore/loaded":
+            if (action.error) {
+                return { purchaseList: state.purchaseList, loadFailure: action.payload };
             }
             else {
-                this.userId = null;
+                return { purchaseList: action.payload, loadFailure: null };
             }
-            this._purchaseList.value = null;
-            if (this.userId) {
-                this._startLoading();
-            }
-            else {
-                this._stopLoading();
+        case "IdentityStore/localUserIdentity":
+            return initialState;
+        default:
+            return state;
+    }
+};
+
+export default class PurchasesStore extends UserDataStore {
+    constructor(redux) {
+        super(redux);
+    }
+
+    newLoader() {
+        return new AutoRefreshLoader("_api/fuel", 30 * 1000, {
+            foundData: data => {
+                this.dispatch({ type: "PurchasesStore/loaded", payload: data });
+            },
+
+            loadError: ex => {
+                this.dispatch({ type: "PurchasesStore/loaded", payload: ex, error: true });
             }
         });
     }
-    abort() {
-        super.abort();
-        this.identity.unsubscribe(this);
-    }
-    kick() {
-        if (this.userId) this._startLoading();
-    }
+
     submit(newPurchase) {
         this.post("_api/fuel", newPurchase)
-            .then(({data, status, headers}) => {
+            .then(({status, headers}) => {
                 if (status !== 201) {
-                    this.emit("purchaseSubmissionFailed", {status, exception: null, data});
+                    this.dispatch({ type: "PurchasesStore/submission", payload: "status was " + status, error: true });
+                    this.dispatch({ type: "NewFuelPurchaseEntry/_registering", payload: false });
+                    this.dispatch({ type: "NewFuelPurchaseEntry/purchaseSubmitted", payload: exception, error: true });
                     return;
                 }
                 const location = headers.location;
@@ -71,45 +52,15 @@ export default class PurchasesStore extends StoreBase {
                     return;
                 }
                 const fuelPurchaseId = matches[1];
+                this.dispatch({ type: "PurchasesStore/submission", payload: fuelPurchaseId });
+                this.dispatch({ type: "NewFuelPurchaseEntry/purchaseSubmitted", payload: fuelPurchaseId });
+                this.dispatch({ type: "NewFuelPurchaseEntry/_reset" });
                 this.kick();
-                this.emit("purchaseSubmitted", fuelPurchaseId);
             })
             .catch(response => {
-                this.emit("purchaseSubmissionFailed", {status: response.status, exception: response});
+                this.dispatch({ type: "PurchasesStore/submission", payload: response, error: true });
+                this.dispatch({ type: "NewFuelPurchaseEntry/_registering", payload: false });
+                this.dispatch({ type: "NewFuelPurchaseEntry/purchaseSubmitted", payload: exception, error: true });
             });
-    }
-    _stopLoading() {
-        if (this._loading) {
-            this._loading.abort();
-            this._loading = null;
-        }
-        if (this._sleeping) {
-            clearTimeout(this._sleeping);
-            this._sleeping = null;
-        }
-    }
-    _startLoading() {
-        this._stopLoading();
-        this._loading = this.get("/_api/fuel")
-            .then(({data}) => {
-                this._purchaseList.value = data;
-                this._loadFailure.value = null;
-            })
-            .catch((response) => {
-                this._purchaseList.value = null;
-                this._loadFailure.value = { status: response.status, exception: response };
-            })
-            .then(() => {
-                this._loading = null;
-                if (this.userId) {
-                    this._sleeping = setTimeout(this._tick.bind(this), this.refreshInterval);
-                }
-            });
-    }
-    _tick() {
-        this._sleeping = null;
-        if (this.userId) {
-            this._startLoading();
-        }
     }
 }

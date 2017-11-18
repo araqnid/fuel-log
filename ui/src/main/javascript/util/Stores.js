@@ -83,12 +83,12 @@ export class UserDataStore {
         this._loader = null;
     }
 
-    begin() {
+    start() {
         this._reduxUnsubscribe = this._redux.subscribe(this.onReduxAction.bind(this));
         this.onReduxAction();
     }
 
-    abort() {
+    stop() {
         if (this._reduxUnsubscribe) {
             this._reduxUnsubscribe();
         }
@@ -117,6 +117,14 @@ export class UserDataStore {
         const localUser = identity.localUserIdentity;
         if (!localUser) return null;
         return localUser.user_id;
+    }
+
+    kick() {
+        if (this._loader) {
+            this._loader.abort();
+            this._loader = this.newLoader();
+            this._loader.begin();
+        }
     }
 
     onReduxAction() {
