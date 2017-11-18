@@ -13,16 +13,12 @@ import org.apache.http.client.utils.URIBuilder
 import org.apache.http.entity.ContentType
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.nio.client.HttpAsyncClient
-import org.apache.http.util.EntityUtils
-import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Instant
 import java.util.concurrent.CompletionStage
 import javax.ws.rs.BadRequestException
 
 class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClient: HttpAsyncClient) {
-    private val logger = LoggerFactory.getLogger(FacebookClient::class.java)
-
     val debugTokenUri = URI.create("https://graph.facebook.com/debug_token")
     val oauthAccessTokenUri = URI.create("https://graph.facebook.com/oauth/access_token")
 
@@ -106,12 +102,9 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
             if (permittedMimeTypes.contains(contentType.mimeType.toLowerCase()))
                 throw BadRequestException("$uri: unhandled content-type: $contentType")
 
-            val stringContent = EntityUtils.toString(response.entity)
-            logger.info("$uri: $stringContent")
-
             objectMapperForFacebookEndpoint
                     .readerFor(T::class.java)
-                    .readValue<T>(stringContent)
+                    .readValue<T>(response.entity.content)
         }
     }
 }
