@@ -2,7 +2,13 @@ package org.araqnid.fuellog.integration
 
 import com.google.common.base.Preconditions
 import com.google.common.util.concurrent.ServiceManager
-import com.google.inject.*
+import com.google.inject.AbstractModule
+import com.google.inject.Guice
+import com.google.inject.Injector
+import com.google.inject.Key
+import com.google.inject.Provides
+import com.google.inject.Singleton
+import com.google.inject.TypeLiteral
 import com.google.inject.util.Modules
 import com.timgroup.clocks.testing.ManualClock
 import org.apache.http.HttpException
@@ -10,6 +16,7 @@ import org.apache.http.HttpHost
 import org.apache.http.conn.routing.HttpRoute
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient
 import org.araqnid.eventstore.EventSource
 import org.araqnid.eventstore.InMemoryEventSource
 import org.araqnid.fuellog.AppConfig
@@ -50,12 +57,15 @@ class ServerRunner(val environment: Map<String, String>) : ExternalResource() {
         val fullEnvironment = HashMap(environment)
         fullEnvironment["SNAPSHOT_SPOOL"] = temporaryFolder.newFolder("snapshots").toString()
         serverInjector = Guice.createInjector(Modules.override(AppConfig(fullEnvironment)).with(IntegrationTestModule()))
+        instance<CloseableHttpAsyncClient>().start()
         instance<ServiceManager>().startAsync().awaitHealthy()
     }
 
     override fun after() {
-        if (serverInjector != null)
+        if (serverInjector != null) {
             instance<ServiceManager>().stopAsync().awaitStopped()
+            instance<CloseableHttpAsyncClient>().close()
+        }
         client.close()
     }
 
