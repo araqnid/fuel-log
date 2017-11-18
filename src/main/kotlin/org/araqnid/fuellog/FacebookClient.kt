@@ -31,12 +31,13 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
             .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
 
     fun fetchFacebookAppToken(): CompletionStage<String> {
+        val request = HttpGet(URIBuilder(oauthAccessTokenUri)
+                .setParameters(listOf(
+                        BasicNameValuePair("client_id", config.id),
+                        BasicNameValuePair("client_secret", config.secret),
+                        BasicNameValuePair("grant_type", "client_credentials")
+                )).build())
 
-        val request = HttpGet(URIBuilder(oauthAccessTokenUri).setParameters(listOf(
-                BasicNameValuePair("client_id", config.id),
-                BasicNameValuePair("client_secret", config.secret),
-                BasicNameValuePair("grant_type", "client_credentials")
-        )).build())
         return asyncHttpClient.executeAsyncHttpRequest(request).thenApply { response ->
             if (response.statusLine.statusCode != HttpStatus.SC_OK)
                 throw BadRequestException("$oauthAccessTokenUri: ${response.statusLine}")
@@ -49,23 +50,22 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
     }
 
     fun validateUserAccessToken(token: String): CompletionStage<DebugTokenResponse> {
-        return fetchFacebookAppToken().thenCompose { appToken ->
-            val request = HttpGet(URIBuilder(debugTokenUri)
-                    .setParameters(listOf(
-                            BasicNameValuePair("input_token", token),
-                            BasicNameValuePair("access_token", appToken) // or "${facebookClientConfig.id}|${facebookClientConfig.secret}"
-                    ))
-                    .build())
+        val request = HttpGet(URIBuilder(debugTokenUri)
+                .setParameters(listOf(
+                        BasicNameValuePair("input_token", token),
+                        BasicNameValuePair("access_token", "${config.id}|${config.secret}")
+                ))
+                .build())
 
-            asyncHttpClient.executeAsyncHttpRequest(request)
-        }.thenApply { response ->
-            if (response.statusLine.statusCode != HttpStatus.SC_OK)
-                throw BadRequestException("$debugTokenUri: ${response.statusLine}")
+        return asyncHttpClient.executeAsyncHttpRequest(request)
+                .thenApply { response ->
+                    if (response.statusLine.statusCode != HttpStatus.SC_OK)
+                        throw BadRequestException("$debugTokenUri: ${response.statusLine}")
 
-            objectMapperForFacebookEndpoint
-                    .readerFor(DebugTokenResponse::class.java)
-                    .withRootName("data")
-                    .readValue<DebugTokenResponse>(response.entity.content)
-        }
+                    objectMapperForFacebookEndpoint
+                            .readerFor(DebugTokenResponse::class.java)
+                            .withRootName("data")
+                            .readValue<DebugTokenResponse>(response.entity.content)
+                }
     }
 }
