@@ -17,7 +17,7 @@ function formatDistanceUnit(key) {
 }
 
 export const reducer = combineReducers({
-    attributes: resetOn("NewFuelPurchaseEntry/_reset")(combineReducers({
+    attributes: resetOn((({type, error}) => type === "PurchasesStore/submission" && !error))(combineReducers({
         fuelVolume: bindActionPayload("NewFuelPurchaseEntry/fuelVolume", ""),
         odometer: bindActionPayload("NewFuelPurchaseEntry/odometer", ""),
         location: bindActionPayload("NewFuelPurchaseEntry/location", ""),
@@ -25,7 +25,7 @@ export const reducer = combineReducers({
         fullFill: bindActionPayload("NewFuelPurchaseEntry/fullFill", false)
     })),
     geoLocation: bindActionPayload("NewFuelPurchaseEntry/geolocation", null),
-    registering: resetOn("NewFuelPurchaseEntry/_reset")(bindActionPayload("NewFuelPurchaseEntry/_registering", false))
+    registering: resetOn("PurchasesStore/submission")(bindActionPayload("NewFuelPurchaseEntry/_registering", false))
 });
 
 const GeoLocation = ({latitude, longitude}) => (
@@ -121,20 +121,6 @@ class NewFuelPurchaseEntry extends React.Component {
     onSubmit(e) {
         e.preventDefault();
         this.props.dispatch({ type: "NewFuelPurchaseEntry/_registering", payload: true });
-        const distanceFactor = this.props.preferences.distance_unit === "MILES" ? 1.60934 : 1;
-        const fuelVolumeFactor = this.props.preferences.fuel_volume_unit === "GALLONS" ? 4.54609 : 1;
-        const newPurchase = this.props.newPurchase;
-        purchases.submit({
-            odometer: newPurchase.odometer * distanceFactor,
-            cost: {
-                currency: this.props.preferences.currency,
-                amount: newPurchase.cost
-            },
-            fuel_volume: newPurchase.fuelVolume * fuelVolumeFactor,
-            full_fill: newPurchase.fullFill,
-            location: newPurchase.location,
-            geo_location: this.props.geoLocation
-        });
     }
     onGeolocationResult(position) {
         this.props.dispatch({ type: "NewFuelPurchaseEntry/geolocation", payload: { latitude: position.coords.latitude, longitude: position.coords.longitude } });

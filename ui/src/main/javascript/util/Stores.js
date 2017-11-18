@@ -1,9 +1,10 @@
 import {AjaxLoaderBase, DelegatingLoader, noopLoader} from "./Loaders";
 
-export function resetOn(resetEventType) {
+export function resetOn(r) {
+    const predicate = typeof r === "function" ? r : ({type}) => type === r;
     return reducer => {
         const initialState = reducer(undefined, { type: "@@INIT" });
-        return (state, action) => action.type === resetEventType ? initialState : reducer(state, action);
+        return (state, action) => predicate(action) ? initialState : reducer(state, action);
     }
 }
 

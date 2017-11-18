@@ -1,3 +1,4 @@
+import axios from "axios";
 import {UserDataStore} from "../util/Stores";
 import {AutoRefreshLoader} from "../util/Loaders";
 
@@ -22,6 +23,7 @@ export const reducer = (state = initialState, action) => {
 export default class PurchasesStore extends UserDataStore {
     constructor(redux) {
         super(redux);
+        this._registering = false;
     }
 
     newLoader() {
@@ -36,13 +38,42 @@ export default class PurchasesStore extends UserDataStore {
         });
     }
 
+    get _reduxRegistering() {
+        const newPurchase = this.getState().newPurchase;
+        if (!newPurchase) return false;
+        return newPurchase.registering;
+    }
+
+    onReduxAction() {
+        super.onReduxAction();
+        if (this._reduxRegistering !== this._registering) {
+            this._registering = this._reduxRegistering;
+            if (this._reduxRegistering) {
+                const { newPurchase: { attributes: newPurchase, geoLocation }, preferences: { preferences } } = this.getState();
+
+                const distanceFactor = preferences.distance_unit === "MILES" ? 1.60934 : 1;
+                const fuelVolumeFactor = preferences.fuel_volume_unit === "GALLONS" ? 4.54609 : 1;
+
+                this.submit({
+                    odometer: newPurchase.odometer * distanceFactor,
+                    cost: {
+                        currency: preferences.currency,
+                        amount: newPurchase.cost
+                    },
+                    fuel_volume: newPurchase.fuelVolume * fuelVolumeFactor,
+                    full_fill: newPurchase.fullFill,
+                    location: newPurchase.location,
+                    geo_location: geoLocation
+                });
+            }
+        }
+    }
+
     submit(newPurchase) {
-        this.post("_api/fuel", newPurchase)
+        axios.post("_api/fuel", newPurchase)
             .then(({status, headers}) => {
                 if (status !== 201) {
                     this.dispatch({ type: "PurchasesStore/submission", payload: "status was " + status, error: true });
-                    this.dispatch({ type: "NewFuelPurchaseEntry/_registering", payload: false });
-                    this.dispatch({ type: "NewFuelPurchaseEntry/purchaseSubmitted", payload: exception, error: true });
                     return;
                 }
                 const location = headers.location;
@@ -53,14 +84,10 @@ export default class PurchasesStore extends UserDataStore {
                 }
                 const fuelPurchaseId = matches[1];
                 this.dispatch({ type: "PurchasesStore/submission", payload: fuelPurchaseId });
-                this.dispatch({ type: "NewFuelPurchaseEntry/purchaseSubmitted", payload: fuelPurchaseId });
-                this.dispatch({ type: "NewFuelPurchaseEntry/_reset" });
                 this.kick();
             })
             .catch(response => {
                 this.dispatch({ type: "PurchasesStore/submission", payload: response, error: true });
-                this.dispatch({ type: "NewFuelPurchaseEntry/_registering", payload: false });
-                this.dispatch({ type: "NewFuelPurchaseEntry/purchaseSubmitted", payload: exception, error: true });
             });
     }
 }
