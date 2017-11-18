@@ -64,7 +64,7 @@ export default class PreferencesStore extends StoreBase {
             })
             .catch((ex) => {
                 this._preferences.value = null;
-                this._loadFailure = { status: ex.status, exception: ex };
+                this._loadFailure.value = { status: ex.status, exception: ex };
             })
             .then(() => {
                 this._requesting = null;
