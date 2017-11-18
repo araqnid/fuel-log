@@ -1,5 +1,5 @@
 import axios from "axios";
-import {UserDataStore} from "../util/Stores";
+import {exposeStoreMethodsViaDispatch, UserDataStore} from "../util/Stores";
 import {AutoRefreshLoader} from "../util/Loaders";
 
 const initialState = { purchaseList: null, loadFailure: null };
@@ -20,13 +20,7 @@ export const reducer = (state = initialState, action) => {
     }
 };
 
-export const actions = dispatch => ({
-    submit() {
-        dispatch(({stores}) => {
-            stores.purchases.submit();
-        })
-    }
-});
+export const actions = exposeStoreMethodsViaDispatch("purchases", ["submit"]);
 
 export default class PurchasesStore extends UserDataStore {
     constructor(redux) {

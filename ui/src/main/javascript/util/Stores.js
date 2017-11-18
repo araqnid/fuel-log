@@ -143,3 +143,33 @@ export class UserDataStore {
         }
     }
 }
+
+export function reduxThunkWithStores(storesAccessor) {
+    return ({getState, dispatch}) => {
+        return next => action => {
+            if (typeof action === "function") {
+                action({ dispatch, getState, stores: storesAccessor() });
+                return null;
+            }
+            else {
+                return next(action);
+            }
+        };
+    };
+}
+
+export function exposeStoreMethodsViaDispatch(storeName, methods) {
+    return dispatch => {
+        const actions = {};
+        methods.forEach(method => {
+            actions[method] = function() {
+                const methodArgs = Array.prototype.slice.call(arguments, 1);
+                dispatch(({ stores }) => {
+                    const store = stores[storeName];
+                    store[method].apply(store, methodArgs);
+                });
+            };
+        });
+        return actions;
+    };
+}

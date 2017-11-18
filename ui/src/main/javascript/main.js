@@ -6,24 +6,13 @@ import {Provider} from "react-redux";
 import Root from "./Root";
 import reducers from "./reducers";
 import storeFactory from "./stores";
+import {reduxThunkWithStores} from "./util/Stores";
 
 let stores = null;
 
-function reduxThunkWithStores({getState, dispatch}) {
-    return next => action => {
-        if (typeof action === "function") {
-            action({ dispatch, getState, stores });
-            return null;
-        }
-        else {
-            return next(action);
-        }
-    };
-}
+const reduxDevToolsExtension = window.__REDUX_DEVTOOLS_EXTENSION__ ? window.__REDUX_DEVTOOLS_EXTENSION__() : x => x;
 
-const redux = createStore(reducers,
-    window.__REDUX_DEVTOOLS_EXTENSION__ ? _.flow(window.__REDUX_DEVTOOLS_EXTENSION__(), applyMiddleware(reduxThunkWithStores))
-        : applyMiddleware(reduxThunkWithStores));
+const redux = createStore(reducers, _.flow(reduxDevToolsExtension, applyMiddleware(reduxThunkWithStores(() => stores))));
 
 if (process.env.NODE_ENV !== "production") {
     window.REDUX = redux;
