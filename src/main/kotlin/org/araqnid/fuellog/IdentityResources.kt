@@ -5,6 +5,7 @@ import org.araqnid.fuellog.events.FacebookProfileData
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CompletionStage
 import java.util.function.BiConsumer
@@ -69,6 +70,10 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
                 .thenApply { parsed ->
                     if (parsed.userId != identifier)
                         throw BadRequestException("Different user ID in request compared to access token")
+                    if (parsed.expiresAt < Instant.now(clock))
+                        throw BadRequestException("User access token has expired")
+                    if (!parsed.isValid)
+                        throw BadRequestException("User access token is not valid")
 
                     val user = associateUser(servletRequest, URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/$identifier"))
                     user.name = name

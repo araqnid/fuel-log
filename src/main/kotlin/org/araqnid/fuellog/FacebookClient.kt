@@ -23,7 +23,7 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
     data class AccessTokenResponse(val accessToken: String, val tokenType: String)
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class DebugTokenResponse(val userId: String, val type: String, val appId: String, val application: String,
-                                  val expires_at: Instant, val isValid: Boolean, val scopes: Set<String>)
+                                  val expiresAt: Instant, val isValid: Boolean, val scopes: Set<String>)
 
     private val objectMapperForFacebookEndpoint = ObjectMapper()
             .registerModule(KotlinModule())
