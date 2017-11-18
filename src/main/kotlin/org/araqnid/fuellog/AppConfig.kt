@@ -30,6 +30,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Clock
 import java.time.Duration
+import javax.inject.Named
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -72,6 +73,9 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
 
         bind(HttpAsyncClient::class.java).to(CloseableHttpAsyncClient::class.java)
     }
+
+    @Provides
+    fun facebookClientConfig(@Named("FACEBOOK_APP_ID") id: String, @Named("FACEBOOK_APP_SECRET") secret: String): FacebookClientConfig = FacebookClientConfig(id, secret)
 
     @Provides
     @Singleton
@@ -139,3 +143,5 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
 
 @Qualifier
 annotation class StatusSource
+
+data class FacebookClientConfig(val id: String, val secret: String)
