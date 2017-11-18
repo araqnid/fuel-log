@@ -5,18 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.client.utils.URIBuilder
-import org.apache.http.concurrent.FutureCallback
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.nio.client.HttpAsyncClient
-import java.lang.Exception
 import java.net.URI
 import java.time.Instant
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 
 class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClient: HttpAsyncClient) {
@@ -41,7 +36,7 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
                 BasicNameValuePair("client_secret", config.secret),
                 BasicNameValuePair("grant_type", "client_credentials")
         )).build())
-        return executeAsyncHttpRequest(request).thenApply { response ->
+        return asyncHttpClient.executeAsyncHttpRequest(request).thenApply { response ->
             if (response.statusLine.statusCode != HttpStatus.SC_OK) throw RuntimeException("Failed to fetch app access token from Facebook: ${response.statusLine}")
             objectMapperForFacebookEndpoint
                     .readerFor(AccessTokenResponse::class.java)
@@ -59,7 +54,7 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
                     ))
                     .build())
 
-            executeAsyncHttpRequest(request)
+            asyncHttpClient.executeAsyncHttpRequest(request)
         }.thenApply { response ->
             if (response.statusLine.statusCode != HttpStatus.SC_OK) throw RuntimeException("Failed to validate Facebook access token: ${response.statusLine}")
 
@@ -67,26 +62,6 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
                     .readerFor(DebugTokenResponse::class.java)
                     .withRootName("data")
                     .readValue<DebugTokenResponse>(response.entity.content)
-        }
-    }
-
-    private fun executeAsyncHttpRequest(request: HttpUriRequest): CompletionStage<HttpResponse> {
-        return CompletableFuture<HttpResponse>().apply {
-            asyncHttpClient.execute(request, apacheCallback(this))
-        }.withContextData()
-    }
-
-    private fun <T> apacheCallback(target: CompletableFuture<T>) = object : FutureCallback<T> {
-        override fun completed(result: T) {
-            target.complete(result)
-        }
-
-        override fun failed(ex: Exception) {
-            target.completeExceptionally(ex)
-        }
-
-        override fun cancelled() {
-            target.cancel(false)
         }
     }
 }

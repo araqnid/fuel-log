@@ -6,20 +6,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.methods.HttpUriRequest
-import org.apache.http.concurrent.FutureCallback
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.events.GoogleProfileData
-import java.lang.Exception
 import java.net.URI
 import java.time.Clock
 import java.time.Instant
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import javax.ws.rs.BadRequestException
 
@@ -49,7 +44,7 @@ class GoogleClient(val config: GoogleClientConfig, private val asyncHttpClient: 
             entity = UrlEncodedFormEntity(listOf(BasicNameValuePair("id_token", idToken)))
         }
 
-        return executeAsyncHttpRequest(request).thenApply { response ->
+        return asyncHttpClient.executeAsyncHttpRequest(request).thenApply { response ->
             if (response.statusLine.statusCode != HttpStatus.SC_OK)
                 throw BadRequestException("$tokenInfoUri: ${response.statusLine}")
             val tokenInfo = objectMapperForGoogleEndpoint.readerFor(TokenInfo::class.java)
@@ -62,26 +57,6 @@ class GoogleClient(val config: GoogleClientConfig, private val asyncHttpClient: 
                 throw BadRequestException("Token issuer is unrecognised: $tokenInfo")
 
             tokenInfo
-        }
-    }
-
-    private fun executeAsyncHttpRequest(request: HttpUriRequest): CompletionStage<HttpResponse> {
-        return CompletableFuture<HttpResponse>().apply {
-            asyncHttpClient.execute(request, apacheCallback(this))
-        }.withContextData()
-    }
-
-    private fun <T> apacheCallback(target: CompletableFuture<T>) = object : FutureCallback<T> {
-        override fun completed(result: T) {
-            target.complete(result)
-        }
-
-        override fun failed(ex: Exception) {
-            target.completeExceptionally(ex)
-        }
-
-        override fun cancelled() {
-            target.cancel(false)
         }
     }
 }
