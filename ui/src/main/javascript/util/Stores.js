@@ -1,4 +1,4 @@
-import {AjaxLoaderBase} from "./Loaders";
+import {AjaxLoaderBase, DelegatingLoader, noopLoader} from "./Loaders";
 
 export function resetOn(resetEventType) {
     return reducer => {
@@ -72,5 +72,65 @@ export class StoreBase extends AjaxLoaderBase {
                 listener(data);
             }
         });
+    }
+}
+
+export class UserDataStore {
+    constructor(redux) {
+        this._redux = redux;
+        this._reduxUnsubscribe = null;
+        this._userId = null;
+        this._loader = null;
+    }
+
+    begin() {
+        this._reduxUnsubscribe = this._redux.subscribe(this.onReduxAction.bind(this));
+        this.onReduxAction();
+    }
+
+    abort() {
+        if (this._reduxUnsubscribe) {
+            this._reduxUnsubscribe();
+        }
+        if (this._loader) {
+            this._loader.abort();
+            this._loader = null;
+        }
+    }
+
+    newLoader() {
+        return new DelegatingLoader(); // effectively no-op loader
+    }
+
+    dispatch(action) {
+        this._redux.dispatch(action);
+    }
+
+    getState() {
+        return this._redux.getState();
+    }
+
+    get _reduxUserId() {
+        const state = this._redux.getState();
+        const identity = state.identity;
+        if (!identity) return null;
+        const localUser = identity.localUserIdentity;
+        if (!localUser) return null;
+        return localUser.user_id;
+    }
+
+    onReduxAction() {
+        const nextUserId = this._reduxUserId;
+        if (nextUserId !== this._userId) {
+            if (this._loader) {
+                this._loader.abort();
+                this._loader = null;
+            }
+            this._userId = nextUserId;
+            if (nextUserId) {
+                this._loader = this.newLoader();
+                this._loader.begin();
+            }
+        }
     }
 }

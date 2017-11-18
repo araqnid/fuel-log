@@ -1,6 +1,9 @@
 import {AutoRefreshLoader} from "../util/Loaders";
+import {UserDataStore} from "../util/Stores";
 
-export const reducer = (state = { preferences: null, loadFailure: null }, action) => {
+const initialState = { preferences: null, loadFailure: null };
+
+export const reducer = (state = initialState, action) => {
     switch (action.type) {
         case "PreferencesStore/loaded":
             if (action.error) {
@@ -10,66 +13,27 @@ export const reducer = (state = { preferences: null, loadFailure: null }, action
                 return { preferences: action.payload, loadFailure: null };
             }
         case "PreferencesStore/reset":
-            return { preferences: null, loadFailure: null };
         case "IdentityStore/localUserIdentity":
-            return { preferences: null, loadFailure: null };
+            return initialState;
         default:
             return state;
     }
 };
 
-export default class PreferencesStore {
+export default class PreferencesStore extends UserDataStore {
     constructor(redux) {
-        this._redux = redux;
-        this._reduxUnsubscribe = null;
-        this._userId = null;
-        this._loader = null;
+        super(redux);
     }
 
-    begin() {
-        this._reduxUnsubscribe = this._redux.subscribe(this.onReduxAction.bind(this));
-        this.onReduxAction();
-    }
+    newLoader() {
+        return new AutoRefreshLoader("_api/user/preferences", 30 * 1000, {
+            foundData: data => {
+                this.dispatch({ type: "PreferencesStore/loaded", payload: data });
+            },
 
-    abort() {
-        if (this._reduxUnsubscribe) {
-            this._reduxUnsubscribe();
-        }
-        if (this._loader) {
-            this._loader.abort();
-            this._loader = null;
-        }
-    }
-
-    get _reduxUserId() {
-        const state = this._redux.getState();
-        const identity = state.identity;
-        if (!identity) return null;
-        const localUser = identity.localUserIdentity;
-        if (!localUser) return null;
-        return localUser.user_id;
-    }
-
-    onReduxAction() {
-        const nextUserId = this._reduxUserId;
-        if (nextUserId !== this._userId) {
-            if (this._loader) {
-                this._loader.abort();
-                this._loader = null;
+            loadError: ex => {
+                this.dispatch({ type: "PreferencesStore/loaded", payload: ex, error: true });
             }
-            this._userId = nextUserId;
-            if (nextUserId) {
-                this._loader = new AutoRefreshLoader("_api/user/preferences", 30 * 1000, {
-                    foundData: data => {
-                        this._redux.dispatch({ type: "PreferencesStore/loaded", payload: data });
-                    },
-
-                    loadError: ex => {
-                        this._redux.dispatch({ type: "PreferencesStore/loaded", payload: ex, error: true });
-                    }
-                });
-                this._loader.begin();
-            }
-        }
+        });
     }
 }
