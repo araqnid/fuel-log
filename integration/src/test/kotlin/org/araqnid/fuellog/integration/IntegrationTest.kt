@@ -19,7 +19,8 @@ import org.junit.Rule
 import java.util.UUID
 
 abstract class IntegrationTest {
-    @Rule @JvmField val server = ServerRunner(mapOf("PORT" to "0", "DOCUMENT_ROOT" to "../ui/build/site"))
+    @Rule @JvmField val server = ServerRunner(mapOf("PORT" to "0", "DOCUMENT_ROOT" to "../ui/build/site",
+            "FACEBOOK_APP_ID" to "", "FACEBOOK_APP_SECRET" to "", "GOOGLE_CLIENT_ID" to "", "GOOGLE_CLIENT_SECRET" to ""))
 
     var response: HttpResponse = BasicHttpResponse(HttpVersion.HTTP_1_0, HttpStatus.SC_INTERNAL_SERVER_ERROR, "No request executed")
     var currentUser: IdentityResources.UserInfo? = null
