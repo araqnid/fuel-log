@@ -38,15 +38,21 @@ export const reducer = combineReducers({
 
 export const actions = dispatch => ({
     beginGoogleSignIn() {
-        dispatch({ type: "IdentityStore/realmChange", payload: "GOOGLE" });
+        dispatch(({stores}) => {
+            stores.identity.signInWithGoogle();
+        })
     },
 
     beginFacebookSignIn() {
-        dispatch({ type: "IdentityStore/realmChange", payload: "FACEBOOK" });
+        dispatch(({stores}) => {
+            stores.identity.signInWithFacebook();
+        })
     },
 
     beginSignOut() {
-        dispatch({ type: "IdentityStore/realmChange", payload: null });
+        dispatch(({stores}) => {
+            stores.identity.signOut();
+        })
     }
 });
 
@@ -145,7 +151,7 @@ export default class IdentityStore {
         if (this._reduxRealmChange !== currentRealm && !this._inProgress) {
             log.info("Change realm", this._reduxRealmChange);
             this._inProgress = true;
-            const realmChange = this._reduxRealmChange ? this._beginSignIn(this._realmProviders[this._reduxRealmChange]) : this._beginSignOut();
+            const realmChange = this._reduxRealmChange ? this._signIn(this._realmProviders[this._reduxRealmChange]) : this.signOut();
             realmChange.then(() => {
                 log.info("Finished realm change");
                 this._inProgress = false;
@@ -153,7 +159,15 @@ export default class IdentityStore {
         }
     }
 
-    _beginSignOut() {
+    signInWithGoogle() {
+        return this._signIn(this._realmProviders.GOOGLE);
+    }
+
+    signInWithFacebook() {
+        return this._signIn(this._realmProviders.FACEBOOK);
+    }
+
+    signOut() {
         const userInfo = this._reduxUserInfo;
         if (!userInfo) return;
         log.info("Sign out", userInfo);
@@ -164,7 +178,7 @@ export default class IdentityStore {
             });
     }
 
-    _beginSignIn(realm) {
+    _signIn(realm) {
         return realm.signIn().then(userInfo => {
             log.info("completed realm sign in", userInfo);
             this.dispatch({ type: "IdentityStore/localUserIdentity", payload: userInfo });

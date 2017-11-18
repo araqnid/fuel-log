@@ -1,19 +1,36 @@
+import _ from "lodash";
 import React from "react";
 import ReactDOM from "react-dom";
-import {createStore} from "redux";
+import {applyMiddleware, createStore} from "redux";
 import {Provider} from "react-redux";
 import Root from "./Root";
 import reducers from "./reducers";
 import storeFactory from "./stores";
 
-const redux = createStore(reducers, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
+let stores = null;
+
+function reduxThunkWithStores({getState, dispatch}) {
+    return next => action => {
+        if (typeof action === "function") {
+            action({ dispatch, getState, stores });
+            return null;
+        }
+        else {
+            return next(action);
+        }
+    };
+}
+
+const redux = createStore(reducers,
+    window.__REDUX_DEVTOOLS_EXTENSION__ ? _.flow(window.__REDUX_DEVTOOLS_EXTENSION__(), applyMiddleware(reduxThunkWithStores))
+        : applyMiddleware(reduxThunkWithStores));
 
 if (process.env.NODE_ENV !== "production") {
     window.REDUX = redux;
     console.log("Redux store available as REDUX");
 }
 
-let stores = storeFactory(redux);
+stores = storeFactory(redux);
 
 Object.values(stores).forEach(store => {
     if (process.env.NODE_ENV !== "production") console.log("starting store", store);
