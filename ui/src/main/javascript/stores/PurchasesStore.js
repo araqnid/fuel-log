@@ -20,10 +20,17 @@ export const reducer = (state = initialState, action) => {
     }
 };
 
+export const actions = dispatch => ({
+    submit() {
+        dispatch(({stores}) => {
+            stores.purchases.submit();
+        })
+    }
+});
+
 export default class PurchasesStore extends UserDataStore {
     constructor(redux) {
         super(redux);
-        this._registering = false;
     }
 
     newLoader() {
@@ -38,39 +45,29 @@ export default class PurchasesStore extends UserDataStore {
         });
     }
 
-    get _reduxRegistering() {
-        const newPurchase = this.getState().newPurchase;
-        if (!newPurchase) return false;
-        return newPurchase.registering;
+    submit() {
+        this.dispatch({ type: "NewFuelPurchaseEntry/_registering", payload: true });
+
+        const { newPurchase: { attributes: newPurchase, geoLocation }, preferences: { preferences } } = this.getState();
+
+        const distanceFactor = preferences.distance_unit === "MILES" ? 1.60934 : 1;
+        const fuelVolumeFactor = preferences.fuel_volume_unit === "GALLONS" ? 4.54609 : 1;
+
+        this._doSubmit({
+            odometer: newPurchase.odometer * distanceFactor,
+            cost: {
+                currency: preferences.currency,
+                amount: newPurchase.cost
+            },
+            fuel_volume: newPurchase.fuelVolume * fuelVolumeFactor,
+            full_fill: newPurchase.fullFill,
+            location: newPurchase.location,
+            geo_location: geoLocation
+        });
     }
 
-    onReduxAction() {
-        super.onReduxAction();
-        if (this._reduxRegistering !== this._registering) {
-            this._registering = this._reduxRegistering;
-            if (this._reduxRegistering) {
-                const { newPurchase: { attributes: newPurchase, geoLocation }, preferences: { preferences } } = this.getState();
-
-                const distanceFactor = preferences.distance_unit === "MILES" ? 1.60934 : 1;
-                const fuelVolumeFactor = preferences.fuel_volume_unit === "GALLONS" ? 4.54609 : 1;
-
-                this.submit({
-                    odometer: newPurchase.odometer * distanceFactor,
-                    cost: {
-                        currency: preferences.currency,
-                        amount: newPurchase.cost
-                    },
-                    fuel_volume: newPurchase.fuelVolume * fuelVolumeFactor,
-                    full_fill: newPurchase.fullFill,
-                    location: newPurchase.location,
-                    geo_location: geoLocation
-                });
-            }
-        }
-    }
-
-    submit(newPurchase) {
-        axios.post("_api/fuel", newPurchase)
+    _doSubmit(newPurchase) {
+        return axios.post("_api/fuel", newPurchase)
             .then(({status, headers}) => {
                 if (status !== 201) {
                     this.dispatch({ type: "PurchasesStore/submission", payload: "status was " + status, error: true });

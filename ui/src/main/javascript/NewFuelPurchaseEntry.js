@@ -2,6 +2,7 @@ import React from "react";
 import {combineReducers} from "redux";
 import {connect} from "react-redux";
 import {bindActionPayload, resetOn} from "./util/Stores";
+import {actions as purchasesActions} from "./stores/PurchasesStore";
 
 const currencies = { 'GBP': { symbol: '£', places: 2 } };
 const volumeUnits = { LITRES: "l", GALLONS: "gal" };
@@ -120,7 +121,7 @@ class NewFuelPurchaseEntry extends React.Component {
     }
     onSubmit(e) {
         e.preventDefault();
-        this.props.dispatch({ type: "NewFuelPurchaseEntry/_registering", payload: true });
+        this.props.purchasesActions.submit();
     }
     onGeolocationResult(position) {
         this.props.dispatch({ type: "NewFuelPurchaseEntry/geolocation", payload: { latitude: position.coords.latitude, longitude: position.coords.longitude } });
@@ -131,5 +132,6 @@ class NewFuelPurchaseEntry extends React.Component {
 }
 
 export default connect(
-    ({ preferences: { preferences }, newPurchase: { attributes: newPurchase, geoLocation, registering } }) => ({ preferences, newPurchase, geoLocation, registering })
+    ({ preferences: { preferences }, newPurchase: { attributes: newPurchase, geoLocation, registering } }) => ({ preferences, newPurchase, geoLocation, registering }),
+    (dispatch) => ({ dispatch, purchasesActions: purchasesActions(dispatch) })
 )(NewFuelPurchaseEntry);
