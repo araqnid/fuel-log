@@ -17,23 +17,7 @@ const log = logFactory("IdentityStore");
 export const reducer = combineReducers({
     googleAvailable: bindActionPayload("IdentityStore/googleAvailable", false),
     facebookAvailable: bindActionPayload("IdentityStore/facebookAvailable", false),
-    localUserIdentity: bindActionPayload("IdentityStore/localUserIdentity", null),
-    realmChange: (state = null, action) => {
-        switch (action.type) {
-            case "IdentityStore/realmChange":
-                return action.payload;
-            case "IdentityStore/localUserIdentity":
-                const userInfo = action.error ? null : action.payload;
-                if (userInfo) {
-                    return userInfo.realm;
-                }
-                else {
-                    return null;
-                }
-            default:
-                return state;
-        }
-    }
+    localUserIdentity: bindActionPayload("IdentityStore/localUserIdentity", null)
 });
 
 export const actions = dispatch => ({
@@ -139,24 +123,7 @@ export default class IdentityStore {
         return userIdentity ? userIdentity.localUserIdentity : null;
     }
 
-    get _reduxRealmChange() {
-        const userIdentity = this._redux.getState().identity;
-        return userIdentity ? userIdentity.realmChange : null;
-    }
-
     onReduxAction() {
-        const userInfo = this._reduxUserInfo;
-        const currentRealm = userInfo ? userInfo.realm : null;
-
-        if (this._reduxRealmChange !== currentRealm && !this._inProgress) {
-            log.info("Change realm", this._reduxRealmChange);
-            this._inProgress = true;
-            const realmChange = this._reduxRealmChange ? this._signIn(this._realmProviders[this._reduxRealmChange]) : this.signOut();
-            realmChange.then(() => {
-                log.info("Finished realm change");
-                this._inProgress = false;
-            })
-        }
     }
 
     signInWithGoogle() {
