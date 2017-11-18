@@ -53,6 +53,18 @@ if (process.env.NODE_ENV !== "production" && module.hot) {
         const updatedReducers = require("./reducers.js")["default"];
         redux.replaceReducer(updatedReducers);
     });
+    module.hot.accept('./stores.js', () => {
+        const updatedStoresFactory = require("./stores.js")["default"];
+        Object.values(stores).forEach(store => {
+            console.log("stopping existing store", store);
+            store.stop();
+        });
+        stores = updatedStoresFactory(redux);
+        Object.values(stores).forEach(store => {
+            console.log("starting replacement store", store);
+            store.start();
+        });
+    });
 }
 
 render();
