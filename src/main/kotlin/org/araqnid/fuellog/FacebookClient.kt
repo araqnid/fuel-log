@@ -13,6 +13,7 @@ import org.apache.http.nio.client.HttpAsyncClient
 import java.net.URI
 import java.time.Instant
 import java.util.concurrent.CompletionStage
+import javax.ws.rs.BadRequestException
 
 class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClient: HttpAsyncClient) {
     val debugTokenUri = URI.create("https://graph.facebook.com/debug_token")
@@ -37,7 +38,9 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
                 BasicNameValuePair("grant_type", "client_credentials")
         )).build())
         return asyncHttpClient.executeAsyncHttpRequest(request).thenApply { response ->
-            if (response.statusLine.statusCode != HttpStatus.SC_OK) throw RuntimeException("Failed to fetch app access token from Facebook: ${response.statusLine}")
+            if (response.statusLine.statusCode != HttpStatus.SC_OK)
+                throw BadRequestException("$oauthAccessTokenUri: ${response.statusLine}")
+
             objectMapperForFacebookEndpoint
                     .readerFor(AccessTokenResponse::class.java)
                     .readValue<AccessTokenResponse>(response.entity.content)
@@ -56,7 +59,8 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
 
             asyncHttpClient.executeAsyncHttpRequest(request)
         }.thenApply { response ->
-            if (response.statusLine.statusCode != HttpStatus.SC_OK) throw RuntimeException("Failed to validate Facebook access token: ${response.statusLine}")
+            if (response.statusLine.statusCode != HttpStatus.SC_OK)
+                throw BadRequestException("$debugTokenUri: ${response.statusLine}")
 
             objectMapperForFacebookEndpoint
                     .readerFor(DebugTokenResponse::class.java)
