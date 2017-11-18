@@ -87,7 +87,7 @@ export default class FacebookIdentityProvider {
     _pullUserData(authResponse) {
         return Promise.all([this._fbApi("/me"), this._fbApi("/me/picture")]).then(([me, myPicture]) => {
             log.info("me", me, myPicture, authResponse);
-            return axios.post('/_api/user/identity/facebook', serialise({ id: me.id, name: me.name, token: authResponse.accessToken, picture: myPicture.data.url })).then(({data}) => data)
+            return axios.post('/_api/user/identity/facebook', serialise({ name: me.name, token: authResponse.accessToken, picture: myPicture.data.url })).then(({data}) => data)
         });
     }
 

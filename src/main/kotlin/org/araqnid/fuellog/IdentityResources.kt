@@ -62,20 +62,18 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @Path("facebook")
     @Produces("application/json")
     @PermitAll
-    fun associateFacebookUser(@FormParam("id") identifier: String, @FormParam("name") name: String, @FormParam("picture") picture: URI,
+    fun associateFacebookUser(@FormParam("name") name: String, @FormParam("picture") picture: URI,
                               @FormParam("token") token: String,
                               @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
         FacebookClient(facebookClientConfig, asyncHttpClient)
                 .validateUserAccessToken(token)
                 .thenApply { parsed ->
-                    if (parsed.userId != identifier)
-                        throw BadRequestException("Different user ID in request compared to access token")
                     if (parsed.expiresAt < Instant.now(clock))
                         throw BadRequestException("User access token has expired")
                     if (!parsed.isValid)
                         throw BadRequestException("User access token is not valid")
 
-                    val user = associateUser(servletRequest, URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/$identifier"))
+                    val user = associateUser(servletRequest, URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.userId}"))
                     user.name = name
                     user.facebookProfileData = FacebookProfileData(picture)
                     userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
