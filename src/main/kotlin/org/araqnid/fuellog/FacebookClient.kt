@@ -20,12 +20,14 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 
 class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClient: HttpAsyncClient) {
+    val debugTokenUri = URI.create("https://graph.facebook.com/debug_token")
+    val oauthAccessTokenUri = URI.create("https://graph.facebook.com/oauth/access_token")
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    data class FacebookAccessTokenResponse(val accessToken: String, val tokenType: String)
+    data class AccessTokenResponse(val accessToken: String, val tokenType: String)
     @JsonIgnoreProperties(ignoreUnknown = true)
-    data class FacebookDebugTokenResponse(val userId: String, val type: String, val appId: String, val application: String,
-                                          val expires_at: Instant, val isValid: Boolean, val scopes: Set<String>)
+    data class DebugTokenResponse(val userId: String, val type: String, val appId: String, val application: String,
+                                  val expires_at: Instant, val isValid: Boolean, val scopes: Set<String>)
 
     private val objectMapperForFacebookEndpoint = ObjectMapper()
             .registerModule(KotlinModule())
@@ -34,7 +36,7 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
 
     fun fetchFacebookAppToken(): CompletionStage<String> {
 
-        val request = HttpGet(URIBuilder(URI.create("https://graph.facebook.com/oauth/access_token")).setParameters(listOf(
+        val request = HttpGet(URIBuilder(oauthAccessTokenUri).setParameters(listOf(
                 BasicNameValuePair("client_id", config.id),
                 BasicNameValuePair("client_secret", config.secret),
                 BasicNameValuePair("grant_type", "client_credentials")
@@ -42,15 +44,15 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
         return executeAsyncHttpRequest(request).thenApply { response ->
             if (response.statusLine.statusCode != HttpStatus.SC_OK) throw RuntimeException("Failed to fetch app access token from Facebook: ${response.statusLine}")
             objectMapperForFacebookEndpoint
-                    .readerFor(FacebookAccessTokenResponse::class.java)
-                    .readValue<FacebookAccessTokenResponse>(response.entity.content)
+                    .readerFor(AccessTokenResponse::class.java)
+                    .readValue<AccessTokenResponse>(response.entity.content)
                     .accessToken
         }
     }
 
-    fun validateUserAccessToken(token: String): CompletionStage<FacebookDebugTokenResponse> {
+    fun validateUserAccessToken(token: String): CompletionStage<DebugTokenResponse> {
         return fetchFacebookAppToken().thenCompose { appToken ->
-            val request = HttpGet(URIBuilder(URI.create("https://graph.facebook.com/debug_token"))
+            val request = HttpGet(URIBuilder(debugTokenUri)
                     .setParameters(listOf(
                             BasicNameValuePair("input_token", token),
                             BasicNameValuePair("access_token", appToken) // or "${facebookClientConfig.id}|${facebookClientConfig.secret}"
@@ -62,9 +64,9 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
             if (response.statusLine.statusCode != HttpStatus.SC_OK) throw RuntimeException("Failed to validate Facebook access token: ${response.statusLine}")
 
             objectMapperForFacebookEndpoint
-                    .readerFor(FacebookDebugTokenResponse::class.java)
+                    .readerFor(DebugTokenResponse::class.java)
                     .withRootName("data")
-                    .readValue<FacebookDebugTokenResponse>(response.entity.content)
+                    .readValue<DebugTokenResponse>(response.entity.content)
         }
     }
 
