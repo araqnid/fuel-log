@@ -7,6 +7,8 @@ export default class GoogleIdentityProvider {
     constructor() {
         this._available = false;
         this._availableListeners = [];
+        this._forwardUserUpdatesEnabled = false;
+        this._forwardUserUpdates = null;
         this._authInitialised = __api_hooks.googleApi.promise
             .then(() => new Promise(resolve => {
                 log.info("start loading auth2");
@@ -20,6 +22,7 @@ export default class GoogleIdentityProvider {
                 if (this._googleAuth === null) {
                     log.info("Initialising GoogleAuth instance");
                     this._googleAuth = gapi.auth2.init({});
+                    this._googleAuth.currentUser.listen(this._currentUserUpdated.bind(this));
                 }
                 else {
                     log.info("Using existing GoogleAuth instance");
@@ -33,6 +36,8 @@ export default class GoogleIdentityProvider {
     }
 
     stop() {
+        // can't unlisten to GoogleAuth api, but realistically this is just a hot-reload dev-mode problem
+        this._forwardUserUpdates = null;
     }
 
     onAvailable(listener) {
@@ -40,6 +45,10 @@ export default class GoogleIdentityProvider {
             listener();
         else
             this._availableListeners.push(listener);
+    }
+
+    onUserUpdate(listener) {
+        this._forwardUserUpdates = listener;
     }
 
     _markAvailable() {
@@ -94,6 +103,7 @@ export default class GoogleIdentityProvider {
     signOut() {
         log.info("Sign out");
         return this._authInitialised
+            .then(this._enableUserForwarding(false))
             .then(() => {
                 this._googleAuth.signOut();
             });
@@ -119,7 +129,8 @@ export default class GoogleIdentityProvider {
 
     _associate(idToken) {
         return axios.post('/_api/user/identity/google', idToken, { headers: { "Content-Type": "text/plain" } })
-            .then(({data}) => data);
+            .then(({data: userInfo}) => userInfo)
+            .then(this._enableUserForwarding());
     }
 
     _currentUser() {
@@ -134,5 +145,31 @@ export default class GoogleIdentityProvider {
                 reject(err);
             });
         });
+    }
+
+    _enableUserForwarding(enabled = true) {
+        return data => {
+            log.info((enabled ? "enabling" : "disabling") + " user update forwarding");
+            this._forwardUserUpdatesEnabled = enabled;
+            return data;
+        };
+    }
+
+    _currentUserUpdated(googleUser) {
+        const forwardTo = this._forwardUserUpdates;
+        if (forwardTo && this._forwardUserUpdatesEnabled) {
+            const idToken = googleUser.getAuthResponse().id_token;
+            if (idToken) {
+                log.info("forwarding currentUser update", googleUser);
+                this._associate(idToken).then(forwardTo);
+            }
+            else {
+                log.info("currentUser updated and dropped id token");
+                forwardTo(null);
+            }
+        }
+        else {
+            log.info("ignoring currentUser update", googleUser);
+        }
     }
 }
