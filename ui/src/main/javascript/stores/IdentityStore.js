@@ -45,16 +45,13 @@ export const actions = dispatch => ({
 export default class IdentityStore {
     constructor(redux) {
         this._redux = redux;
-        this._reduxUnsubscribe = null;
         this._realmProviders = {
             GOOGLE: new GoogleIdentityProvider(),
             FACEBOOK: new FacebookIdentityProvider()
         };
-        this._inProgress = false;
     }
 
     start() {
-        this._reduxUnsubscribe = this._redux.subscribe(this.onReduxAction.bind(this));
         this._realmProviders.GOOGLE.onAvailable(() => this.dispatch({ type: "IdentityStore/googleAvailable", payload: true }));
         this._realmProviders.FACEBOOK.onAvailable(() => this.dispatch({ type: "IdentityStore/facebookAvailable", payload: true }));
         this._realmProviders.GOOGLE.onUserUpdate(userInfo => this.dispatch({ type: "IdentityStore/localUserIdentity", payload: userInfo }));
@@ -115,18 +112,11 @@ export default class IdentityStore {
 
     stop() {
         Object.values(this._realmProviders).forEach(p => p.stop());
-        if (this._reduxUnsubscribe) {
-            this._reduxUnsubscribe();
-            this._reduxUnsubscribe = null;
-        }
     }
 
     get _reduxUserInfo() {
         const userIdentity = this._redux.getState().identity;
         return userIdentity ? userIdentity.localUserIdentity : null;
-    }
-
-    onReduxAction() {
     }
 
     signInWithGoogle() {
