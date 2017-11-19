@@ -39,9 +39,9 @@ export default class FacebookIdentityProvider {
                 log.info("start probing for Facebook user");
                 return this._fbGetLoginStatus();
             })
-            .then(facebookStatus => {
-                log.info("got Facebook login status", facebookStatus);
-                return facebookStatus.status === "connected";
+            .then(({ status }) => {
+                log.info("got Facebook login status", status);
+                return status === "connected";
             });
     }
 
@@ -55,24 +55,26 @@ export default class FacebookIdentityProvider {
                 log.info("confirm Facebook user", userInfo);
                 return this._fbGetLoginStatus();
             })
-            .then(facebookStatus => {
-                log.info("Got Facebook user", facebookStatus);
-                if (facebookStatus.status === "connected") {
-                    return this._associate(facebookStatus.authResponse);
+            .then(({ status, authResponse }) => {
+                if (status === "connected") {
+                    log.info("login-status produced user response", authResponse);
+                    return this._associate(authResponse);
                 }
                 else {
+                    log.info("login-status did not produce a user", status);
                     return null;
                 }
             });
     }
 
     signIn() {
-        return this._fbLogin().then(facebookStatus => {
-            log.info("Signed in; got Facebook status", facebookStatus);
-            if (facebookStatus.status === "connected") {
-                return this._associate(facebookStatus.authResponse);
+        return this._fbLogin().then(({ status, authResponse }) => {
+            if (status === "connected") {
+                log.info("sign-in produced user response", authResponse);
+                return this._associate(authResponse);
             }
             else {
+                log.info("sign-in did not produce a user", status);
                 return null;
             }
         });
