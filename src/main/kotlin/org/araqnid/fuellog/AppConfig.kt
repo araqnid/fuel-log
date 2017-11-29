@@ -22,7 +22,7 @@ import org.araqnid.appstatus.AppVersion
 import org.araqnid.appstatus.ComponentsBuilder
 import org.araqnid.appstatus.StatusComponent
 import org.araqnid.eventstore.EventSource
-import org.araqnid.eventstore.filesystem.FilesystemEventSource
+import org.araqnid.eventstore.filesystem.TieredFilesystemEventSource
 import org.araqnid.eventstore.subscription.PollingEventSubscriptionService
 import org.araqnid.eventstore.subscription.SnapshotEventSubscriptionService
 import java.nio.file.Files
@@ -42,7 +42,7 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
     override fun configure() {
         environment.forEach { k, v -> bindConstant().annotatedWith(Names.named(k)).to(v) }
 
-        bind(EventSource::class.java).to(FilesystemEventSource::class.java)
+        bind(EventSource::class.java).to(TieredFilesystemEventSource::class.java)
         bind(Clock::class.java).toInstance(Clock.systemDefaultZone())
         bind(InfoResources::class.java)
         bind(RootResource::class.java)
@@ -82,8 +82,8 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
 
     @Provides
     @Singleton
-    fun filesystemEventSource(clock: Clock): FilesystemEventSource {
-        return FilesystemEventSource(getenv("EVENT_SPOOL").toPath(), clock)
+    fun filesystemEventSource(clock: Clock): TieredFilesystemEventSource {
+        return TieredFilesystemEventSource(getenv("EVENT_SPOOL").toPath(), clock)
     }
 
     @Provides

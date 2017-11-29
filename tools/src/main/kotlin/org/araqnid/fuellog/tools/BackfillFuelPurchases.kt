@@ -5,7 +5,7 @@ import com.fasterxml.uuid.impl.NameBasedGenerator
 import com.google.common.base.Splitter
 import com.google.common.io.Resources
 import org.araqnid.eventstore.StreamId
-import org.araqnid.eventstore.filesystem.FilesystemEventSource
+import org.araqnid.eventstore.filesystem.TieredFilesystemEventSource
 import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.EventMetadata
 import org.araqnid.fuellog.events.FuelPurchased
@@ -28,7 +28,7 @@ object BackfillFuelPurchases {
         val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/google/112460655559871226975")
         val eventsDirectory = Paths.get(if (args.isNotEmpty()) args[0] else "events")
         with(eventsDirectory.resolve("fuel")) { if (Files.exists(this)) deleteRecursively(this) }
-        val userId = FilesystemEventSource(eventsDirectory, Clock.systemDefaultZone())
+        val userId = TieredFilesystemEventSource(eventsDirectory, Clock.systemDefaultZone())
                 .categoryReader.readCategoryForwards("user")
                 .map { it.event }
                 .map{
@@ -54,7 +54,7 @@ object BackfillFuelPurchases {
                     parts[1].toDouble() * KM_PER_MILE, parts[3].isYes(), parts[5], null)
             val purchaseId = Generators.nameBasedGenerator(NameBasedGenerator.NAMESPACE_URL)
                     .generate("https://fuel.araqnid.org/fuel/?user_id=$userId&timestamp=${purchaseEvent.timestamp}&odometer=${purchaseEvent.odometer}")
-            FilesystemEventSource(eventsDirectory, Clock.fixed(timestamp, ZoneId.of("Europe/London")))
+            TieredFilesystemEventSource(eventsDirectory, Clock.fixed(timestamp, ZoneId.of("Europe/London")))
                     .streamWriter
                     .write(StreamId("fuel", purchaseId.toString()),
                             listOf(EventCodecs.encode(purchaseEvent, metadata)))
