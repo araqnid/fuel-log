@@ -111,7 +111,7 @@ configurations {
 }
 
 dependencies {
-    compile("org.araqnid:app-status:0.0.11")
+    compile("org.araqnid:app-status:0.0.12")
     compile("org.araqnid:eventstore:0.0.20")
     compile("com.google.guava:guava:$guavaVersion")
     compile("com.google.inject:guice:$guiceVersion")
