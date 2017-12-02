@@ -76,6 +76,7 @@ tasks {
         manifest {
             attributes["Implementation-Title"] = project.description ?: project.name
             attributes["Implementation-Version"] = project.version
+            attributes["X-Service-Class"] = application.mainClassName
         }
         from("ui/build/site") {
             into("www")
