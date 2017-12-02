@@ -78,6 +78,10 @@ tasks {
                         .sortedBy { dep -> dep.gav }
                         .forEach { dep -> w.write("${dep.digest} ${dep.gav} ${dep.type}\n")}
             }
+
+            File(outputDir, "${project.name}.bootdeps.txt").outputStream().bufferedWriter().use {
+                // blank - no extra boot classpath entries
+            }
         }
     }
 
