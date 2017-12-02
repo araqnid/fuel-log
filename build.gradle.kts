@@ -13,7 +13,7 @@ application {
     mainClassName = "org.araqnid.fuellog.boot.Main"
 }
 
-val jettyVersion by extra { "9.4.7.v20170914" }
+val jettyVersion by extra { "9.4.8.v20171121" }
 val jacksonVersion by extra { "2.9.1" }
 val resteasyVersion by extra { "3.1.4.Final" }
 val guiceVersion by extra { "4.1.0" }
