@@ -14,5 +14,6 @@ dependencies {
     testCompile(kotlin("test-junit"))
     testCompile("com.timgroup:clocks-testing:1.0.1070")
     testCompile(kotlin("stdlib-jdk8"))
+    testCompile("org.hamcrest:hamcrest-library:1.3")
     testRuntime("org.slf4j:slf4j-simple:1.7.25")
 }
