@@ -1,15 +1,20 @@
 package org.araqnid.fuellog.integration
 
-import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.natpryce.hamkrest.and
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.cast
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
-import org.araqnid.eventstore.Blob
 import org.araqnid.eventstore.EventCategoryReader
 import org.araqnid.eventstore.EventStreamWriter
 import org.araqnid.eventstore.StreamId
@@ -22,22 +27,15 @@ import org.araqnid.fuellog.events.EventMetadata
 import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
 import org.araqnid.fuellog.findFirstAndClose
+import org.araqnid.fuellog.hamkrest.containsInOrder
+import org.araqnid.fuellog.hamkrest.json.jsonObject
 import org.araqnid.fuellog.toListAndClose
-import org.hamcrest.Description
-import org.hamcrest.Matcher
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.contains
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.hasEntry
-import org.hamcrest.TypeSafeDiagnosingMatcher
 import org.junit.Test
-import java.io.InputStream
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 class FuelResourcesIntegrationTest : IntegrationTest() {
-    val objectMapper: ObjectMapper = ObjectMapper()
-            .registerModule(KotlinModule())
+    val objectMapper: ObjectMapper = jacksonObjectMapper()
             .registerModule(JavaTimeModule())
             .registerModule(Jdk8Module())
             .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
@@ -95,8 +93,10 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 location = "Somewhere",
                 geoLocation = Coordinates(51.2, 0.02))
 
-        assertThat(serverEvents(), contains(
-                DecodedEvent.matcher(equalTo("fuel"), equalTo(fuelPurchasedEvent), hasEntry("client_ip", "127.0.0.1"))
+        assertThat(serverEvents(), containsInOrder(
+                has(DecodedEvent::category, equalTo("fuel"))
+                        and has(DecodedEvent::data, cast(equalTo(fuelPurchasedEvent)))
+                        and has(DecodedEvent::metadata, cast(jsonObject().withProperty("client_ip", "127.0.0.1").withAnyOtherProperties()))
         ))
 
         val streamId = server.instance<EventCategoryReader>().readCategoryForwards("fuel")
@@ -167,48 +167,11 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
         assertThat(fuelRecords[0].fuelVolume, equalTo(50.0))
     }
 
-    fun serverEvents(): List<DecodedEvent> = server.instance<EventCategoryReader>().readCategoryForwards("fuel")
-            .map { (_, event) -> DecodedEvent(event.streamId.category, EventCodecs.decode(event), event.metadata.parseJsonAsGeneric()) }
+    private fun serverEvents(): List<DecodedEvent> = server.instance<EventCategoryReader>().readCategoryForwards("fuel")
+            .map { (_, event) -> DecodedEvent(event.streamId.category, EventCodecs.decode(event), objectMapper.readTree(event.metadata.openStream())) }
             .toListAndClose()
 
-    data class DecodedEvent(val category: String, val data: Event, val metadata: Map<String, Any>) {
-        companion object {
-            fun matcher(category: Matcher<String>, data: Matcher<Event>, metadata: Matcher<Map<out String, Any>>): Matcher<DecodedEvent> {
-                return object : TypeSafeDiagnosingMatcher<DecodedEvent>() {
-                    override fun matchesSafely(item: DecodedEvent, mismatchDescription: Description): Boolean {
-                        if (!category.matches(item.category)) {
-                            mismatchDescription.appendText("category ")
-                            category.describeMismatch(item.category, mismatchDescription)
-                            return false
-                        }
-                        if (!data.matches(item.data)) {
-                            mismatchDescription.appendText("data ")
-                            category.describeMismatch(item.data, mismatchDescription)
-                            return false
-                        }
-                        if (!metadata.matches(item.metadata)) {
-                            mismatchDescription.appendText("metadata ")
-                            category.describeMismatch(item.metadata, mismatchDescription)
-                            return false
-                        }
-                        return true
-                    }
+    data class DecodedEvent(val category: String, val data: Event, val metadata: JsonNode)
 
-                    override fun describeTo(description: Description) {
-                        description.appendText("data with category ").appendDescriptionOf(category)
-                                .appendText(", data ").appendDescriptionOf(data)
-                                .appendText(", metadata ").appendDescriptionOf(metadata)
-                    }
-                }
-            }
-        }
-    }
-
-    private inline fun <reified T> typeReference() : TypeReference<T> = object : TypeReference<T>() {}
-
-    private fun Blob.parseJsonAsGeneric(): Map<String, Any> = objectMapper.readerFor(typeReference<Map<String, Any>>()).readValue(this.openStream())
-
-    private inline fun <reified T> readJsonResponse(): T = readJson(response.entity.content)
-
-    private inline fun <reified T> readJson(input: InputStream): T = objectMapper.readerFor(typeReference<T>()).readValue(input)
+    private inline fun <reified T : Any> readJsonResponse(): T = objectMapper.readValue(response.entity.content)
 }

@@ -1,5 +1,7 @@
 package org.araqnid.fuellog
 
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import com.timgroup.clocks.testing.ManualClock
 import org.araqnid.eventstore.InMemoryEventSource
 import org.araqnid.eventstore.NoSuchStreamException
@@ -10,15 +12,13 @@ import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.EventMetadata
 import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.containsInAnyOrder
-import org.hamcrest.Matchers.equalTo
+import org.araqnid.fuellog.hamkrest.containsInAnyOrder
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
 import java.time.Clock
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 class FuelRepositoryTest {
     @Rule @JvmField val thrown: ExpectedException = ExpectedException.none()

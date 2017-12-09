@@ -21,9 +21,9 @@ import org.araqnid.eventstore.EventSource
 import org.araqnid.eventstore.InMemoryEventSource
 import org.araqnid.fuellog.AppConfig
 import org.araqnid.fuellog.JettyService
+import org.araqnid.fuellog.test.NIOTemporaryFolder
 import org.eclipse.jetty.server.NetworkConnector
 import org.junit.rules.ExternalResource
-import org.junit.rules.TemporaryFolder
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.net.URI
@@ -40,7 +40,7 @@ class ServerRunner(val environment: Map<String, String>) : ExternalResource() {
     inline fun <reified T, Ann : Annotation> instance(annotationClass: Class<Ann>): T = injector.getInstance(Key.get(typeLiteral(), annotationClass))
     inline fun <reified T, Ann : Annotation> instance(annotation: Ann): T = injector.getInstance(Key.get(typeLiteral(), annotation))
 
-    val temporaryFolder = TemporaryFolder()
+    val temporaryFolder = NIOTemporaryFolder()
 
     val client: CloseableHttpClient = HttpClients.custom()
             .setRoutePlanner({ target, _, _ ->

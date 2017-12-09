@@ -113,7 +113,6 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
     testCompile(kotlin("test-junit"))
-    testCompile("org.hamcrest:hamcrest-library:1.3")
     testCompile(project(":test-utils"))
     testCompile("com.timgroup:clocks-testing:1.0.1070")
     runtime("ch.qos.logback:logback-classic:1.2.2")

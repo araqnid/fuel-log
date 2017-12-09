@@ -1,14 +1,15 @@
 package org.araqnid.fuellog.integration
 
+import com.natpryce.hamkrest.anything
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.or
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
-import org.araqnid.fuellog.matchers.jsonAnyString
-import org.araqnid.fuellog.matchers.jsonNull
-import org.araqnid.fuellog.matchers.jsonObject
-import org.araqnid.fuellog.matchers.jsonTextStructuredAs
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.either
-import org.hamcrest.Matchers.equalTo
+import org.araqnid.fuellog.hamkrest.json.json
+import org.araqnid.fuellog.hamkrest.json.jsonNull
+import org.araqnid.fuellog.hamkrest.json.jsonObject
+import org.araqnid.fuellog.hamkrest.json.jsonString
 import org.junit.Test
 import javax.ws.rs.core.MediaType
 
@@ -19,8 +20,8 @@ class RootResourceIntegrationTest : IntegrationTest() {
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType(MediaType.APPLICATION_JSON))
         assertThat(response.entity.text,
-                jsonTextStructuredAs(jsonObject()
-                        .withProperty("version", either(jsonNull()).or(jsonAnyString()))
+                json(jsonObject()
+                        .withProperty("version", jsonNull() or jsonString(anything))
                         .withProperty("user_info", jsonNull())))
     }
 
@@ -30,8 +31,8 @@ class RootResourceIntegrationTest : IntegrationTest() {
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType(MediaType.APPLICATION_JSON))
         assertThat(response.entity.text,
-                jsonTextStructuredAs(jsonObject()
-                        .withProperty("version", either(jsonNull()).or(jsonAnyString()))
+                json(jsonObject()
+                        .withProperty("version", jsonNull() or jsonString(anything))
                         .withPropertyJSON("user_info", "{ realm: 'TEST', user_id: '${user.userId}', name: '${user.name}', picture: null }")))
     }
 }

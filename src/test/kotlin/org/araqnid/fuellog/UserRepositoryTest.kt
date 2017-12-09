@@ -4,25 +4,26 @@ import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.uuid.Generators
 import com.fasterxml.uuid.impl.NameBasedGenerator
+import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.and
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import org.araqnid.eventstore.Blob
 import org.araqnid.eventstore.EventRecord
 import org.araqnid.eventstore.InMemoryEventSource
 import org.araqnid.eventstore.NewEvent
 import org.araqnid.eventstore.StreamId
-import org.araqnid.fuellog.matchers.jsonBytesEquivalentTo
-import org.hamcrest.Description
-import org.hamcrest.Matcher
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.contains
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.TypeSafeDiagnosingMatcher
+import org.araqnid.fuellog.hamkrest.containsInOrder
+import org.araqnid.fuellog.hamkrest.containsOnly
+import org.araqnid.fuellog.hamkrest.json.bytesEquivalentTo
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.net.URI
 import java.time.Clock
-import java.util.UUID
+import java.util.*
 
 private val emptyMetadata = RequestMetadata("10.0.0.0", null)
 
@@ -38,8 +39,8 @@ class UserRepositoryTest {
         val externalId = URI.create("http://www.example.com")
         repo.findOrCreateUserByExternalId(externalId, emptyMetadata)
         assertThat(eventSource.storeReader.readAllForwards().map { it.event }.toListAndClose(),
-                contains(eventRecord(StreamId("user", externalId.toUUID().toString()), 0, "UserExternalIdAssigned",
-                                        jsonBytesEquivalentTo("{ external_id: '$externalId' }"))))
+                containsOnly(eventRecord(StreamId("user", externalId.toUUID().toString()), 0, "UserExternalIdAssigned",
+                                        bytesEquivalentTo("{ external_id: '$externalId' }"))))
     }
 
     @Test fun find_user_by_id() {
@@ -92,7 +93,7 @@ class UserRepositoryTest {
         repo.save(user, emptyMetadata)
 
         assertThat(eventSource.streamReader.readStreamForwards(streamId).map { it.event }.toListAndClose(),
-                contains(eventRecord("UserExternalIdAssigned", "{ external_id: '$externalId' }"),
+                containsInOrder(eventRecord("UserExternalIdAssigned", "{ external_id: '$externalId' }"),
                         eventRecord("UserNameChanged", "{ new_value: 'A Suer' }"),
                         eventRecord("UserNameChanged", "{ new_value: 'A User' }")))
     }
@@ -112,7 +113,7 @@ class UserRepositoryTest {
         repo.save(user, emptyMetadata)
 
         assertThat(eventSource.streamReader.readStreamForwards(streamId).map { it.event }.toListAndClose(),
-                contains(eventRecord("UserExternalIdAssigned", "{ external_id: '$externalId' }"),
+                containsInOrder(eventRecord("UserExternalIdAssigned", "{ external_id: '$externalId' }"),
                         eventRecord("UserNameChanged", "{ new_value: 'A Suer' }")))
     }
 
@@ -136,54 +137,19 @@ private fun jsonBlob(text: String): Blob {
     return Blob(baos.toByteArray())
 }
 
-private fun eventRecord(streamId: StreamId, eventNumber: Long, type: String, data: Matcher<ByteArray>): Matcher<EventRecord> {
-    return object : TypeSafeDiagnosingMatcher<EventRecord>() {
-        override fun matchesSafely(item: EventRecord, mismatchDescription: Description): Boolean {
-            if (item.streamId != streamId) {
-                mismatchDescription.appendText("stream was ").appendValue(item.streamId)
-                return false
-            }
-            if (item.type != type) {
-                mismatchDescription.appendText("type was ").appendValue(item.type)
-                return false
-            }
-            if (item.eventNumber != eventNumber) {
-                mismatchDescription.appendText("event number was ").appendValue(item.eventNumber)
-                return false
-            }
-            val bytes: ByteArray = item.data.read()
-            mismatchDescription.appendText("data ")
-            data.describeMismatch(bytes, mismatchDescription)
-            return data.matches(bytes)
-        }
+private val Blob.bytes: ByteArray
+    get() = read()
 
-        override fun describeTo(description: Description) {
-            description.appendText("event in ").appendValue(streamId)
-                    .appendText(", number ").appendValue(eventNumber)
-                    .appendText(", type ").appendValue(type)
-                    .appendText(", with data ").appendDescriptionOf(data)
-        }
-    }
+private fun eventRecord(streamId: StreamId, eventNumber: Long, type: String, data: Matcher<ByteArray>): Matcher<EventRecord> {
+    return has(EventRecord::streamId, equalTo(streamId)) and
+            has(EventRecord::type, equalTo(type)) and
+            has(EventRecord::eventNumber, equalTo(eventNumber)) and
+            has(EventRecord::data, has(Blob::bytes, data))
 }
 
-private fun eventRecord(type: String, jsonData: String) = eventRecord(type, jsonBytesEquivalentTo(jsonData))
+private fun eventRecord(type: String, jsonData: String) = eventRecord(type, bytesEquivalentTo(jsonData))
 
 private fun eventRecord(type: String, data: Matcher<ByteArray>): Matcher<EventRecord> {
-    return object : TypeSafeDiagnosingMatcher<EventRecord>() {
-        override fun matchesSafely(item: EventRecord, mismatchDescription: Description): Boolean {
-            if (item.type != type) {
-                mismatchDescription.appendText("type was ").appendValue(item.type)
-                return false
-            }
-            val bytes: ByteArray = item.data.read()
-            mismatchDescription.appendText("data ")
-            data.describeMismatch(bytes, mismatchDescription)
-            return data.matches(bytes)
-        }
-
-        override fun describeTo(description: Description) {
-            description.appendText("event of type ").appendValue(type)
-                    .appendText(", with data ").appendDescriptionOf(data)
-        }
-    }
+    return has(EventRecord::type, equalTo(type)) and
+            has(EventRecord::data, has(Blob::bytes, data))
 }

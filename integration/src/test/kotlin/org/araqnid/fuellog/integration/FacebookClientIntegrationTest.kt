@@ -1,12 +1,11 @@
 package org.araqnid.fuellog.integration
 
+import com.natpryce.hamkrest.isEmptyString
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.FacebookClient
 import org.araqnid.fuellog.FacebookClientConfig
+import org.araqnid.fuellog.hamkrest.assumeThat
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.isEmptyString
-import org.hamcrest.Matchers.not
-import org.junit.Assume.assumeThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
@@ -31,8 +30,8 @@ class FacebookClientIntegrationTest {
 
     @Test
     fun `fetches app token`() {
-        assumeThat(facebookAppId, not(isEmptyString()))
-        assumeThat(facebookAppSecret, not(isEmptyString()))
+        assumeThat(facebookAppId, !isEmptyString)
+        assumeThat(facebookAppSecret, !isEmptyString)
 
         val facebookClient = FacebookClient(server.instance<FacebookClientConfig>(), server.instance<HttpAsyncClient>())
         val appToken = facebookClient.fetchFacebookAppToken().toCompletableFuture().join()
@@ -49,9 +48,9 @@ class FacebookClientIntegrationTest {
 
     @Test
     fun `fetches user profile by id`() {
-        assumeThat(facebookAppId, not(isEmptyString()))
-        assumeThat(facebookAppSecret, not(isEmptyString()))
-        assumeThat(accessToken, not(isEmptyString()))
+        assumeThat(facebookAppId, !isEmptyString)
+        assumeThat(facebookAppSecret, !isEmptyString)
+        assumeThat(accessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(server.instance<FacebookClientConfig>(), server.instance<HttpAsyncClient>())
         val result = facebookClient.fetchUserProfile("10155233566049669").toCompletableFuture().join()
@@ -63,9 +62,9 @@ class FacebookClientIntegrationTest {
 
     @Test
     fun `fetches user's own profile`() {
-        assumeThat(facebookAppId, not(isEmptyString()))
-        assumeThat(facebookAppSecret, not(isEmptyString()))
-        assumeThat(accessToken, not(isEmptyString()))
+        assumeThat(facebookAppId, !isEmptyString)
+        assumeThat(facebookAppSecret, !isEmptyString)
+        assumeThat(accessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(server.instance<FacebookClientConfig>(), server.instance<HttpAsyncClient>())
         val result = facebookClient.fetchUsersOwnProfile(accessToken).toCompletableFuture().join()

@@ -1,14 +1,9 @@
 package org.araqnid.fuellog.integration
 
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
-import org.araqnid.eventstore.EventSource
-import org.araqnid.eventstore.InMemoryEventSource
-import org.araqnid.fuellog.integration.IntegrationTest
-import org.araqnid.fuellog.integration.hasMimeType
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.instanceOf
 import org.junit.Test
 
 class StaticContentIntegrationTest : IntegrationTest() {

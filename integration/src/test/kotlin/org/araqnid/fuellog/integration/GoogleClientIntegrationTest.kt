@@ -1,12 +1,11 @@
 package org.araqnid.fuellog.integration
 
+import com.natpryce.hamkrest.isEmptyString
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.GoogleClient
 import org.araqnid.fuellog.GoogleClientConfig
+import org.araqnid.fuellog.hamkrest.assumeThat
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.isEmptyString
-import org.hamcrest.Matchers.not
-import org.junit.Assume.assumeThat
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -30,8 +29,8 @@ class GoogleClientIntegrationTest {
     @Ignore("don't actually have a way of testing this, need a test id token")
     @Test
     fun validates_id_token() {
-        assumeThat(googleClientId, not(isEmptyString()))
-        assumeThat(googleClientSecret, not(isEmptyString()))
+        assumeThat(googleClientId, !isEmptyString)
+        assumeThat(googleClientSecret, !isEmptyString)
 
         val googleClient = GoogleClient(server.instance<GoogleClientConfig>(), server.instance<HttpAsyncClient>(), server.clock)
         googleClient.validateToken("").toCompletableFuture().join()

@@ -1,6 +1,8 @@
 package org.araqnid.fuellog
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.assertion.assertThat
 import org.araqnid.eventstore.Blob
 import org.araqnid.eventstore.EventRecord
 import org.araqnid.eventstore.StreamId
@@ -11,9 +13,7 @@ import org.araqnid.fuellog.events.GoogleProfileChanged
 import org.araqnid.fuellog.events.GoogleProfileData
 import org.araqnid.fuellog.events.UserExternalIdAssigned
 import org.araqnid.fuellog.events.UserNameChanged
-import org.araqnid.fuellog.matchers.jsonRepresentationEquivalentTo
-import org.hamcrest.Matcher
-import org.hamcrest.MatcherAssert.assertThat
+import org.araqnid.fuellog.hamkrest.json.equivalentTo
 import org.junit.Test
 import java.net.URI
 import java.time.Instant
@@ -91,4 +91,6 @@ class EventCodecsTest {
     }
 }
 
-fun jsonBlobEquivalentTo(referenceJson: String): Matcher<Blob> = jsonRepresentationEquivalentTo(referenceJson, { it.openStream().use { stream -> ObjectMapper().readTree(stream) } })
+fun jsonBlobEquivalentTo(referenceJson: String): Matcher<Blob> {
+    return equivalentTo(referenceJson, { it.openStream().use { stream -> ObjectMapper().readTree(stream) } })
+}

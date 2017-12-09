@@ -1,14 +1,14 @@
 package org.araqnid.fuellog.integration
 
+import com.natpryce.hamkrest.anything
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
-import org.araqnid.fuellog.matchers.jsonBytesStructuredAs
-import org.araqnid.fuellog.matchers.jsonObject
-import org.araqnid.fuellog.matchers.jsonScalar
-import org.araqnid.fuellog.matchers.jsonString
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.any
-import org.hamcrest.Matchers.equalTo
+import org.araqnid.fuellog.hamkrest.json.jsonBytes
+import org.araqnid.fuellog.hamkrest.json.jsonObject
+import org.araqnid.fuellog.hamkrest.json.jsonScalar
+import org.araqnid.fuellog.hamkrest.json.jsonString
 import org.junit.Test
 import javax.ws.rs.core.MediaType
 
@@ -24,7 +24,7 @@ class InfoResourcesIntegrationTest : IntegrationTest() {
         execute(HttpGet(server.uri("/_api/info/version")).accepting(MediaType.APPLICATION_JSON))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType(MediaType.APPLICATION_JSON))
-        assertThat(response.entity.bytes, jsonBytesStructuredAs(jsonObject()
+        assertThat(response.entity.bytes, jsonBytes(jsonObject()
                         .withProperty("version", jsonScalar())
                         .withProperty("title", jsonScalar())
                         .withProperty("vendor", jsonScalar())))
@@ -34,7 +34,7 @@ class InfoResourcesIntegrationTest : IntegrationTest() {
         execute(HttpGet(server.uri("/_api/info/version")).accepting(MediaType.TEXT_PLAIN))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType(MediaType.TEXT_PLAIN))
-        assertThat(response.entity.text, any(String::class.java))
+        assertThat(response.entity.text, anything)
     }
 
     @Test fun status_has_json() {
@@ -42,8 +42,8 @@ class InfoResourcesIntegrationTest : IntegrationTest() {
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType(MediaType.APPLICATION_JSON))
         assertThat(response.entity.bytes,
-                jsonBytesStructuredAs(jsonObject()
-                        .withProperty("status", jsonString(any(String::class.java)))
+                jsonBytes(jsonObject()
+                        .withProperty("status", jsonString(anything))
                         .withProperty("components", jsonObject()
                                 .withPropertyJSON("jvmVersion", "{ priority: 'INFO', label: 'JVM version', text: '${System.getProperty("java.version")}' }")
                                 .withAnyOtherProperties()

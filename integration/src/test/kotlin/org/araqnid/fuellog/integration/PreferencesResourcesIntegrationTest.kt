@@ -1,10 +1,10 @@
 package org.araqnid.fuellog.integration
 
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
-import org.araqnid.fuellog.matchers.jsonTextEquivalentTo
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.equalTo
+import org.araqnid.fuellog.hamkrest.json.equivalentTo
 import org.junit.Test
 
 class PreferencesResourcesIntegrationTest : IntegrationTest() {
@@ -18,6 +18,6 @@ class PreferencesResourcesIntegrationTest : IntegrationTest() {
         execute(HttpGet("/_api/user/preferences"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType("application/json"))
-        assertThat(response.entity.text, jsonTextEquivalentTo("{ fuel_volume_unit: 'LITRES', distance_unit: 'MILES', currency: 'GBP' }"))
+        assertThat(response.entity.text, equivalentTo("{ fuel_volume_unit: 'LITRES', distance_unit: 'MILES', currency: 'GBP' }"))
     }
 }
