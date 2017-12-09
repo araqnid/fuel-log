@@ -21,8 +21,14 @@ function formatCost(value, preferences) {
     return definition.symbol + value.amount.toFixed(definition.places);
 }
 
+function instantFromEpochSecondsDecimal(epochTime) {
+    const epochSecond = Math.trunc(epochTime);
+    const nanoAdjustment = Math.trunc((epochTime - epochSecond) * 1E9);
+    return Instant.ofEpochSecond(epochSecond, nanoAdjustment);
+}
+
 const FuelPurchase = ({purchase, preferences}) => {
-    const purchaseInstant = Instant.ofEpochMilli(purchase.purchased_at * 1000);
+    const purchaseInstant = instantFromEpochSecondsDecimal(purchase.purchased_at);
     const purchaseDateTime = ZonedDateTime.ofInstant(purchaseInstant, ZoneId.SYSTEM);
     const purchaseDate = purchaseDateTime.toLocalDate();
     return <tr>

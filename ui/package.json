@@ -6,7 +6,7 @@
     "axios": "^0.17.1",
     "bootstrap": "^3.3.7",
     "jquery": "^2.2.4",
-    "js-joda": "1.5.1",
+    "js-joda": "^1.6.2",
     "lodash": "^3.10.1",
     "nanoajax": "^0.4.3",
     "prop-types": "^15.6.0",
