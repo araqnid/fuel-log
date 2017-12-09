@@ -30,17 +30,14 @@ import java.net.URI
 import java.time.Clock
 
 class ServerRunner(val environment: Map<String, String>) : ExternalResource() {
-    private var serverInjector: Injector? = null
-
-    val injector: Injector
-        get() = serverInjector!!
+    lateinit var injector: Injector
 
     inline fun <reified T> typeLiteral(): TypeLiteral<T> = object : TypeLiteral<T>() { }
     inline fun <reified T> instance(): T = injector.getInstance(Key.get(typeLiteral()))
     inline fun <reified T, Ann : Annotation> instance(annotationClass: Class<Ann>): T = injector.getInstance(Key.get(typeLiteral(), annotationClass))
     inline fun <reified T, Ann : Annotation> instance(annotation: Ann): T = injector.getInstance(Key.get(typeLiteral(), annotation))
 
-    val temporaryFolder = NIOTemporaryFolder()
+    val snapshotsFolder = NIOTemporaryFolder()
 
     val client: CloseableHttpClient = HttpClients.custom()
             .setRoutePlanner({ target, _, _ ->
@@ -55,14 +52,14 @@ class ServerRunner(val environment: Map<String, String>) : ExternalResource() {
     override fun before() {
         System.setProperty("org.jboss.logging.provider", "slf4j")
         val fullEnvironment = HashMap(environment)
-        fullEnvironment["SNAPSHOT_SPOOL"] = temporaryFolder.newFolder("snapshots").toString()
-        serverInjector = Guice.createInjector(Modules.override(AppConfig(fullEnvironment)).with(IntegrationTestModule()))
+        fullEnvironment["SNAPSHOT_SPOOL"] = snapshotsFolder.root.toString()
+        injector = Guice.createInjector(Modules.override(AppConfig(fullEnvironment)).with(IntegrationTestModule()))
         instance<CloseableHttpAsyncClient>().start()
         instance<ServiceManager>().startAsync().awaitHealthy()
     }
 
     override fun after() {
-        if (serverInjector != null) {
+        if (this::injector.isInitialized) {
             instance<ServiceManager>().stopAsync().awaitStopped()
             instance<CloseableHttpAsyncClient>().close()
         }
@@ -70,7 +67,7 @@ class ServerRunner(val environment: Map<String, String>) : ExternalResource() {
     }
 
     override fun apply(base: Statement?, description: Description?): Statement {
-        return temporaryFolder.apply(super.apply(base, description), description)
+        return snapshotsFolder.apply(super.apply(base, description), description)
     }
 
     val port: Int
