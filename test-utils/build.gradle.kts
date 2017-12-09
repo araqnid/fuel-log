@@ -11,4 +11,5 @@ dependencies {
     compile("com.google.guava:guava:$guavaVersion")
     compile("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("reflect"))
 }
