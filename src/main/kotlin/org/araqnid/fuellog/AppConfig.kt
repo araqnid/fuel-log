@@ -97,7 +97,7 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
 
     @Provides
     @Singleton
-    fun snapshotSubscription(clock: Clock, eventSource: EventSource, snapshotPersister: EventProcessorImpl, subscription: PollingEventSubscriptionService, statistics: SnapshotStatistics): SnapshotEventSubscriptionService {
+    fun snapshotSubscription(clock: Clock, snapshotPersister: EventProcessorImpl, subscription: PollingEventSubscriptionService, statistics: SnapshotStatistics): SnapshotEventSubscriptionService {
         return SnapshotEventSubscriptionService(subscription, snapshotPersister, clock, Duration.ofMinutes(15)).apply {
             addListener(SnapshotSubscriptionLogger(), directExecutor())
             addListener(statistics, directExecutor())
