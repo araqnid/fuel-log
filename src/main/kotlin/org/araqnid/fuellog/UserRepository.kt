@@ -20,13 +20,22 @@ import java.net.URI
 import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.collections.ArrayList
+import kotlin.collections.MutableMap
+import kotlin.collections.MutableSet
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.mutableMapOf
+import kotlin.collections.mutableSetOf
+import kotlin.collections.plusAssign
+import kotlin.collections.set
 import kotlin.reflect.KProperty
 
 class UserRepository @Inject constructor(val categoryReader: EventCategoryReader, val streamReader: EventStreamReader, val streamWriter: EventStreamWriter, val clock: Clock) {
     private val category = "user"
     private var lastPosition: Position = categoryReader.emptyCategoryPosition(category)
-    private val externalIdLookup: MutableMap<URI, UUID> = HashMap()
-    private val knownUsers: MutableSet<UUID> = HashSet()
+    private val externalIdLookup: MutableMap<URI, UUID> = mutableMapOf()
+    private val knownUsers: MutableSet<UUID> = mutableSetOf()
 
     @Synchronized
     fun sync() {

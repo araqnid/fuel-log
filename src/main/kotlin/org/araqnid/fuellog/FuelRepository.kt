@@ -9,7 +9,7 @@ import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import javax.inject.Inject
 
 class FuelRepository @Inject constructor(val streamReader: EventStreamReader, val categoryReader: EventCategoryReader) {
@@ -33,7 +33,7 @@ class FuelRepository @Inject constructor(val streamReader: EventStreamReader, va
     }
 
     fun byUserId(userId: UUID): Collection<FuelRecord> {
-        val records = HashMap<UUID, FuelRecord>()
+        val records = mutableMapOf<UUID, FuelRecord>()
         categoryReader.readCategoryForwards("fuel")
                 .map { it.event }
                 .forEachOrderedAndClose { eventRecord ->

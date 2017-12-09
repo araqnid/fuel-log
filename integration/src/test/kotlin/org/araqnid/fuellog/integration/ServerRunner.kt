@@ -51,7 +51,7 @@ class ServerRunner(val environment: Map<String, String>) : ExternalResource() {
 
     override fun before() {
         System.setProperty("org.jboss.logging.provider", "slf4j")
-        val fullEnvironment = HashMap(environment)
+        val fullEnvironment = environment.toMutableMap()
         fullEnvironment["SNAPSHOT_SPOOL"] = snapshotsFolder.root.toString()
         injector = Guice.createInjector(Modules.override(AppConfig(fullEnvironment)).with(IntegrationTestModule()))
         instance<CloseableHttpAsyncClient>().start()
