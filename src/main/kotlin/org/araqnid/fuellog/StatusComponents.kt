@@ -26,6 +26,9 @@ object BasicStatusComponents {
     @OnStatusPage(label = "JVM version")
     val jvmVersion = System.getProperty("java.version")!!
 
+    @OnStatusPage("Kotlin version")
+    val kotlinVersion: String = KotlinVersion.CURRENT.toString()
+
     @OnStatusPage(label = "Jetty version")
     val jettyVersion = Jetty.VERSION!!
 }
