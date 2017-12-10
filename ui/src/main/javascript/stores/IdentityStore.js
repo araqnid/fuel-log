@@ -99,10 +99,10 @@ export default class IdentityStore {
 
             log.info("Assembled probe results", result);
             if (result.GOOGLE) {
-                userInfo = this._realmProviders.GOOGLE.autoLogin();
+                userInfo = await this._realmProviders.GOOGLE.autoLogin();
             }
             else if (result.FACEBOOK) {
-                userInfo = this._realmProviders.FACEBOOK.autoLogin();
+                userInfo = await this._realmProviders.FACEBOOK.autoLogin();
             }
             else {
                 userInfo = null;
