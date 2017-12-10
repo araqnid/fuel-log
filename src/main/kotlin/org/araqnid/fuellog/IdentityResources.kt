@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock
 import java.util.*
+import java.util.concurrent.CompletionException
 import java.util.function.BiConsumer
 import javax.annotation.security.PermitAll
 import javax.inject.Inject
@@ -134,9 +135,10 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
         future(ResteasyAsync()) {
             block()
         }.whenCompleteAsync(BiConsumer { result, ex ->
-            when {
-                ex != null -> asyncResponse.resume(ex)
-                else -> asyncResponse.resume(result)
+            when (ex) {
+                null -> asyncResponse.resume(result)
+                is CompletionException -> asyncResponse.resume(ex.cause)
+                else -> asyncResponse.resume(ex)
             }
         }, jettyService.server.threadPool)
     }
