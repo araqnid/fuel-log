@@ -2,6 +2,7 @@ package org.araqnid.fuellog
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -86,6 +87,15 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
         val response = asyncHttpClient.executeAsyncHttpRequest(HttpGet(URIBuilder(uri).setParameters(
                 BasicNameValuePair("access_token", "${config.id}|${config.secret}"),
                 BasicNameValuePair("fields", "id,name,picture")
+        ).build()))
+        return parseJsonResponse(uri, response)
+    }
+
+    suspend fun debugToken(token: String): JsonNode {
+        val uri = URI.create("https://graph.facebook.com/debug_token")
+        val response = asyncHttpClient.executeAsyncHttpRequest(HttpGet(URIBuilder(uri).setParameters(
+                BasicNameValuePair("access_token", "${config.id}|${config.secret}"),
+                BasicNameValuePair("input_token", token)
         ).build()))
         return parseJsonResponse(uri, response)
     }

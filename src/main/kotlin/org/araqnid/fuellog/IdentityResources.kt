@@ -62,7 +62,7 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     fun associateFacebookUser(token: String,
                               @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
         respondTo(asyncResponse) {
-            val parsed = FacebookClient(facebookClientConfig, asyncHttpClient).fetchUserProfile(token)
+            val parsed = FacebookClient(facebookClientConfig, asyncHttpClient).fetchUsersOwnProfile(token)
             val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.id}")!!
 
             val user = associateUser(servletRequest, externalId)
