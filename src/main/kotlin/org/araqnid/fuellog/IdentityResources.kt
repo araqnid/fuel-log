@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock
 import java.util.*
-import java.util.concurrent.CompletionStage
 import java.util.function.BiConsumer
 import javax.annotation.security.PermitAll
 import javax.inject.Inject
@@ -65,20 +64,22 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @PermitAll
     fun associateFacebookUser(token: String,
                               @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
-        future(ResteasyAsync()) {
+        respondTo(asyncResponse) {
             try {
                 val parsed = FacebookClient(facebookClientConfig, asyncHttpClient).fetchUserProfile(token)
-                val user = associateUser(servletRequest,
-                        URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.id}"))
+                val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.id}")!!
+
+                val user = associateUser(servletRequest, externalId)
                 user.name = parsed.name
                 user.facebookProfileData = FacebookProfileData(parsed.picture.data.url)
                 userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
+
                 UserInfo.from(user)
             } catch (ex: Exception) {
                 logger.warn("Failed to verify Facebook token", ex)
                 throw BadRequestException("Failed to verify Facebook token")
             }
-        }.thenRespondTo(asyncResponse)
+        }
     }
 
     @POST
@@ -87,7 +88,7 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @Produces("application/json")
     @PermitAll
     fun associateGoogleUserAsync(idToken: String, @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
-        future(ResteasyAsync()) {
+        respondTo(asyncResponse) {
             try {
                 val tokenInfo = GoogleClient(googleClientConfig, asyncHttpClient, clock).validateToken(idToken)
                 val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/google/${tokenInfo.userId}")!!
@@ -102,7 +103,7 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
                 logger.warn("Failed to verify Google token", ex)
                 throw BadRequestException("Failed to verify Google token")
             }
-        }.thenRespondTo(asyncResponse)
+        }
     }
 
     private fun associateUser(servletRequest: HttpServletRequest, externalId: URI): UserRecord {
@@ -129,12 +130,13 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
         }
     }
 
-    private fun <T> CompletionStage<T>.thenRespondTo(asyncResponse: AsyncResponse): CompletionStage<T> {
-        return whenCompleteAsync(BiConsumer { result, ex ->
+    private fun <T> respondTo(asyncResponse: AsyncResponse, block: suspend () -> T) {
+        future(ResteasyAsync()) {
+            block()
+        }.whenCompleteAsync(BiConsumer { result, ex ->
             when {
-                result != null -> asyncResponse.resume(result)
                 ex != null -> asyncResponse.resume(ex)
-                else -> throw IllegalStateException()
+                else -> asyncResponse.resume(result)
             }
         }, jettyService.server.threadPool)
     }
