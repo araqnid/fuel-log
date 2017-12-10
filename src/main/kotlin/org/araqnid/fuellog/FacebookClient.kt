@@ -100,14 +100,14 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
         return parseJsonResponse(uri, response)
     }
 
-    val permittedMimeTypes = setOf("text/javacsript", "application/json")
+    val permittedMimeTypes = setOf("text/javascript", "application/json")
 
     private inline fun <reified T : Any> parseJsonResponse(uri: URI, response: HttpResponse): T {
         if (response.statusLine.statusCode != HttpStatus.SC_OK)
             throw BadRequestException("$uri: ${response.statusLine}")
 
         val contentType = ContentType.get(response.entity)
-        if (permittedMimeTypes.contains(contentType.mimeType.toLowerCase()))
+        if (!permittedMimeTypes.contains(contentType.mimeType.toLowerCase()))
             throw BadRequestException("$uri: unhandled content-type: $contentType")
 
         return objectMapperForFacebookEndpoint.readValue(response.entity.content)
