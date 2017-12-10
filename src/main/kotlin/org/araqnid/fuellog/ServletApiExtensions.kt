@@ -1,16 +1,22 @@
 package org.araqnid.fuellog
 
-import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpSession
-
-internal val userSessionAttributeName = IdentityResources::class.java.name + ".USER_ID"
+import kotlin.reflect.KProperty
+import kotlin.reflect.jvm.jvmErasure
 
 internal val HttpServletRequest.maybeSession: HttpSession?
     get() = this.getSession(false)
 
-internal var HttpSession.userId: UUID?
-    get() = getAttribute(userSessionAttributeName) as UUID?
-    set(value) {
-        setAttribute(userSessionAttributeName, value)
+internal class HttpSessionAttribute<T : Any>(private val name: String) {
+    @Suppress("UNCHECKED_CAST")
+    operator fun getValue(session: HttpSession, property: KProperty<*>): T? =
+            property.returnType.jvmErasure.java.cast(session.getAttribute(name)) as T?
+
+    operator fun setValue(session: HttpSession, property: KProperty<*>, value: T?) {
+        if (value == null)
+            session.removeAttribute(name)
+        else
+            session.setAttribute(name, value)
     }
+}
