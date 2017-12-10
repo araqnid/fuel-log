@@ -20,9 +20,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.container.AsyncResponse
 import javax.ws.rs.container.Suspended
 import javax.ws.rs.core.Context
-import kotlin.coroutines.experimental.Continuation
-import kotlin.coroutines.experimental.CoroutineContext
-import kotlin.coroutines.experimental.startCoroutine
 
 @Singleton
 @Path("/user/identity")
@@ -121,20 +118,6 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     }
 
     private fun <T> respondTo(asyncResponse: AsyncResponse, block: suspend () -> T) {
-        block.startCoroutine(object : Continuation<T> {
-            override val context: CoroutineContext = ResteasyAsync()
-
-            override fun resume(value: T) {
-                jettyService.server.threadPool.execute {
-                    asyncResponse.resume(value)
-                }
-            }
-
-            override fun resumeWithException(exception: Throwable) {
-                jettyService.server.threadPool.execute {
-                    asyncResponse.resume(exception)
-                }
-            }
-        })
+        respondAsynchronously(asyncResponse, jettyService.server.threadPool, block)
     }
 }
