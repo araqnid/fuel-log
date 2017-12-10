@@ -64,53 +64,57 @@ export default class IdentityStore {
     }
 
     async _launch() {
-        let {data: {user_info: userInfo}} = await axios.get("_api/user/identity");
-        if (userInfo) {
-            const realm = this._realmProviders[userInfo.realm];
-            if (realm) {
-                log.info("last known user identity is in known realm, confirm it", userInfo);
-                const confirmed = await realm.confirmUser(userInfo);
-                if (confirmed) {
-                    log.info("User details confirmed");
-                    userInfo = confirmed;
-                }
-                else {
-                    log.info("User details not confirmed");
-                    await axios.delete("_api/user/identity");
-                    userInfo = null;
-                }
-            }
-            else {
-                log.warn("last known user identity is in unknown realm");
-                await axios.delete("_api/user/identity");
-                userInfo = null;
-            }
-        }
-        else {
-            log.info("Asking realm providers to probe for identity");
-            const names = Object.keys(this._realmProviders);
-            const values = await Promise.all(names.map(name => this._realmProviders[name].probe()));
+        const {data: {user_info: provisionalUserInfo}} = await axios.get("_api/user/identity");
 
-            log.info("Collected probe results", values);
-            const result = {};
-            names.forEach((name, index) => {
-                result[name] = values[index];
-            });
-
-            log.info("Assembled probe results", result);
-            if (result.GOOGLE) {
-                userInfo = await this._realmProviders.GOOGLE.autoLogin();
-            }
-            else if (result.FACEBOOK) {
-                userInfo = await this._realmProviders.FACEBOOK.autoLogin();
-            }
-            else {
-                userInfo = null;
-            }
-        }
+        const userInfo = await (provisionalUserInfo ? this._confirm(provisionalUserInfo) : this._probe());
 
         log.info("final user: ", userInfo);
         this.dispatch({ type: "IdentityStore/localUserIdentity", payload: userInfo });
+    }
+
+    async _confirm(provisionalUserInfo) {
+        const realm = this._realmProviders[provisionalUserInfo.realm];
+        if (realm) {
+            log.info("last known user identity is in known realm, confirm it", provisionalUserInfo);
+            const confirmed = await realm.confirmUser(provisionalUserInfo);
+            if (confirmed) {
+                log.info("User details confirmed");
+                return confirmed;
+            }
+            else {
+                log.info("User details not confirmed");
+                await axios.delete("_api/user/identity");
+                return null;
+            }
+        }
+        else {
+            log.warn("last known user identity is in unknown realm");
+            await axios.delete("_api/user/identity");
+            return null;
+        }
+    }
+
+    async _probe() {
+        log.info("Asking realm providers to probe for identity");
+        const names = Object.keys(this._realmProviders);
+        const values = await Promise.all(names.map(name => this._realmProviders[name].probe()));
+
+        log.info("Collected probe results", values);
+        const result = {};
+        names.forEach((name, index) => {
+            result[name] = values[index];
+        });
+
+        log.info("Assembled probe results", result);
+        if (result.GOOGLE) {
+            return this._realmProviders.GOOGLE.autoLogin();
+        }
+        else if (result.FACEBOOK) {
+            return this._realmProviders.FACEBOOK.autoLogin();
+        }
+        else {
+            return null;
+        }
     }
 
     get _reduxUserInfo() {
