@@ -2,7 +2,6 @@ package org.araqnid.fuellog
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -45,13 +44,7 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
 
         val response = asyncHttpClient.executeAsyncHttpRequest(request)
 
-        if (response.statusLine.statusCode != HttpStatus.SC_OK)
-            throw BadRequestException("$oauthAccessTokenUri: ${response.statusLine}")
-
-        return objectMapperForFacebookEndpoint
-                .readerFor(AccessTokenResponse::class.java)
-                .readValue<AccessTokenResponse>(response.entity.content)
-                .accessToken
+        return parseJsonResponse<AccessTokenResponse>(oauthAccessTokenUri, response).accessToken
     }
 
     suspend fun validateUserAccessToken(token: String): DebugTokenResponse {
@@ -91,16 +84,7 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
         return parseJsonResponse(uri, response)
     }
 
-    suspend fun debugToken(token: String): JsonNode {
-        val uri = URI.create("https://graph.facebook.com/debug_token")
-        val response = asyncHttpClient.executeAsyncHttpRequest(HttpGet(URIBuilder(uri).setParameters(
-                BasicNameValuePair("access_token", "${config.id}|${config.secret}"),
-                BasicNameValuePair("input_token", token)
-        ).build()))
-        return parseJsonResponse(uri, response)
-    }
-
-    val permittedMimeTypes = setOf("text/javascript", "application/json")
+    private val permittedMimeTypes = setOf("text/javascript", "application/json")
 
     private inline fun <reified T : Any> parseJsonResponse(uri: URI, response: HttpResponse): T {
         if (response.statusLine.statusCode != HttpStatus.SC_OK)

@@ -91,11 +91,11 @@ class FacebookClientIntegrationTest {
     }
 
     @Test
-    fun `fetches token debug information`() {
+    fun `validates user access token`() {
         assumeThat(accessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(facebookClientConfig, httpClient)
-        val result = future { facebookClient.debugToken(accessToken) }.join()
+        val result = future { facebookClient.validateUserAccessToken(accessToken) }.join()
 
         val sw = StringWriter()
         jacksonObjectMapper().writer().withDefaultPrettyPrinter().writeValue(sw, result)
