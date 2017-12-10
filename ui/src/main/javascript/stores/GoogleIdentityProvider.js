@@ -58,17 +58,17 @@ export default class GoogleIdentityProvider {
         });
     }
 
-    probe() {
-        return this._authInitialised.then(() => {
-            log.info("start probing for Google user");
-            return this._currentUser();
-        }).then(googleUser => {
-            log.info("probed", googleUser);
-            return !!googleUser.getId();
-        });
+    async probe() {
+        await this._authInitialised;
+
+        log.info("start probing for Google user");
+        const googleUser = await this._currentUser();
+
+        log.info("probed", googleUser);
+        return !!googleUser.getId();
     }
 
-    autoLogin() {
+    async autoLogin() {
         log.info("Go ahead with auto-login");
         const currentUser = this._googleAuth.currentUser.get();
         const idToken = currentUser.getAuthResponse().id_token;
@@ -77,60 +77,57 @@ export default class GoogleIdentityProvider {
             return this._associate(idToken);
         }
         else {
-            return Promise.reject("need to sign in to get ID token");
+            throw new Error("need to sign in to get ID token");
         }
     }
 
-    signIn() {
+    async signIn() {
         log.info("Sign in");
-        return this._authInitialised.then(() => {
-            const currentUser = this._googleAuth.currentUser.get();
-            const idToken = currentUser.getAuthResponse().id_token;
-            if (idToken) {
-                log.info("already have an ID token");
-                return currentUser;
-            }
-            else {
-                log.info("need to sign in to get ID token");
-                return this._googleAuth.signIn();
-            }
-        }).then(googleUser => {
-            log.info("resolved Google user for sign-in", googleUser);
-            return this._associate(googleUser.getAuthResponse().id_token);
-        });
+        await this._authInitialised;
+
+        let googleUser;
+        const currentUser = this._googleAuth.currentUser.get();
+        const idToken = currentUser.getAuthResponse().id_token;
+        if (idToken) {
+            log.info("already have an ID token");
+            googleUser = currentUser;
+        }
+        else {
+            log.info("need to sign in to get ID token");
+            googleUser = await this._googleAuth.signIn();
+        }
+
+        log.info("resolved Google user for sign-in", googleUser);
+        return this._associate(googleUser.getAuthResponse().id_token);
     }
 
-    signOut() {
+    async signOut() {
         log.info("Sign out");
-        return this._authInitialised
-            .then(this._enableUserForwarding(false))
-            .then(() => {
-                this._googleAuth.signOut();
-            });
+        await this._authInitialised;
+        this._enableUserForwarding(false);
+        this._googleAuth.signOut();
     }
 
-    confirmUser(userInfo) {
-        return this._authInitialised
-            .then(() => {
-                log.info("confirm Google user", userInfo);
-                return this._currentUser();
-            })
-            .then(googleUser => {
-                if (!googleUser) return null;
-                const idToken = googleUser.getAuthResponse().id_token;
-                if (idToken) {
-                    return this._associate(idToken);
-                }
-                else {
-                    return null;
-                }
-            });
+    async confirmUser(userInfo) {
+        await this._authInitialised;
+
+        log.info("confirm Google user", userInfo);
+        const googleUser = await this._currentUser();
+        if (!googleUser) return null;
+
+        const idToken = googleUser.getAuthResponse().id_token;
+        if (idToken) {
+            return this._associate(idToken);
+        }
+        else {
+            return null;
+        }
     }
 
-    _associate(idToken) {
-        return axios.post('/_api/user/identity/google', idToken, { headers: { "Content-Type": "text/plain" } })
-            .then(({data: userInfo}) => userInfo)
-            .then(this._enableUserForwarding());
+    async _associate(idToken) {
+        const { data: userInfo } = await axios.post('/_api/user/identity/google', idToken, { headers: { "Content-Type": "text/plain" } });
+        this._enableUserForwarding();
+        return userInfo;
     }
 
     _currentUser() {
@@ -148,11 +145,8 @@ export default class GoogleIdentityProvider {
     }
 
     _enableUserForwarding(enabled = true) {
-        return data => {
-            log.info((enabled ? "enabling" : "disabling") + " user update forwarding");
-            this._forwardUserUpdatesEnabled = enabled;
-            return data;
-        };
+        log.info((enabled ? "enabling" : "disabling") + " user update forwarding");
+        this._forwardUserUpdatesEnabled = enabled;
     }
 
     _currentUserUpdated(googleUser) {
