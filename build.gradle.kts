@@ -1,5 +1,6 @@
 import org.araqnid.gradle.RuntimeDependenciesTask
 import org.jetbrains.kotlin.daemon.common.toHexString
+import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 
@@ -56,6 +57,10 @@ allprojects {
             }
         }
     }
+}
+
+kotlin {
+    experimental.coroutines = Coroutines.ENABLE
 }
 
 configurations {
