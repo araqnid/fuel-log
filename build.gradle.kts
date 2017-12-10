@@ -1,4 +1,5 @@
 import org.araqnid.gradle.RuntimeDependenciesTask
+import org.gradle.kotlin.dsl.get
 import org.jetbrains.kotlin.daemon.common.toHexString
 import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import java.io.ByteArrayOutputStream
@@ -57,10 +58,14 @@ allprojects {
             }
         }
     }
-}
 
-kotlin {
-    experimental.coroutines = Coroutines.ENABLE
+    afterEvaluate {
+        if (tasks.findByName("compileKotlin") != null) {
+            kotlin {
+                experimental.coroutines = Coroutines.ENABLE
+            }
+        }
+    }
 }
 
 configurations {
