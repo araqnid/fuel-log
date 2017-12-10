@@ -1,14 +1,11 @@
 package org.araqnid.fuellog
 
-import kotlinx.coroutines.experimental.future.future
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.events.FacebookProfileData
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock
 import java.util.*
-import java.util.concurrent.CompletionException
-import java.util.function.BiConsumer
 import javax.annotation.security.PermitAll
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -23,6 +20,9 @@ import javax.ws.rs.Produces
 import javax.ws.rs.container.AsyncResponse
 import javax.ws.rs.container.Suspended
 import javax.ws.rs.core.Context
+import kotlin.coroutines.experimental.Continuation
+import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.experimental.startCoroutine
 
 @Singleton
 @Path("/user/identity")
@@ -121,14 +121,20 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     }
 
     private fun <T> respondTo(asyncResponse: AsyncResponse, block: suspend () -> T) {
-        future(ResteasyAsync()) {
-            block()
-        }.whenCompleteAsync(BiConsumer { result, ex ->
-            when (ex) {
-                null -> asyncResponse.resume(result)
-                is CompletionException -> asyncResponse.resume(ex.cause)
-                else -> asyncResponse.resume(ex)
+        block.startCoroutine(object : Continuation<T> {
+            override val context: CoroutineContext = ResteasyAsync()
+
+            override fun resume(value: T) {
+                jettyService.server.threadPool.execute {
+                    asyncResponse.resume(value)
+                }
             }
-        }, jettyService.server.threadPool)
+
+            override fun resumeWithException(exception: Throwable) {
+                jettyService.server.threadPool.execute {
+                    asyncResponse.resume(exception)
+                }
+            }
+        })
     }
 }
