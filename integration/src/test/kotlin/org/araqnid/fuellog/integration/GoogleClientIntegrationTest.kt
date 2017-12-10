@@ -2,44 +2,59 @@ package org.araqnid.fuellog.integration
 
 import com.natpryce.hamkrest.isEmptyString
 import kotlinx.coroutines.experimental.future.future
-import org.apache.http.nio.client.HttpAsyncClient
+import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.araqnid.fuellog.GoogleClient
 import org.araqnid.fuellog.GoogleClientConfig
 import org.araqnid.fuellog.hamkrest.assumeThat
 import org.hamcrest.Matchers
-import org.junit.Ignore
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
+import java.time.Clock
 import javax.ws.rs.BadRequestException
 
 class GoogleClientIntegrationTest {
     companion object {
         val googleClientId = System.getenv("GOOGLE_CLIENT_ID") ?: ""
         val googleClientSecret = System.getenv("GOOGLE_CLIENT_SECRET") ?: ""
+        val googleIdToken = System.getenv("GOOGLE_ID_TOKEN") ?: ""
     }
 
-    @get:Rule
-    val server = ServerRunner(mapOf("PORT" to "0", "DOCUMENT_ROOT" to "../ui/build/site",
-            "FACEBOOK_APP_ID" to "", "FACEBOOK_APP_SECRET" to "",
-            "GOOGLE_CLIENT_ID" to googleClientId, "GOOGLE_CLIENT_SECRET" to googleClientSecret))
+    @Before
+    fun startHttpClient() {
+        httpClient.start()
+    }
+
+    @After
+    fun cleanupHttpClient() {
+        httpClient.close()
+    }
 
     @get:Rule
     val expected = ExpectedException.none()
 
-    @Ignore("don't actually have a way of testing this, need a test id token")
-    @Test
-    fun validates_id_token() {
-        assumeThat(googleClientId, !isEmptyString)
-        assumeThat(googleClientSecret, !isEmptyString)
+    private val clock = Clock.systemDefaultZone()
 
-        val googleClient = GoogleClient(server.instance<GoogleClientConfig>(), server.instance<HttpAsyncClient>(), server.clock)
-        future { googleClient.validateToken("") }.join()
+    private val httpClient = HttpAsyncClients.createDefault()
+
+    private val googleClientConfig: GoogleClientConfig
+        get() {
+            assumeThat(googleClientId, !isEmptyString)
+            assumeThat(googleClientSecret, !isEmptyString)
+            return GoogleClientConfig(googleClientId, googleClientSecret)
+        }
+
+    @Test
+    fun `validates ID token`() {
+        val googleClient = GoogleClient(googleClientConfig, httpClient, clock)
+        future { googleClient.validateToken(googleIdToken) }.join()
     }
 
     @Test
-    fun failure_to_validate_id_token_produces_bad_request_exception() {
-        val googleClient = GoogleClient(GoogleClientConfig("", ""), server.instance<HttpAsyncClient>(), server.clock)
+    fun `failure to validate ID token produces BadRequestException`() {
+        val googleClient = GoogleClient(GoogleClientConfig("", ""), httpClient, clock)
 
         expected.expectCause(Matchers.instanceOf(BadRequestException::class.java))
         future { googleClient.validateToken("") }.join()
