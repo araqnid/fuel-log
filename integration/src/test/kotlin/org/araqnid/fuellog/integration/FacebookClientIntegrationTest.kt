@@ -1,6 +1,7 @@
 package org.araqnid.fuellog.integration
 
 import com.natpryce.hamkrest.isEmptyString
+import kotlinx.coroutines.experimental.future.future
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.FacebookClient
 import org.araqnid.fuellog.FacebookClientConfig
@@ -34,7 +35,7 @@ class FacebookClientIntegrationTest {
         assumeThat(facebookAppSecret, !isEmptyString)
 
         val facebookClient = FacebookClient(server.instance<FacebookClientConfig>(), server.instance<HttpAsyncClient>())
-        val appToken = facebookClient.fetchFacebookAppToken().toCompletableFuture().join()
+        val appToken = future { facebookClient.fetchFacebookAppToken() }.join()
         assertNotEquals("", appToken)
     }
 
@@ -43,8 +44,11 @@ class FacebookClientIntegrationTest {
         val facebookClient = FacebookClient(FacebookClientConfig("", ""), server.instance<HttpAsyncClient>())
 
         expected.expectCause(Matchers.instanceOf(BadRequestException::class.java))
-        facebookClient.fetchFacebookAppToken().toCompletableFuture().join()
+        future { facebookClient.fetchFacebookAppToken() }.join()
     }
+
+    // tests that can be performed only with a current, valid, user access token
+    val accessToken = ""
 
     @Test
     fun `fetches user profile by id`() {
@@ -53,12 +57,9 @@ class FacebookClientIntegrationTest {
         assumeThat(accessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(server.instance<FacebookClientConfig>(), server.instance<HttpAsyncClient>())
-        val result = facebookClient.fetchUserProfile("10155233566049669").toCompletableFuture().join()
+        val result = future { facebookClient.fetchUserProfile("10155233566049669") }.join()
         assertEquals(FacebookClient.UserIdentity("Steve Haslam", "10155233566049669", FacebookClient.Picture(FacebookClient.PictureData(50, 50, URI.create("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/22365519_10155849960609669_4611817305999182053_n.jpg?oh=dbbd4324f5adf21776510ed0cd5dd3b9&oe=5A9F07D2"), false))), result)
     }
-
-    // tests that can be performed only with a current, valid, user access token
-    val accessToken = ""
 
     @Test
     fun `fetches user's own profile`() {
@@ -67,7 +68,7 @@ class FacebookClientIntegrationTest {
         assumeThat(accessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(server.instance<FacebookClientConfig>(), server.instance<HttpAsyncClient>())
-        val result = facebookClient.fetchUsersOwnProfile(accessToken).toCompletableFuture().join()
+        val result = future { facebookClient.fetchUsersOwnProfile(accessToken) }.join()
         assertEquals(FacebookClient.UserIdentity("Steve Haslam", "10155233566049669", FacebookClient.Picture(FacebookClient.PictureData(50, 50, URI.create("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/22365519_10155849960609669_4611817305999182053_n.jpg?oh=dbbd4324f5adf21776510ed0cd5dd3b9&oe=5A9F07D2"), false))), result)
     }
 }

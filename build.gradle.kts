@@ -110,6 +110,8 @@ dependencies {
     compile("com.fasterxml.uuid:java-uuid-generator:3.1.3")
     compile("org.tukaani:xz:1.5")
     compile("org.apache.commons:commons-compress:1.13")
+    compile("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.20")
+    compile("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.20")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
     testCompile(kotlin("test-junit"))

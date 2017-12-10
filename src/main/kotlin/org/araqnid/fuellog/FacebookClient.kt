@@ -2,10 +2,10 @@ package org.araqnid.fuellog
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
@@ -15,7 +15,6 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.nio.client.HttpAsyncClient
 import java.net.URI
 import java.time.Instant
-import java.util.concurrent.CompletionStage
 import javax.ws.rs.BadRequestException
 
 class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClient: HttpAsyncClient) {
@@ -31,12 +30,11 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
     data class Picture(val data: PictureData)
     data class PictureData(val width: Int, val height: Int, val url: URI, @JsonProperty("is_silhouette") val silhouette: Boolean)
 
-    private val objectMapperForFacebookEndpoint = ObjectMapper()
-            .registerModule(KotlinModule())
+    private val objectMapperForFacebookEndpoint = jacksonObjectMapper()
             .registerModule(JavaTimeModule())
             .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
 
-    fun fetchFacebookAppToken(): CompletionStage<String> {
+    suspend fun fetchFacebookAppToken(): String {
         val request = HttpGet(URIBuilder(oauthAccessTokenUri)
                 .setParameters(listOf(
                         BasicNameValuePair("client_id", config.id),
@@ -44,18 +42,18 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
                         BasicNameValuePair("grant_type", "client_credentials")
                 )).build())
 
-        return asyncHttpClient.executeAsyncHttpRequest(request).thenApply { response ->
-            if (response.statusLine.statusCode != HttpStatus.SC_OK)
-                throw BadRequestException("$oauthAccessTokenUri: ${response.statusLine}")
+        val response = asyncHttpClient.executeAsyncHttpRequest(request)
 
-            objectMapperForFacebookEndpoint
-                    .readerFor(AccessTokenResponse::class.java)
-                    .readValue<AccessTokenResponse>(response.entity.content)
-                    .accessToken
-        }
+        if (response.statusLine.statusCode != HttpStatus.SC_OK)
+            throw BadRequestException("$oauthAccessTokenUri: ${response.statusLine}")
+
+        return objectMapperForFacebookEndpoint
+                .readerFor(AccessTokenResponse::class.java)
+                .readValue<AccessTokenResponse>(response.entity.content)
+                .accessToken
     }
 
-    fun validateUserAccessToken(token: String): CompletionStage<DebugTokenResponse> {
+    suspend fun validateUserAccessToken(token: String): DebugTokenResponse {
         val request = HttpGet(URIBuilder(debugTokenUri)
                 .setParameters(listOf(
                         BasicNameValuePair("input_token", token),
@@ -63,48 +61,45 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
                 ))
                 .build())
 
-        return asyncHttpClient.executeAsyncHttpRequest(request)
-                .thenApply { response ->
-                    if (response.statusLine.statusCode != HttpStatus.SC_OK)
-                        throw BadRequestException("$debugTokenUri: ${response.statusLine}")
+        val response = asyncHttpClient.executeAsyncHttpRequest(request)
 
-                    objectMapperForFacebookEndpoint
-                            .readerFor(DebugTokenResponse::class.java)
-                            .withRootName("data")
-                            .readValue<DebugTokenResponse>(response.entity.content)
-                }
+        if (response.statusLine.statusCode != HttpStatus.SC_OK)
+            throw BadRequestException("$debugTokenUri: ${response.statusLine}")
+
+        return objectMapperForFacebookEndpoint
+                .readerFor(DebugTokenResponse::class.java)
+                .withRootName("data")
+                .readValue<DebugTokenResponse>(response.entity.content)
     }
 
-    fun fetchUsersOwnProfile(accessToken: String): CompletionStage<UserIdentity> {
+    suspend fun fetchUsersOwnProfile(accessToken: String): UserIdentity {
         val uri = URI.create("https://graph.facebook.com/me")
-        return asyncHttpClient.executeAsyncHttpRequest(HttpGet(URIBuilder(uri).setParameters(
+        val response = asyncHttpClient.executeAsyncHttpRequest(HttpGet(URIBuilder(uri).setParameters(
                 BasicNameValuePair("access_token", accessToken),
                 BasicNameValuePair("fields", "id,name,picture")
-        ).build())).parseJsonResponse(uri)
+        ).build()))
+        return parseJsonResponse(uri, response)
     }
 
-    fun fetchUserProfile(userId: String): CompletionStage<UserIdentity> {
+    suspend fun fetchUserProfile(userId: String): UserIdentity {
         val uri = URI.create("https://graph.facebook.com/$userId")
-        return asyncHttpClient.executeAsyncHttpRequest(HttpGet(URIBuilder(uri).setParameters(
+        val response = asyncHttpClient.executeAsyncHttpRequest(HttpGet(URIBuilder(uri).setParameters(
                 BasicNameValuePair("access_token", "${config.id}|${config.secret}"),
                 BasicNameValuePair("fields", "id,name,picture")
-        ).build())).parseJsonResponse(uri)
+        ).build()))
+        return parseJsonResponse(uri, response)
     }
 
     val permittedMimeTypes = setOf("text/javacsript", "application/json")
 
-    private inline fun <reified T> CompletionStage<HttpResponse>.parseJsonResponse(uri: URI): CompletionStage<T> {
-        return thenApply { response ->
-            if (response.statusLine.statusCode != HttpStatus.SC_OK)
-                throw BadRequestException("$uri: ${response.statusLine}")
+    private inline fun <reified T : Any> parseJsonResponse(uri: URI, response: HttpResponse): T {
+        if (response.statusLine.statusCode != HttpStatus.SC_OK)
+            throw BadRequestException("$uri: ${response.statusLine}")
 
-            val contentType = ContentType.get(response.entity)
-            if (permittedMimeTypes.contains(contentType.mimeType.toLowerCase()))
-                throw BadRequestException("$uri: unhandled content-type: $contentType")
+        val contentType = ContentType.get(response.entity)
+        if (permittedMimeTypes.contains(contentType.mimeType.toLowerCase()))
+            throw BadRequestException("$uri: unhandled content-type: $contentType")
 
-            objectMapperForFacebookEndpoint
-                    .readerFor(T::class.java)
-                    .readValue<T>(response.entity.content)
-        }
+        return objectMapperForFacebookEndpoint.readValue(response.entity.content)
     }
 }

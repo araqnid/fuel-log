@@ -1,6 +1,7 @@
 package org.araqnid.fuellog.integration
 
 import com.natpryce.hamkrest.isEmptyString
+import kotlinx.coroutines.experimental.future.future
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.GoogleClient
 import org.araqnid.fuellog.GoogleClientConfig
@@ -33,7 +34,7 @@ class GoogleClientIntegrationTest {
         assumeThat(googleClientSecret, !isEmptyString)
 
         val googleClient = GoogleClient(server.instance<GoogleClientConfig>(), server.instance<HttpAsyncClient>(), server.clock)
-        googleClient.validateToken("").toCompletableFuture().join()
+        future { googleClient.validateToken("") }.join()
     }
 
     @Test
@@ -41,6 +42,6 @@ class GoogleClientIntegrationTest {
         val googleClient = GoogleClient(GoogleClientConfig("", ""), server.instance<HttpAsyncClient>(), server.clock)
 
         expected.expectCause(Matchers.instanceOf(BadRequestException::class.java))
-        googleClient.validateToken("").toCompletableFuture().join()
+        future { googleClient.validateToken("") }.join()
     }
 }

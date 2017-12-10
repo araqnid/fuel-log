@@ -1,11 +1,12 @@
 package org.araqnid.fuellog
 
+import kotlinx.coroutines.experimental.future.future
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.events.FacebookProfileData
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CompletionStage
 import java.util.function.BiConsumer
 import javax.annotation.security.PermitAll
@@ -64,21 +65,20 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @PermitAll
     fun associateFacebookUser(token: String,
                               @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
-        FacebookClient(facebookClientConfig, asyncHttpClient)
-                .fetchUsersOwnProfile(token)
-                .thenApply { parsed ->
-
-                    val user = associateUser(servletRequest, URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.id}"))
-                    user.name = parsed.name
-                    user.facebookProfileData = FacebookProfileData(parsed.picture.data.url)
-                    userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
-                    UserInfo.from(user)
-                }
-                .exceptionally { ex ->
-                    logger.warn("Failed to verify Facebook token", ex)
-                    throw BadRequestException("Failed to verify Facebook token")
-                }
-                .thenRespondTo(asyncResponse)
+        future(ResteasyAsync()) {
+            try {
+                val parsed = FacebookClient(facebookClientConfig, asyncHttpClient).fetchUserProfile(token)
+                val user = associateUser(servletRequest,
+                        URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.id}"))
+                user.name = parsed.name
+                user.facebookProfileData = FacebookProfileData(parsed.picture.data.url)
+                userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
+                UserInfo.from(user)
+            } catch (ex: Exception) {
+                logger.warn("Failed to verify Facebook token", ex)
+                throw BadRequestException("Failed to verify Facebook token")
+            }
+        }.thenRespondTo(asyncResponse)
     }
 
     @POST
@@ -87,19 +87,22 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @Produces("application/json")
     @PermitAll
     fun associateGoogleUserAsync(idToken: String, @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
-        GoogleClient(googleClientConfig, asyncHttpClient, clock)
-                .validateToken(idToken)
-                .thenApply { tokenInfo ->
-                    val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/google/${tokenInfo.userId}")!!
+        future(ResteasyAsync()) {
+            try {
+                val tokenInfo = GoogleClient(googleClientConfig, asyncHttpClient, clock).validateToken(idToken)
+                val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/google/${tokenInfo.userId}")!!
 
-                    val user = associateUser(servletRequest, externalId)
-                    user.name = tokenInfo.name
-                    user.googleProfileData = tokenInfo.toProfileData()
-                    userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
+                val user = associateUser(servletRequest, externalId)
+                user.name = tokenInfo.name
+                user.googleProfileData = tokenInfo.toProfileData()
+                userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
 
-                    UserInfo.from(user)
-                }
-                .thenRespondTo(asyncResponse)
+                UserInfo.from(user)
+            } catch (ex: Exception) {
+                logger.warn("Failed to verify Google token", ex)
+                throw BadRequestException("Failed to verify Google token")
+            }
+        }.thenRespondTo(asyncResponse)
     }
 
     private fun associateUser(servletRequest: HttpServletRequest, externalId: URI): UserRecord {

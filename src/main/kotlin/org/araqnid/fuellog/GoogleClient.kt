@@ -15,7 +15,6 @@ import org.araqnid.fuellog.events.GoogleProfileData
 import java.net.URI
 import java.time.Clock
 import java.time.Instant
-import java.util.concurrent.CompletionStage
 import javax.ws.rs.BadRequestException
 
 class GoogleClient(val config: GoogleClientConfig, private val asyncHttpClient: HttpAsyncClient, private val clock: Clock) {
@@ -39,24 +38,25 @@ class GoogleClient(val config: GoogleClientConfig, private val asyncHttpClient: 
             .registerModule(JavaTimeModule())
             .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
 
-    fun validateToken(idToken: String): CompletionStage<TokenInfo> {
+    suspend fun validateToken(idToken: String): TokenInfo {
         val request = HttpPost(tokenInfoUri).apply {
             entity = UrlEncodedFormEntity(listOf(BasicNameValuePair("id_token", idToken)))
         }
 
-        return asyncHttpClient.executeAsyncHttpRequest(request).thenApply { response ->
-            if (response.statusLine.statusCode != HttpStatus.SC_OK)
-                throw BadRequestException("$tokenInfoUri: ${response.statusLine}")
-            val tokenInfo = objectMapperForGoogleEndpoint.readerFor(TokenInfo::class.java)
-                    .readValue<TokenInfo>(response.entity.content)!!
-            if (tokenInfo.clientId != config.id)
-                throw BadRequestException("Token is not for our client ID: $tokenInfo")
-            if (tokenInfo.expiresAt < Instant.now(clock))
-                throw BadRequestException("Token already expired: $tokenInfo")
-            if (tokenInfo.issuedBy != "accounts.google.com" && tokenInfo.issuedBy != "https://accounts.google.com")
-                throw BadRequestException("Token issuer is unrecognised: $tokenInfo")
+        val response = asyncHttpClient.executeAsyncHttpRequest(request)
 
-            tokenInfo
-        }
+        if (response.statusLine.statusCode != HttpStatus.SC_OK)
+            throw BadRequestException("$tokenInfoUri: ${response.statusLine}")
+
+        val tokenInfo = objectMapperForGoogleEndpoint.readerFor(TokenInfo::class.java)
+                .readValue<TokenInfo>(response.entity.content)!!
+        if (tokenInfo.clientId != config.id)
+            throw BadRequestException("Token is not for our client ID: $tokenInfo")
+        if (tokenInfo.expiresAt < Instant.now(clock))
+            throw BadRequestException("Token already expired: $tokenInfo")
+        if (tokenInfo.issuedBy != "accounts.google.com" && tokenInfo.issuedBy != "https://accounts.google.com")
+            throw BadRequestException("Token issuer is unrecognised: $tokenInfo")
+
+        return tokenInfo
     }
 }

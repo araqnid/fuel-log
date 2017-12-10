@@ -5,24 +5,23 @@ import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.concurrent.FutureCallback
 import org.apache.http.nio.client.HttpAsyncClient
 import java.lang.Exception
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletionStage
+import kotlin.coroutines.experimental.suspendCoroutine
 
-fun HttpAsyncClient.executeAsyncHttpRequest(request: HttpUriRequest): CompletionStage<HttpResponse> {
-    return CompletableFuture<HttpResponse>().apply {
+suspend fun HttpAsyncClient.executeAsyncHttpRequest(request: HttpUriRequest): HttpResponse {
+    return suspendCoroutine { cont ->
         val apacheCallback = object : FutureCallback<HttpResponse> {
             override fun completed(result: HttpResponse) {
-                this@apply.complete(result)
+                cont.resume(result)
             }
 
             override fun failed(ex: Exception) {
-                this@apply.completeExceptionally(ex)
+                cont.resumeWithException(ex)
             }
 
             override fun cancelled() {
-                this@apply.cancel(false)
+                cont.resumeWithException(IllegalStateException())
             }
         }
         this@executeAsyncHttpRequest.execute(request, apacheCallback)
-    }.withContextData()
+    }
 }
