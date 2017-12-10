@@ -13,7 +13,6 @@ import javax.annotation.security.PermitAll
 import javax.inject.Inject
 import javax.inject.Singleton
 import javax.servlet.http.HttpServletRequest
-import javax.ws.rs.BadRequestException
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.FormParam
@@ -66,20 +65,15 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     fun associateFacebookUser(token: String,
                               @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
         respondTo(asyncResponse) {
-            try {
-                val parsed = FacebookClient(facebookClientConfig, asyncHttpClient).fetchUserProfile(token)
-                val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.id}")!!
+            val parsed = FacebookClient(facebookClientConfig, asyncHttpClient).fetchUserProfile(token)
+            val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.id}")!!
 
-                val user = associateUser(servletRequest, externalId)
-                user.name = parsed.name
-                user.facebookProfileData = FacebookProfileData(parsed.picture.data.url)
-                userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
+            val user = associateUser(servletRequest, externalId)
+            user.name = parsed.name
+            user.facebookProfileData = FacebookProfileData(parsed.picture.data.url)
+            userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
 
-                UserInfo.from(user)
-            } catch (ex: Exception) {
-                logger.warn("Failed to verify Facebook token", ex)
-                throw BadRequestException("Failed to verify Facebook token")
-            }
+            UserInfo.from(user)
         }
     }
 
@@ -90,20 +84,15 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @PermitAll
     fun associateGoogleUserAsync(idToken: String, @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
         respondTo(asyncResponse) {
-            try {
-                val tokenInfo = GoogleClient(googleClientConfig, asyncHttpClient, clock).validateToken(idToken)
-                val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/google/${tokenInfo.userId}")!!
+            val tokenInfo = GoogleClient(googleClientConfig, asyncHttpClient, clock).validateToken(idToken)
+            val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/google/${tokenInfo.userId}")!!
 
-                val user = associateUser(servletRequest, externalId)
-                user.name = tokenInfo.name
-                user.googleProfileData = tokenInfo.toProfileData()
-                userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
+            val user = associateUser(servletRequest, externalId)
+            user.name = tokenInfo.name
+            user.googleProfileData = tokenInfo.toProfileData()
+            userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
 
-                UserInfo.from(user)
-            } catch (ex: Exception) {
-                logger.warn("Failed to verify Google token", ex)
-                throw BadRequestException("Failed to verify Google token")
-            }
+            UserInfo.from(user)
         }
     }
 
