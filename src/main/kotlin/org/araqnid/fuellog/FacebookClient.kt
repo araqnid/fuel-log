@@ -2,10 +2,11 @@ package org.araqnid.fuellog
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
@@ -57,13 +58,7 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
 
         val response = asyncHttpClient.executeAsyncHttpRequest(request)
 
-        if (response.statusLine.statusCode != HttpStatus.SC_OK)
-            throw BadRequestException("$debugTokenUri: ${response.statusLine}")
-
-        return objectMapperForFacebookEndpoint
-                .readerFor(DebugTokenResponse::class.java)
-                .withRootName("data")
-                .readValue<DebugTokenResponse>(response.entity.content)
+        return parseJsonResponse(debugTokenUri, response) { withRootName("data") }
     }
 
     suspend fun fetchUsersOwnProfile(accessToken: String): UserIdentity {
@@ -86,7 +81,7 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
 
     private val permittedMimeTypes = setOf("text/javascript", "application/json")
 
-    private inline fun <reified T : Any> parseJsonResponse(uri: URI, response: HttpResponse): T {
+    private inline fun <reified T : Any> parseJsonResponse(uri: URI, response: HttpResponse, configureReader: ObjectReader.() -> ObjectReader = { this }): T {
         if (response.statusLine.statusCode != HttpStatus.SC_OK)
             throw BadRequestException("$uri: ${response.statusLine}")
 
@@ -94,6 +89,6 @@ class FacebookClient(val config: FacebookClientConfig, private val asyncHttpClie
         if (!permittedMimeTypes.contains(contentType.mimeType.toLowerCase()))
             throw BadRequestException("$uri: unhandled content-type: $contentType")
 
-        return objectMapperForFacebookEndpoint.readValue(response.entity.content)
+        return objectMapperForFacebookEndpoint.readerFor(jacksonTypeRef<T>()).let(configureReader).readValue<T>(response.entity.content)
     }
 }

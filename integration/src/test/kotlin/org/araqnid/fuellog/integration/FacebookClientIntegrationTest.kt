@@ -1,6 +1,5 @@
 package org.araqnid.fuellog.integration
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -18,7 +17,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
-import java.io.StringWriter
 import javax.ws.rs.BadRequestException
 import kotlin.test.assertNotEquals
 
@@ -97,8 +95,8 @@ class FacebookClientIntegrationTest {
         val facebookClient = FacebookClient(facebookClientConfig, httpClient)
         val result = future { facebookClient.validateUserAccessToken(accessToken) }.join()
 
-        val sw = StringWriter()
-        jacksonObjectMapper().writer().withDefaultPrettyPrinter().writeValue(sw, result)
-        println(sw.toString())
+        assertThat(result, has(FacebookClient.DebugTokenResponse::appId, equalTo(facebookClientConfig.id))
+                and has(FacebookClient.DebugTokenResponse::type, equalTo("USER"))
+                and has(FacebookClient.DebugTokenResponse::isValid, equalTo(true)))
     }
 }
