@@ -40,6 +40,7 @@ allprojects {
     repositories {
         mavenCentral()
         maven(url = "https://repo.araqnid.org/maven/")
+        maven(url = "https://dl.bintray.com/araqnid/maven")
     }
 
     tasks {
@@ -127,7 +128,7 @@ dependencies {
     testCompile(project(":test-utils"))
     testCompile("com.timgroup:clocks-testing:1.0.1070")
     testCompile("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.20")
-    testCompile("org.araqnid:hamkrest-json:1.0.2")
+    testCompile("org.araqnid:hamkrest-json:1.0.3")
     runtime("ch.qos.logback:logback-classic:1.2.2")
     runtime("org.slf4j:jcl-over-slf4j:1.7.25")
 }
