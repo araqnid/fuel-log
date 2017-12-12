@@ -28,8 +28,8 @@ import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
 import org.araqnid.fuellog.findFirstAndClose
 import org.araqnid.fuellog.hamkrest.containsInOrder
-import org.araqnid.fuellog.hamkrest.json.jsonObject
 import org.araqnid.fuellog.toListAndClose
+import org.araqnid.hamkrest.json.jsonObject
 import org.junit.Test
 import java.time.Instant
 import java.util.*

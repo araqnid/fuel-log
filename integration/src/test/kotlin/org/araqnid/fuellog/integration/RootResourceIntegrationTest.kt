@@ -6,10 +6,10 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.or
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
-import org.araqnid.fuellog.hamkrest.json.json
-import org.araqnid.fuellog.hamkrest.json.jsonNull
-import org.araqnid.fuellog.hamkrest.json.jsonObject
-import org.araqnid.fuellog.hamkrest.json.jsonString
+import org.araqnid.hamkrest.json.json
+import org.araqnid.hamkrest.json.jsonNull
+import org.araqnid.hamkrest.json.jsonObject
+import org.araqnid.hamkrest.json.jsonString
 import org.junit.Test
 import javax.ws.rs.core.MediaType
 

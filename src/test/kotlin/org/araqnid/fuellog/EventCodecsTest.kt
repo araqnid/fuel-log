@@ -13,7 +13,7 @@ import org.araqnid.fuellog.events.GoogleProfileChanged
 import org.araqnid.fuellog.events.GoogleProfileData
 import org.araqnid.fuellog.events.UserExternalIdAssigned
 import org.araqnid.fuellog.events.UserNameChanged
-import org.araqnid.fuellog.hamkrest.json.equivalentTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.junit.Test
 import java.net.URI
 import java.time.Instant

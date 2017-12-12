@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
-import org.araqnid.fuellog.hamkrest.json.equivalentTo
+import org.araqnid.hamkrest.json.equivalentTo
 import org.junit.Test
 
 class PreferencesResourcesIntegrationTest : IntegrationTest() {

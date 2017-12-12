@@ -16,7 +16,7 @@ import org.araqnid.eventstore.NewEvent
 import org.araqnid.eventstore.StreamId
 import org.araqnid.fuellog.hamkrest.containsInOrder
 import org.araqnid.fuellog.hamkrest.containsOnly
-import org.araqnid.fuellog.hamkrest.json.bytesEquivalentTo
+import org.araqnid.hamkrest.json.bytesEquivalentTo
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test

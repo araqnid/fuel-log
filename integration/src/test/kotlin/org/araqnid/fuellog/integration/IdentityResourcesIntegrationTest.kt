@@ -15,8 +15,8 @@ import org.araqnid.eventstore.StreamId
 import org.araqnid.fuellog.events.Event
 import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.UserExternalIdAssigned
-import org.araqnid.fuellog.hamkrest.json.equivalentTo
 import org.araqnid.fuellog.toListAndClose
+import org.araqnid.hamkrest.json.equivalentTo
 import org.junit.Test
 import java.net.URI
 
