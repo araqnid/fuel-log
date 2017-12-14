@@ -1,7 +1,7 @@
 package org.araqnid.fuellog.integration
 
 import com.natpryce.hamkrest.isEmptyString
-import kotlinx.coroutines.experimental.future.future
+import kotlinx.coroutines.experimental.runBlocking
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.araqnid.fuellog.GoogleClient
 import org.araqnid.fuellog.GoogleClientConfig
@@ -49,7 +49,7 @@ class GoogleClientIntegrationTest {
     @Test
     fun `validates ID token`() {
         val googleClient = GoogleClient(googleClientConfig, httpClient, clock)
-        future { googleClient.validateToken(googleIdToken) }.join()
+        runBlocking { googleClient.validateToken(googleIdToken) }
     }
 
     @Test
@@ -57,6 +57,6 @@ class GoogleClientIntegrationTest {
         val googleClient = GoogleClient(GoogleClientConfig("", ""), httpClient, clock)
 
         expected.expectCause(Matchers.instanceOf(BadRequestException::class.java))
-        future { googleClient.validateToken("") }.join()
+        runBlocking { googleClient.validateToken("") }
     }
 }

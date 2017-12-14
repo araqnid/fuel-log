@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isEmptyString
 import com.natpryce.hamkrest.present
-import kotlinx.coroutines.experimental.future.future
+import kotlinx.coroutines.experimental.runBlocking
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.araqnid.fuellog.FacebookClient
 import org.araqnid.fuellog.FacebookClientConfig
@@ -54,7 +54,7 @@ class FacebookClientIntegrationTest {
     @Test
     fun `fetches app token`() {
         val facebookClient = FacebookClient(facebookClientConfig, httpClient)
-        val appToken = future { facebookClient.fetchFacebookAppToken() }.join()
+        val appToken = runBlocking { facebookClient.fetchFacebookAppToken() }
         assertNotEquals("", appToken)
     }
 
@@ -63,13 +63,13 @@ class FacebookClientIntegrationTest {
         val facebookClient = FacebookClient(FacebookClientConfig("", ""), httpClient)
 
         expected.expectCause(Matchers.instanceOf(BadRequestException::class.java))
-        future { facebookClient.fetchFacebookAppToken() }.join()
+        runBlocking { facebookClient.fetchFacebookAppToken() }
     }
 
     @Test
     fun `fetches user profile by id`() {
         val facebookClient = FacebookClient(facebookClientConfig, httpClient)
-        val result = future { facebookClient.fetchUserProfile("10155233566049669") }.join()
+        val result = runBlocking { facebookClient.fetchUserProfile("10155233566049669") }
 
         assertThat(result, has(FacebookClient.UserIdentity::name, equalTo("Steve Haslam"))
                 and has(FacebookClient.UserIdentity::id, equalTo("10155233566049669"))
@@ -81,7 +81,7 @@ class FacebookClientIntegrationTest {
         assumeThat(accessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(facebookClientConfig, httpClient)
-        val result = future { facebookClient.fetchUsersOwnProfile(accessToken) }.join()
+        val result = runBlocking { facebookClient.fetchUsersOwnProfile(accessToken) }
 
         assertThat(result, has(FacebookClient.UserIdentity::name, equalTo("Steve Haslam"))
                 and has(FacebookClient.UserIdentity::id, equalTo("10155233566049669"))
@@ -93,7 +93,7 @@ class FacebookClientIntegrationTest {
         assumeThat(accessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(facebookClientConfig, httpClient)
-        val result = future { facebookClient.validateUserAccessToken(accessToken) }.join()
+        val result = runBlocking { facebookClient.validateUserAccessToken(accessToken) }
 
         assertThat(result, has(FacebookClient.DebugTokenResponse::appId, equalTo(facebookClientConfig.id))
                 and has(FacebookClient.DebugTokenResponse::type, equalTo("USER"))
