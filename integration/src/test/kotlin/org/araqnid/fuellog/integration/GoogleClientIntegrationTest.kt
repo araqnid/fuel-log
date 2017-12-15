@@ -1,11 +1,16 @@
 package org.araqnid.fuellog.integration
 
+import com.natpryce.hamkrest.anything
+import com.natpryce.hamkrest.cast
+import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.isEmptyString
+import com.natpryce.hamkrest.sameInstance
 import kotlinx.coroutines.experimental.runBlocking
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.araqnid.fuellog.GoogleClient
 import org.araqnid.fuellog.GoogleClientConfig
 import org.araqnid.fuellog.hamkrest.assumeThat
+import org.araqnid.fuellog.hamkrest.expect
 import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Before
@@ -14,6 +19,7 @@ import org.junit.Test
 import org.junit.rules.ExpectedException
 import java.time.Clock
 import javax.ws.rs.BadRequestException
+import javax.ws.rs.NotFoundException
 
 class GoogleClientIntegrationTest {
     companion object {
@@ -56,7 +62,8 @@ class GoogleClientIntegrationTest {
     fun `failure to validate ID token produces BadRequestException`() {
         val googleClient = GoogleClient(GoogleClientConfig("", ""), httpClient, clock)
 
-        expected.expectCause(Matchers.instanceOf(BadRequestException::class.java))
+        expected.expect(isA<BadRequestException>())
+
         runBlocking { googleClient.validateToken("") }
     }
 }

@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.isEmptyString
 import com.natpryce.hamkrest.present
 import kotlinx.coroutines.experimental.runBlocking
@@ -11,6 +12,7 @@ import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.araqnid.fuellog.FacebookClient
 import org.araqnid.fuellog.FacebookClientConfig
 import org.araqnid.fuellog.hamkrest.assumeThat
+import org.araqnid.fuellog.hamkrest.expect
 import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Before
@@ -62,7 +64,7 @@ class FacebookClientIntegrationTest {
     fun `failure to fetch app token produces bad request exception`() {
         val facebookClient = FacebookClient(FacebookClientConfig("", ""), httpClient)
 
-        expected.expectCause(Matchers.instanceOf(BadRequestException::class.java))
+        expected.expect(isA<BadRequestException>())
         runBlocking { facebookClient.fetchFacebookAppToken() }
     }
 
