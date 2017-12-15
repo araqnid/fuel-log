@@ -1,10 +1,15 @@
+import com.timgroup.gradle.webpack.WebpackTask
+
 plugins {
     id("com.timgroup.webpack")
 }
 
 tasks {
-    "webpack" {
+    "webpack"(WebpackTask::class) {
         inputs.files(rootProject.configurations["compile"].fileCollection { dep -> dep.group == "org.araqnid" && dep.name == "app-status" })
+
+        gzipResources = false
+        generateManifest = false
 
         doFirst {
             val cfg = rootProject.configurations["compile"].copy()

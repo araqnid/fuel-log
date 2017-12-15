@@ -8,7 +8,7 @@ import java.security.MessageDigest
 plugins {
     application
     kotlin("jvm") version "1.2.10"
-    id("com.timgroup.webpack") version "1.0.11" apply false
+    id("com.timgroup.webpack") version "1.0.12" apply false
 }
 
 application {
