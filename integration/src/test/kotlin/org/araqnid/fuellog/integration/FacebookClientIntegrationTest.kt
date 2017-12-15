@@ -13,7 +13,6 @@ import org.araqnid.fuellog.FacebookClient
 import org.araqnid.fuellog.FacebookClientConfig
 import org.araqnid.fuellog.hamkrest.assumeThat
 import org.araqnid.fuellog.hamkrest.expect
-import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
