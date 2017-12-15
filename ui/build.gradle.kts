@@ -25,6 +25,8 @@ tasks {
             sync {
                 into(File(buildDir, "site/_status"))
                 from(File(tmpDir, "org/araqnid/appstatus/site"))
+                exclude("*.gz")
+                exclude(".MANIFEST")
             }
         }
     }
