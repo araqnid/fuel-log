@@ -28,15 +28,11 @@ class ResteasyAsync<in T>(
     }
 
     override fun resume(value: T) {
-        executor.execute {
-            asyncResponse.resume(value)
-        }
+        asyncResponse.resume(value)
     }
 
     override fun resumeWithException(exception: Throwable) {
-        executor.execute {
-            asyncResponse.resume(exception)
-        }
+        asyncResponse.resume(exception)
     }
 }
 
