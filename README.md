@@ -1,7 +1,7 @@
 Fuel purchase logger
 ====================
 
-[ ![Build Status](https://travis-ci.org/araqnid/fuel-log.svg?branch=master)](https://travis-ci.org/araqnid/fuel-log) [ ![Kotlin](https://img.shields.io/badge/kotlin-1.2.0-blue.svg)](http://kotlinlang.org)
+[ ![Build Status](https://travis-ci.org/araqnid/fuel-log.svg?branch=master)](https://travis-ci.org/araqnid/fuel-log) [ ![Kotlin](https://img.shields.io/badge/kotlin-1.2.10-blue.svg)](http://kotlinlang.org)
 
 See it in action at https://fuel.araqnid.org/
 

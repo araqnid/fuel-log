@@ -7,7 +7,7 @@ import java.security.MessageDigest
 
 plugins {
     application
-    kotlin("jvm") version "1.2.0"
+    kotlin("jvm") version "1.2.10"
     id("com.timgroup.webpack") version "1.0.1" apply false
 }
 
