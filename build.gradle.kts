@@ -38,9 +38,7 @@ allprojects {
     version = gitVersion
 
     repositories {
-        mavenCentral()
-        maven(url = "https://repo.araqnid.org/maven/")
-        maven(url = "https://dl.bintray.com/araqnid/maven")
+        jcenter()
     }
 
     tasks {
@@ -100,8 +98,8 @@ tasks {
 }
 
 dependencies {
-    compile("org.araqnid:app-status:0.0.12")
-    compile("org.araqnid:eventstore:0.0.20")
+    compile("org.araqnid:app-status:0.0.13")
+    compile("org.araqnid:eventstore:0.0.22")
     compile("com.google.guava:guava:$guavaVersion")
     compile("com.google.inject:guice:$guiceVersion")
     compile("com.google.inject.extensions:guice-servlet:$guiceVersion")
