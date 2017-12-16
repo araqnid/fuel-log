@@ -22,14 +22,7 @@ url_of() {
     group="$1"
     name="$2"
     version="$3"
-    case "$group" in
-        org.araqnid)
-            repo="https://repo.araqnid.org/maven"
-            ;;
-        *)
-            repo="http://central.maven.org/maven2"
-            ;;
-    esac
+    repo="https://jcenter.bintray.com"
     echo "$repo/$(echo $group | tr '.' '/')/$name/$version/$name-$version.jar"
 }
 
