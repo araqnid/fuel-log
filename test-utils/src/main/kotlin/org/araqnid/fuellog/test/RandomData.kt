@@ -14,18 +14,15 @@ fun randomInteger(max: Int) = RANDOM.nextInt(max)
 
 @JvmOverloads
 fun randomString(prefix: String = "", len: Int = 10): String {
-    val builder = if (prefix.isEmpty())
-        StringBuilder(len)
-    else
-        StringBuilder(len + prefix.length + 1).apply {
+    return buildString(len + prefix.length + 1) {
+        if (prefix.isNotEmpty()) {
             append(prefix)
             append('-')
         }
-
-    for (i in 1..len) {
-        builder.append(alphabet[RANDOM.nextInt(alphabet.length)])
+        for (i in 1..len) {
+            append(alphabet[RANDOM.nextInt(alphabet.length)])
+        }
     }
-    return builder.toString()
 }
 
 inline fun <reified T : Enum<T>> randomEnumInstance(): T = EnumSet.allOf(T::class.java).pickOne()

@@ -27,17 +27,16 @@ class AssumptionViolatedException private constructor(private val assumption: St
         get() = description
 
     override val description: String
-        get() {
-            val builder = StringBuilder()
-
+        get() = buildString {
             if (assumption != null) {
-                builder.append(assumption).append(": ")
+                append(assumption)
+                append(": ")
             }
 
-            builder.append("got: ").append(describe(actual))
-                    .append(", expected: ").append(describe(matcher))
-
-            return builder.toString()
+            append("got: ")
+            append(describe(actual))
+            append(", expected: ")
+            append(describe(matcher))
         }
 
     companion object {
