@@ -1,6 +1,7 @@
 package org.araqnid.fuellog
 
 import kotlinx.coroutines.experimental.CoroutineDispatcher
+import kotlinx.coroutines.experimental.newCoroutineContext
 import org.jboss.resteasy.spi.ResteasyProviderFactory
 import java.util.concurrent.Executor
 import java.util.concurrent.ForkJoinPool
@@ -14,7 +15,7 @@ class ResteasyAsync<in T>(
         private val data: Map<Class<*>, Any> = ResteasyProviderFactory.getContextDataMap(),
         private val executor: Executor = ForkJoinPool.commonPool()
 ) : CoroutineDispatcher(), Continuation<T> {
-    override val context: CoroutineContext = this@ResteasyAsync
+    override val context: CoroutineContext = newCoroutineContext(this@ResteasyAsync)
 
     override fun dispatch(context: CoroutineContext, block: Runnable) {
         executor.execute {
