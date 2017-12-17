@@ -100,6 +100,7 @@ tasks {
 dependencies {
     compile("org.araqnid:app-status:0.0.13")
     compile("org.araqnid:eventstore:0.0.22")
+    compile("org.araqnid:kotlin-coroutines-resteasy:1.0.1")
     compile("com.google.guava:guava:$guavaVersion")
     compile("com.google.inject:guice:$guiceVersion")
     compile("com.google.inject.extensions:guice-servlet:$guiceVersion")
