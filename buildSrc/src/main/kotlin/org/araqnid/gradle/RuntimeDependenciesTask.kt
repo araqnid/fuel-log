@@ -20,10 +20,10 @@ open class RuntimeDependenciesTask : DefaultTask() {
     var outputDir = File(project.buildDir, name)
 
     @get:InputFiles
-    val runtime: Configuration = project.configurations.getByName("runtime")
+    val runtime: Configuration by lazy { project.configurations.getByName("runtime") }
 
     @get:InputFiles
-    val boot: Configuration = project.configurations.getByName("boot")
+    val boot: Configuration by lazy { project.configurations.getByName("boot") }
 
     @TaskAction
     fun run() {
