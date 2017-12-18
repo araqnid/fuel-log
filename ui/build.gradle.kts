@@ -1,4 +1,6 @@
 import com.timgroup.gradle.webpack.WebpackTask
+import org.araqnid.gradle.Dep
+import org.araqnid.gradle.toHexString
 
 plugins {
     id("com.timgroup.webpack")
@@ -6,15 +8,19 @@ plugins {
 
 tasks {
     "webpack"(WebpackTask::class) {
-        inputs.files(rootProject.configurations["compile"].fileCollection { dep -> dep.group == "org.araqnid" && dep.name == "app-status" })
+        inputs.files(rootProject.configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME).fileCollection { dep -> dep.group == "org.araqnid" && dep.name == "app-status" })
 
         gzipResources = false
         generateManifest = false
 
         doFirst {
-            val cfg = rootProject.configurations["compile"].copy()
-            cfg.isTransitive = false
-            val jarFile = cfg.files { dep -> dep.group == "org.araqnid" && dep.name == "app-status" }.single()
+            val jarFile = rootProject.configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+                    .resolvedConfiguration.resolvedArtifacts
+                    .filter { artifact ->
+                        artifact.moduleVersion.id.group == "org.araqnid" && artifact.moduleVersion.id.name == "app-status"
+                    }
+                    .map { it.file }
+                    .single()
             logger.info("Include app-status UI from $jarFile")
             val tmpDir = File(buildDir, "appStatus")
             sync {
