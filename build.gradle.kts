@@ -88,6 +88,7 @@ tasks {
         }
         from("ui/build/site") {
             into("www")
+            exclude(".cache")
         }
         from(runtimeDeps) {
             into("META-INF")
