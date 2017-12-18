@@ -75,7 +75,6 @@ configurations {
     "testRuntime" {
         exclude(group = "ch.qos.logback", module = "logback-classic")
     }
-    create("boot")
 }
 
 tasks {
