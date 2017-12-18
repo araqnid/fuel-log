@@ -8,14 +8,18 @@ configurations {
     }
 }
 
+val jettyVersion: String by rootProject.extra
+val resteasyVersion: String by rootProject.extra
+
 dependencies {
-    testCompile(rootProject)
-    testCompile(project(":test-utils"))
-    testCompile(kotlin("test-junit"))
-    testCompile("com.timgroup:clocks-testing:1.0.1070")
-    testCompile(kotlin("stdlib-jdk8"))
-    testCompile("org.hamcrest:hamcrest-library:1.3")
-    testCompile("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.20")
-    testCompile("org.araqnid:hamkrest-json:1.0.3")
-    testRuntime("org.slf4j:slf4j-simple:1.7.25")
+    testImplementation(rootProject)
+    testImplementation(project(":test-utils"))
+    testImplementation(kotlin("stdlib-jdk8"))
+    testImplementation("com.timgroup:clocks-testing:1.0.1070")
+    testImplementation("org.araqnid:hamkrest-json:1.0.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.20")
+    testImplementation("org.apache.httpcomponents:httpasyncclient:4.1.3")
+    testImplementation("org.eclipse.jetty:jetty-server:$jettyVersion")
+    testImplementation("org.jboss.resteasy:resteasy-jaxrs:$resteasyVersion")
+    testRuntimeOnly("org.slf4j:slf4j-simple:1.7.25")
 }

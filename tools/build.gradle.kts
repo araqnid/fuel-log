@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
-    compile(rootProject)
+    implementation(rootProject)
+    implementation("com.fasterxml.uuid:java-uuid-generator:3.1.3")
 }
