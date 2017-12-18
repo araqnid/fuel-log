@@ -22,4 +22,4 @@ ENV JAVA_HOME=/usr/lib/jvm/zulu-9-amd64 \
 STOPSIGNAL SIGTERM
 EXPOSE 8000
 
-CMD /srv/app/bin/run
+CMD ["/srv/app/bin/run"]
