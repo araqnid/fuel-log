@@ -3,6 +3,7 @@ package org.araqnid.gradle
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -21,7 +22,7 @@ open class RuntimeDependenciesTask : DefaultTask() {
     var outputDir = File(project.buildDir, name)
 
     @get:InputFiles
-    val runtime: Configuration by lazy { project.configurations.getByName("runtime") }
+    val runtime: Configuration by lazy { project.configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME) }
 
     @get:InputFiles @get:Optional
     val boot: Configuration? by lazy { project.configurations.findByName("boot") }
