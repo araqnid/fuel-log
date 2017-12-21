@@ -93,7 +93,7 @@ tasks {
         from(runtimeDeps) {
             into("META-INF")
         }
-        dependsOn(":ui:webpack", runtimeDeps)
+        dependsOn(":ui:webpack")
     }
 }
 
