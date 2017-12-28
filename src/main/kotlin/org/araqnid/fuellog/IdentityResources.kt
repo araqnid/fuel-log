@@ -1,8 +1,9 @@
 package org.araqnid.fuellog
 
+import kotlinx.coroutines.experimental.CoroutineScope
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.events.FacebookProfileData
-import org.araqnid.kotlin.coroutines.resteasy.respondAsynchronously
+import org.araqnid.kotlin.coroutines.experimental.resteasy.respondAsynchronously
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock
@@ -118,7 +119,7 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
         }
     }
 
-    private fun <T> respondTo(asyncResponse: AsyncResponse, block: suspend () -> T) {
-        respondAsynchronously(asyncResponse, jettyService.server.threadPool, block)
+    private fun <T> respondTo(asyncResponse: AsyncResponse, block: suspend CoroutineScope.() -> T) {
+        respondAsynchronously(asyncResponse, executor = jettyService.server.threadPool, block = block)
     }
 }
