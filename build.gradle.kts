@@ -39,6 +39,7 @@ allprojects {
     version = gitVersion
 
     repositories {
+        mavenLocal()
         jcenter()
     }
 
@@ -99,10 +100,10 @@ tasks {
 }
 
 dependencies {
-    api("org.araqnid:eventstore:0.0.22")
+    api("org.araqnid:eventstore:0.0.23")
     api("com.google.inject:guice:$guiceVersion")
     api("com.google.guava:guava:$guavaVersion")
-    implementation("org.araqnid:app-status:0.0.13")
+    implementation("org.araqnid:app-status:0.0.14")
     implementation("org.araqnid:kotlin-coroutines-resteasy:1.0.1")
     implementation("com.google.inject.extensions:guice-servlet:$guiceVersion")
     implementation("com.google.inject.extensions:guice-multibindings:$guiceVersion")
