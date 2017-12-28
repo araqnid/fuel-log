@@ -8,6 +8,7 @@ import java.security.MessageDigest
 plugins {
     application
     kotlin("jvm") version "1.2.10"
+    `java-library`
     id("com.timgroup.webpack") version "1.0.12" apply false
 }
 
@@ -98,9 +99,9 @@ tasks {
 }
 
 dependencies {
-    compile("org.araqnid:eventstore:0.0.22")
-    compile("com.google.inject:guice:$guiceVersion")
-    compile("com.google.guava:guava:$guavaVersion")
+    api("org.araqnid:eventstore:0.0.22")
+    api("com.google.inject:guice:$guiceVersion")
+    api("com.google.guava:guava:$guavaVersion")
     implementation("org.araqnid:app-status:0.0.13")
     implementation("org.araqnid:kotlin-coroutines-resteasy:1.0.1")
     implementation("com.google.inject.extensions:guice-servlet:$guiceVersion")
