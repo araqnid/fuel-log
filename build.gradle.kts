@@ -120,7 +120,7 @@ dependencies {
     implementation("com.fasterxml.uuid:java-uuid-generator:3.1.3")
     implementation("org.tukaani:xz:1.5")
     implementation("org.apache.commons:commons-compress:1.13")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.20")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test-junit"))
