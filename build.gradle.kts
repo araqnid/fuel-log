@@ -7,7 +7,7 @@ import java.security.MessageDigest
 
 plugins {
     application
-    kotlin("jvm") version "1.2.10"
+    kotlin("jvm") version "1.2.21"
     `java-library`
     id("com.timgroup.webpack") version "1.0.12" apply false
 }
@@ -122,7 +122,7 @@ dependencies {
     implementation("com.fasterxml.uuid:java-uuid-generator:3.1.3")
     implementation("org.tukaani:xz:1.5")
     implementation("org.apache.commons:commons-compress:1.13")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.21")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.1")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test-junit"))
