@@ -18,7 +18,7 @@ dependencies {
     testImplementation(kotlin("stdlib-jdk8"))
     testImplementation("com.timgroup:clocks-testing:1.0.1070")
     testImplementation("org.araqnid:hamkrest-json:1.0.3")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.20")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.1")
     testImplementation("org.apache.httpcomponents:httpasyncclient:4.1.3")
     testImplementation("org.eclipse.jetty:jetty-server:$jettyVersion")
     testImplementation("org.jboss.resteasy:resteasy-jaxrs:$resteasyVersion")
