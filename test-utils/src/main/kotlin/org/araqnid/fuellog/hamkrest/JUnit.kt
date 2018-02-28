@@ -11,16 +11,18 @@ import org.junit.rules.ExpectedException
 fun <T> assumeThat(actual: T, matcher: Matcher<T>) {
     val result = matcher(actual)
     if (result is MatchResult.Mismatch)
-        throw AssumptionViolatedException.create(actual, matcher)
+        throw AssumptionViolatedException(assumption = null, matcher = matcher, result = result)
 }
 
 fun <T> assumeThat(message: String, actual: T, matcher: Matcher<T>) {
     val result = matcher(actual)
     if (result is MatchResult.Mismatch)
-        throw AssumptionViolatedException.create(message, actual, matcher)
+        throw AssumptionViolatedException(assumption = message, matcher = matcher, result = result)
 }
 
-class AssumptionViolatedException private constructor(private val assumption: String? = null, private val actual: Any?, private val matcher: Matcher<*>)
+class AssumptionViolatedException (private val assumption: String? = null,
+                                   private val matcher: Matcher<*>,
+                                   private val result: MatchResult.Mismatch)
     : org.junit.AssumptionViolatedException(assumption), SelfDescribing {
 
     override val message: String?
@@ -33,21 +35,11 @@ class AssumptionViolatedException private constructor(private val assumption: St
                 append(": ")
             }
 
-            append("got: ")
-            append(describe(actual))
-            append(", expected: ")
+            append("expected: ")
             append(describe(matcher))
+            append(", but: ")
+            append(describe(result))
         }
-
-    companion object {
-        fun <T> create(actual: T, matcher: Matcher<T>): AssumptionViolatedException {
-            return AssumptionViolatedException(actual = actual, matcher = matcher)
-        }
-
-        fun <T> create(message: String, actual: T, matcher: Matcher<T>): AssumptionViolatedException {
-            return AssumptionViolatedException(assumption = message, actual = actual, matcher = matcher)
-        }
-    }
 }
 
 fun <T> Matcher<T>.asHamcrest(): org.hamcrest.Matcher<T> {
