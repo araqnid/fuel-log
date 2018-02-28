@@ -28,8 +28,8 @@ class AssumptionViolatedException (private val assumption: String? = null,
     override val message: String?
         get() = description
 
-    override val description: String
-        get() = buildString {
+    override val description by lazy {
+        buildString {
             if (assumption != null) {
                 append(assumption)
                 append(": ")
@@ -40,6 +40,7 @@ class AssumptionViolatedException (private val assumption: String? = null,
             append(", but: ")
             append(describe(result))
         }
+    }
 }
 
 fun <T> Matcher<T>.asHamcrest(): org.hamcrest.Matcher<T> {
