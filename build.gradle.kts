@@ -21,6 +21,7 @@ val jacksonVersion by extra("2.9.3")
 val resteasyVersion by extra("3.1.4.Final")
 val guiceVersion by extra("4.1.0")
 val guavaVersion by extra("23.6-jre")
+val kotlinCoroutinesVersion by extra("0.22.3")
 
 val gitVersion by extra {
     val capture = ByteArrayOutputStream()
@@ -122,8 +123,8 @@ dependencies {
     implementation("com.fasterxml.uuid:java-uuid-generator:3.1.3")
     implementation("org.tukaani:xz:1.5")
     implementation("org.apache.commons:commons-compress:1.13")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.22.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutinesVersion")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
     testImplementation(kotlin("test-junit"))
