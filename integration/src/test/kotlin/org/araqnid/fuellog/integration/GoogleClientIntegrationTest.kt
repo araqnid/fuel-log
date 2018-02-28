@@ -1,12 +1,10 @@
 package org.araqnid.fuellog.integration
 
 import com.natpryce.hamkrest.isA
-import com.natpryce.hamkrest.isEmptyString
 import kotlinx.coroutines.experimental.runBlocking
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.araqnid.fuellog.GoogleClient
 import org.araqnid.fuellog.GoogleClientConfig
-import org.araqnid.fuellog.hamkrest.assumeThat
 import org.araqnid.fuellog.hamkrest.expect
 import org.junit.After
 import org.junit.Before
@@ -17,12 +15,6 @@ import java.time.Clock
 import javax.ws.rs.BadRequestException
 
 class GoogleClientIntegrationTest {
-    companion object {
-        val googleClientId = System.getenv("GOOGLE_CLIENT_ID") ?: ""
-        val googleClientSecret = System.getenv("GOOGLE_CLIENT_SECRET") ?: ""
-        val googleIdToken = System.getenv("GOOGLE_ID_TOKEN") ?: ""
-    }
-
     @Before
     fun startHttpClient() {
         httpClient.start()
@@ -40,12 +32,7 @@ class GoogleClientIntegrationTest {
 
     private val httpClient = HttpAsyncClients.createDefault()
 
-    private val googleClientConfig: GoogleClientConfig
-        get() {
-            assumeThat(googleClientId, !isEmptyString)
-            assumeThat(googleClientSecret, !isEmptyString)
-            return GoogleClientConfig(googleClientId, googleClientSecret)
-        }
+    private val googleClientConfig by lazy { GoogleClientConfig(googleClientId, googleClientSecret) }
 
     @Test
     fun `validates ID token`() {

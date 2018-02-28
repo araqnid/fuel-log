@@ -22,14 +22,6 @@ import javax.ws.rs.BadRequestException
 import kotlin.test.assertNotEquals
 
 class FacebookClientIntegrationTest {
-    companion object {
-        val facebookAppId = System.getenv("FACEBOOK_APP_ID") ?: ""
-        val facebookAppSecret = System.getenv("FACEBOOK_APP_SECRET") ?: ""
-
-        // some tests can be performed only with a current, valid, user access token
-        val accessToken = System.getenv("FACEBOOK_USER_ACCESS_TOKEN") ?: ""
-    }
-
     @Before
     fun startHttpClient() {
         httpClient.start()
@@ -45,12 +37,7 @@ class FacebookClientIntegrationTest {
 
     private val httpClient = HttpAsyncClients.createDefault()
 
-    private val facebookClientConfig: FacebookClientConfig
-        get() {
-            assumeThat(facebookAppId, !isEmptyString)
-            assumeThat(facebookAppSecret, !isEmptyString)
-            return FacebookClientConfig(facebookAppId, facebookAppSecret)
-        }
+    private val facebookClientConfig by lazy { FacebookClientConfig(facebookAppId, facebookAppSecret) }
 
     @Test
     fun `fetches app token`() {
