@@ -1,14 +1,14 @@
 package org.araqnid.fuellog
 
+import kotlinx.coroutines.experimental.suspendCancellableCoroutine
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.concurrent.FutureCallback
 import org.apache.http.nio.client.HttpAsyncClient
 import java.lang.Exception
-import kotlin.coroutines.experimental.suspendCoroutine
 
 suspend fun HttpAsyncClient.executeAsyncHttpRequest(request: HttpUriRequest): HttpResponse {
-    return suspendCoroutine { cont ->
+    return suspendCancellableCoroutine { cont ->
         val apacheCallback = object : FutureCallback<HttpResponse> {
             override fun completed(result: HttpResponse) {
                 cont.resume(result)
@@ -19,7 +19,7 @@ suspend fun HttpAsyncClient.executeAsyncHttpRequest(request: HttpUriRequest): Ht
             }
 
             override fun cancelled() {
-                cont.resumeWithException(IllegalStateException())
+                cont.cancel()
             }
         }
         this@executeAsyncHttpRequest.execute(request, apacheCallback)
