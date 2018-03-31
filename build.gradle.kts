@@ -20,7 +20,7 @@ val jettyVersion by extra("9.4.8.v20171121")
 val jacksonVersion by extra("2.9.3")
 val resteasyVersion by extra("3.1.4.Final")
 val guiceVersion by extra("4.1.0")
-val guavaVersion by extra("23.6-jre")
+val guavaVersion by extra("24.1-jre")
 val kotlinCoroutinesVersion by extra("0.22.3")
 
 val gitVersion by extra {
