@@ -7,7 +7,7 @@ import java.security.MessageDigest
 
 plugins {
     application
-    kotlin("jvm") version "1.2.30"
+    kotlin("jvm") version "1.2.31"
     `java-library`
     id("com.timgroup.webpack") version "1.0.12" apply false
 }
@@ -21,7 +21,7 @@ val jacksonVersion by extra("2.9.3")
 val resteasyVersion by extra("3.1.4.Final")
 val guiceVersion by extra("4.1.0")
 val guavaVersion by extra("24.1-jre")
-val kotlinCoroutinesVersion by extra("0.22.3")
+val kotlinCoroutinesVersion by extra("0.22.5")
 
 val gitVersion by extra {
     val capture = ByteArrayOutputStream()
