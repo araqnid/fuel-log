@@ -17,7 +17,7 @@ application {
 }
 
 val jettyVersion by extra("9.4.9.v20180320")
-val jacksonVersion by extra("2.9.3")
+val jacksonVersion by extra("2.9.5")
 val resteasyVersion by extra("3.1.4.Final")
 val guiceVersion by extra("4.1.0")
 val guavaVersion by extra("24.1-jre")
