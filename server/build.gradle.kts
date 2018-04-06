@@ -43,7 +43,7 @@ tasks {
             attributes["Implementation-Version"] = project.version
             attributes["X-Service-Class"] = application.mainClassName
         }
-        from("ui/build/site") {
+        from(project(":ui").buildDir.resolve("site")) {
             into("www")
             exclude(".cache")
         }
