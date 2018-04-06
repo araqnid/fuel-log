@@ -9,7 +9,7 @@ set -e
 cd "$(dirname $0)/../.."
 
 gradle() {
-    ./gradlew "$@"
+    ./gradlew --parallel "$@"
 }
 
 tagged_as=$(git describe --tags)
