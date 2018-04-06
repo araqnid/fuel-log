@@ -41,7 +41,7 @@ tmpdir=$(mktemp -d -t $artifact-$site-promote)
 trap 'rm -rf "$tmpdir"' EXIT
 
 jarfile=$artifact-$version.jar
-ln -sfn $PWD/server/build/libs/$jarfile $tmpdir/$jarfile
+ln -sfn $PWD/server/build/libs/server-$version.jar $tmpdir/$jarfile
 ln -sfn $PWD/src/script/mount_service $tmpdir/mount
 ln -sfn $PWD/src/script/extract_site_content $tmpdir/extract_site_content
 
