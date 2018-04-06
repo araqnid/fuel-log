@@ -23,7 +23,7 @@ import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.net.URI
 import java.time.Clock
-import java.util.*
+import java.util.UUID
 
 private val emptyMetadata = RequestMetadata("10.0.0.0", null)
 

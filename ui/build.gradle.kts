@@ -8,13 +8,15 @@ plugins {
 
 tasks {
     "webpack"(WebpackTask::class) {
-        inputs.files(rootProject.configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME).fileCollection { dep -> dep.group == "org.araqnid" && dep.name == "app-status" })
+        val runtimeClasspath = project(":server").configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+
+        inputs.files(runtimeClasspath.fileCollection { dep -> dep.group == "org.araqnid" && dep.name == "app-status" })
 
         gzipResources = false
         generateManifest = false
 
         doFirst {
-            val jarFile = rootProject.configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+            val jarFile = runtimeClasspath
                     .resolvedConfiguration.resolvedArtifacts
                     .filter { artifact ->
                         artifact.moduleVersion.id.group == "org.araqnid" && artifact.moduleVersion.id.name == "app-status"

@@ -18,7 +18,7 @@ import org.junit.Test
 import org.junit.rules.ExpectedException
 import java.time.Clock
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 class FuelRepositoryTest {
     @Rule @JvmField val thrown: ExpectedException = ExpectedException.none()

@@ -4,6 +4,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -27,10 +28,13 @@ open class RuntimeDependenciesTask : DefaultTask() {
     @get:InputFiles @get:Optional
     val boot: Configuration? by lazy { project.configurations.findByName("boot") }
 
+    @get:Input
+    var appName: String? = null
+
     @TaskAction
     fun run() {
-        writeFile(runtime, "${project.name}.deps.txt")
-        writeFile(boot, "${project.name}.bootdeps.txt")
+        writeFile(runtime, "${appName ?: project.name}.deps.txt")
+        writeFile(boot, "${appName ?: project.name}.bootdeps.txt")
     }
 
     private fun writeFile(cfg: Configuration?, filename: String) {

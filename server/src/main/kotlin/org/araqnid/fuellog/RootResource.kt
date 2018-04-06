@@ -1,7 +1,6 @@
 package org.araqnid.fuellog
 
 import org.araqnid.appstatus.AppVersion
-import java.util.UUID
 import javax.annotation.security.PermitAll
 import javax.inject.Inject
 import javax.ws.rs.GET

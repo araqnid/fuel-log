@@ -9,7 +9,7 @@ import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 import javax.inject.Inject
 
 class FuelRepository @Inject constructor(val streamReader: EventStreamReader, val categoryReader: EventCategoryReader) {

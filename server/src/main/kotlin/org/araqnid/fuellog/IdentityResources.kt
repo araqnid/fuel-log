@@ -7,7 +7,7 @@ import org.araqnid.kotlin.coroutines.experimental.resteasy.respondAsynchronously
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock
-import java.util.*
+import java.util.UUID
 import javax.annotation.security.PermitAll
 import javax.inject.Inject
 import javax.inject.Singleton
