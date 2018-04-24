@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 
 plugins {
-    kotlin("jvm") version "1.2.31" apply false
+    kotlin("jvm") version "1.2.40" apply false
     id("com.timgroup.webpack") version "1.0.12" apply false
 }
 
