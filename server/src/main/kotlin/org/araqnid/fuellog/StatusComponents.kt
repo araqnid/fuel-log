@@ -24,11 +24,17 @@ class StatusComponents {
 
 object BasicStatusComponents {
     @OnStatusPage(label = "JVM version")
-    val jvmVersion = System.getProperty("java.version")!!
+    val jvmVersion: String by lazy {
+        val basicVersion = System.getProperty("java.version")
+        when (basicVersion) {
+            "10" -> System.getProperty("java.vendor.version")
+            else -> basicVersion
+        }
+    }
 
     @OnStatusPage("Kotlin version")
-    val kotlinVersion: String = KotlinVersion.CURRENT.toString()
+    val kotlinVersion = KotlinVersion.CURRENT.toString()
 
     @OnStatusPage(label = "Jetty version")
-    val jettyVersion = Jetty.VERSION!!
+    val jettyVersion: String = Jetty.VERSION
 }
