@@ -47,7 +47,7 @@ class InfoResourcesIntegrationTest : IntegrationTest() {
                 jsonBytes(jsonObject()
                         .withProperty("status", jsonString(anything))
                         .withProperty("components", jsonObject()
-                                .withPropertyJSON("jvmVersion", "{ priority: 'INFO', label: 'JVM version', text: '${System.getProperty("java.version")}' }")
+                                .withProperty("jvmVersion", jsonObject())
                                 .withAnyOtherProperties()
                         )))
     }
