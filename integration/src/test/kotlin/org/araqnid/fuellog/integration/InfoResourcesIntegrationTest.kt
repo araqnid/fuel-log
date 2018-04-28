@@ -47,7 +47,7 @@ class InfoResourcesIntegrationTest : IntegrationTest() {
                 jsonBytes(jsonObject()
                         .withProperty("status", jsonString(anything))
                         .withProperty("components", jsonObject()
-                                .withProperty("jvmVersion", jsonObject())
+                                .withProperty("jvmVersion", jsonObject().withAnyOtherProperties())
                                 .withAnyOtherProperties()
                         )))
     }
