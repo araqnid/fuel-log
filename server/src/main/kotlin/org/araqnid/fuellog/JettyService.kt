@@ -41,7 +41,7 @@ class JettyService @Inject constructor(@Named("PORT") port: Int,
         requestLog = Slf4jRequestLog().apply {
             logLatency = true
         }
-        handler = GzipHandler() wrapping StatisticsHandler() wrapping ContextHandlerCollection().apply {
+        handler = StatisticsHandler() wrapping ContextHandlerCollection().apply {
             addHandler(ServletContextHandler().apply {
                 contextPath = "/_api"
                 sessionHandler = SessionHandler().apply {
@@ -51,6 +51,7 @@ class JettyService @Inject constructor(@Named("PORT") port: Int,
                 addFilter(FilterHolder(Filter30Dispatcher()), "/*", EnumSet.of(DispatcherType.REQUEST))
                 addServlet(DefaultServlet::class.java, "/")
                 addEventListener(resteasyBootstrap)
+                gzipHandler = GzipHandler()
             })
             addContext("/", documentRoot).apply {
                 handler = ResourceHandler()
