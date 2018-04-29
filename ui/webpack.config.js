@@ -20,6 +20,7 @@ const production = process.env.NODE_ENV === "production";
 module.exports = {
     context: sourceDir,
     entry: ["bootstrap", "./styles.css", "./main"],
+    mode: production ? "production" : "development",
     output: {
         path: outputDir,
         filename: production ? "[name]-[hash].js" : "[name].js"
@@ -84,7 +85,6 @@ module.exports = {
         }
         else {
             plugins.push(
-                new webpack.NamedModulesPlugin(),
                 new webpack.HotModuleReplacementPlugin()
             );
         }
