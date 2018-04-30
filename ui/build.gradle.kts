@@ -6,6 +6,10 @@ plugins {
     id("com.timgroup.webpack")
 }
 
+webpackPlugin {
+    nodeVersion.set("8.11.1")
+}
+
 tasks {
     "webpack"(WebpackTask::class) {
         val runtimeClasspath = project(":server").configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)

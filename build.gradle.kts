@@ -7,7 +7,7 @@ import java.security.MessageDigest
 
 plugins {
     kotlin("jvm") version "1.2.41" apply false
-    id("com.timgroup.webpack") version "1.0.12" apply false
+    id("com.timgroup.webpack") version "1.0.29" apply false
 }
 
 val jettyVersion by extra("9.4.9.v20180320")
