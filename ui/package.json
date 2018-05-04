@@ -5,7 +5,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "bootstrap": "^3.3.7",
-    "jquery": "^2.2.4",
+    "jquery": "^3.3.1",
     "js-joda": "^1.8.2",
     "lodash": "^4.17.10",
     "nanoajax": "^0.4.3",
