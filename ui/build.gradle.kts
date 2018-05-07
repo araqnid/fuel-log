@@ -6,8 +6,9 @@ plugins {
     id("com.timgroup.webpack")
 }
 
-webpackPlugin {
-    nodeVersion.set("8.11.1")
+node {
+    version = "8.11.1"
+    download = true
 }
 
 tasks {
