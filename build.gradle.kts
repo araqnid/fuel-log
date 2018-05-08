@@ -10,7 +10,7 @@ plugins {
     id("com.timgroup.webpack") version "1.0.37" apply false
 }
 
-val jettyVersion by extra("9.4.9.v20180320")
+val jettyVersion by extra("9.4.10.v20180503")
 val jacksonVersion by extra("2.9.5")
 val resteasyVersion by extra("3.1.4.Final")
 val guiceVersion by extra("4.2.0")
