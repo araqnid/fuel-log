@@ -18,6 +18,8 @@ application {
     mainClassName = "org.araqnid.fuellog.boot.Main"
 }
 
+val web by configurations.creating
+
 configurations {
     "runtime" {
         exclude(group = "commons-logging", module = "commons-logging")
@@ -43,14 +45,13 @@ tasks {
             attributes["Implementation-Version"] = project.version
             attributes["X-Service-Class"] = application.mainClassName
         }
-        from(project(":ui").buildDir.resolve("site")) {
+        from(web) {
             into("www")
             exclude(".cache")
         }
         from(runtimeDeps) {
             into("META-INF")
         }
-        dependsOn(":ui:webpack")
     }
 }
 
@@ -87,4 +88,5 @@ dependencies {
     testImplementation("org.araqnid:hamkrest-json:1.0.3")
     runtimeOnly("ch.qos.logback:logback-classic:1.2.2")
     runtimeOnly("org.slf4j:jcl-over-slf4j:1.7.25")
+    web(project(path = ":ui", configuration = "web"))
 }
