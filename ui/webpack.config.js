@@ -23,7 +23,7 @@ module.exports = {
     mode: production ? "production" : "development",
     output: {
         path: outputDir,
-        filename: production ? "[name]-[hash].js" : "[name].js"
+        filename: production ? "[name]-[chunkhash].js" : "[name].js"
     },
     devServer: {
         contentBase: contentBaseDir,
@@ -32,6 +32,12 @@ module.exports = {
             "/_api": "http://localhost:64064"
         },
         hot: true
+    },
+    optimization: {
+        runtimeChunk: true,
+        splitChunks: {
+            chunks: "all",
+        }
     },
     module: {
         rules: [
@@ -76,11 +82,15 @@ module.exports = {
             new FaviconsWebpackPlugin({
                 logo: "./if_fuel_103260.png",
                 title: "Fuel Log"
-            })
+            }),
+            new webpack.optimize.SplitChunksPlugin()
         ];
 
         if (production) {
-
+            plugins.push(
+                new webpack.HashedModuleIdsPlugin(),
+                new webpack.NamedChunksPlugin()
+            );
         }
         else {
             plugins.push(
