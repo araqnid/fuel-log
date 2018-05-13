@@ -1,7 +1,7 @@
 import axios from "axios";
 import Observable from "zen-observable";
 
-export default function ajaxObservable(url, requestConfig) {
+export default function ajaxObservable(url, requestConfig = ({ headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" }})) {
     return new Observable(observer => {
         const cancelSource = axios.CancelToken.source();
 

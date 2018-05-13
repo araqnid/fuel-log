@@ -22,7 +22,7 @@ export const reducer = (state = initialState, action) => {
 };
 
 export const actions = exposeStoreMethodsViaDispatch("purchases", ["submit"]);
-const purchasesObservable = ajaxObservable("_api/fuel", { headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" } })
+const purchasesObservable = ajaxObservable("_api/fuel")
     .map(data => ({ type: "PurchasesStore/loaded", payload: data }));
 
 export default class PurchasesStore extends UserDataStore {

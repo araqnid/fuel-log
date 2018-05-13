@@ -20,7 +20,7 @@ export const reducer = (state = initialState, action) => {
     }
 };
 
-const preferencesObservable = ajaxObservable("_api/user/preferences", { headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" } })
+const preferencesObservable = ajaxObservable("_api/user/preferences")
     .map(data => ({ type: "PreferencesStore/loaded", payload: data }));
 
 export default class PreferencesStore extends UserDataStore {
