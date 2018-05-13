@@ -1,4 +1,4 @@
-import {DelegatingLoader, noopLoader} from "./Loaders";
+import {LoaderBase, noopLoader} from "./Loaders";
 
 export function resetOn(r) {
     const predicate = typeof r === "function" ? r : ({type}) => type === r;
@@ -12,6 +12,12 @@ export function bindActionPayload(type, initialValue = null) {
     const reducer = (state = initialValue, action) => action.type === type && !action.error ? action.payload : state;
     reducer.resetOn = resetEventType => resetOn(resetEventType)(reducer);
     return reducer;
+}
+
+export class NoopLoader extends LoaderBase {
+    constructor() {
+        super();
+    }
 }
 
 export class UserDataStore {
@@ -41,7 +47,7 @@ export class UserDataStore {
     }
 
     newLoader() {
-        return new DelegatingLoader(); // effectively no-op loader
+        return new NoopLoader();
     }
 
     dispatch(action) {
