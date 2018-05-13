@@ -2,6 +2,7 @@ import React from "react";
 import {connect} from "react-redux";
 import {Instant, ZonedDateTime, ZoneId} from "js-joda";
 import _ from "lodash";
+import {reverse, sortBy} from "lodash/fp";
 
 function formatDistance(value, preferences) {
     const unit = preferences.distance_unit || "KM";
@@ -77,7 +78,7 @@ const FuelPurchaseList = ({purchases, preferences}) => {
 
 export default connect(
     ({ purchases: { purchaseList }, preferences: { preferences } }) => ({
-        purchases: _.reverse(_.sortBy(purchaseList, "purchased_at")),
+        purchases: _.flow(sortBy("purchased_at"), reverse)(purchaseList),
         preferences
     }),
     dispatch => ({})
