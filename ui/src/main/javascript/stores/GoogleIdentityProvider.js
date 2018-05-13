@@ -125,7 +125,7 @@ export default class GoogleIdentityProvider {
     }
 
     async _associate(idToken) {
-        const { data: userInfo } = await axios.post('/_api/user/identity/google', idToken, { headers: { "Content-Type": "text/plain" } });
+        const { data: userInfo } = await axios.post('/_api/user/identity/google', idToken, { headers: { "Content-Type": "text/plain", "X-Requested-With": "XMLHttpRequest" } });
         this._enableUserForwarding();
         return userInfo;
     }

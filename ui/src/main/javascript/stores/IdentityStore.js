@@ -64,7 +64,7 @@ export default class IdentityStore {
     }
 
     async _launch() {
-        const {data: {user_info: provisionalUserInfo}} = await axios.get("_api/user/identity");
+        const {data: {user_info: provisionalUserInfo}} = await axios.get("_api/user/identity", ({ headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" }}));
 
         const userInfo = await (provisionalUserInfo ? this._confirm(provisionalUserInfo) : this._probe());
 
@@ -83,13 +83,13 @@ export default class IdentityStore {
             }
             else {
                 log.info("User details not confirmed");
-                await axios.delete("_api/user/identity");
+                await axios.delete("_api/user/identity", ({ headers: { "X-Requested-With": "XMLHttpRequest" } }));
                 return null;
             }
         }
         else {
             log.warn("last known user identity is in unknown realm");
-            await axios.delete("_api/user/identity");
+            await axios.delete("_api/user/identity", ({ headers: { "X-Requested-With": "XMLHttpRequest" } }));
             return null;
         }
     }
