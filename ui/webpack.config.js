@@ -42,7 +42,7 @@ module.exports = {
                     loader: 'babel-loader',
                     options: {
                         presets: [['env', { modules: false }], 'react'],
-                        plugins: ["transform-object-rest-spread"]
+                        plugins: ["transform-object-rest-spread", "lodash"]
                     }
                 }
             },
@@ -59,7 +59,6 @@ module.exports = {
     resolve: {
         extensions: ['.webpack.js', '.web.js', '.js'],
         alias: {
-            "lodash$": "lodash/index.js",
             "jquery$": "jquery/dist/jquery.js",
             "bootstrap$": "bootstrap/dist/js/bootstrap.js"
         }
