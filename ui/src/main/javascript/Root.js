@@ -4,22 +4,21 @@ import Identity from "./Identity";
 
 const Root = ({}) => (
     <div>
-        <div className="navbar navbar-inverse navbar-fixed-top" role="navigation">
-            <div className="container">
-                <div className="navbar-header">
-                    <button type="button" className="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span className="sr-only">Toggle navigation</span>
-                        <span className="icon-bar"/>
-                        <span className="icon-bar"/>
-                        <span className="icon-bar"/>
-                    </button>
-                    <a className="navbar-brand" id="fuellog-home-link" href="#">Fuel Log</a>
-                </div>
-                <div className="navbar-collapse collapse">
-                    <Identity />
-                </div>
+        <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+            <a className="navbar-brand" href="/#">Fuel Log</a>
+            <button className="navbar-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span className="navbar-toggler-icon"/>
+            </button>
+
+            <div className="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul className="navbar-nav mr-auto">
+                </ul>
+
+                <Identity/>
             </div>
-        </div>
+        </nav>
         <Content />
     </div>
 );

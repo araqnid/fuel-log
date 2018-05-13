@@ -8,6 +8,9 @@ import Root from "./Root";
 import reducers from "./reducers";
 import storeFactory from "./stores";
 import {reduxThunkWithStores} from "./util/Stores";
+import "bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./styles.css";
 
 let stores = null;
 
@@ -34,16 +37,6 @@ if (process.env.NODE_ENV !== "production") {
 
 const componentRootElt = document.createElement("div");
 document.body.appendChild(componentRootElt);
-
-(function(fontFamily, fallback) {
-    document.head.appendChild((function() {
-        const linkElt = document.createElement("link");
-        linkElt.setAttribute("href", "https://fonts.googleapis.com/css?family=" + encodeURIComponent(fontFamily));
-        linkElt.setAttribute("rel", "stylesheet");
-        return linkElt;
-    })());
-    componentRootElt.style.cssText = "font-family: " + fontFamily + ", " + fallback;
-})("Roboto", "sans-serif");
 
 let RootComponent = Root;
 

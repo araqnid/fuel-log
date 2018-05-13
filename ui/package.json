@@ -4,11 +4,12 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "bootstrap": "^3.3.7",
+    "bootstrap": "4.1.1",
     "jquery": "^3.3.1",
     "js-joda": "^1.8.2",
     "lodash": "^4.17.10",
     "nanoajax": "^0.4.3",
+    "popper.js": "^1.14.3",
     "prop-types": "^15.6.1",
     "react": "^16.3.2",
     "react-dom": "^16.3.2",

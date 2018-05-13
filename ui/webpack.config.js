@@ -19,7 +19,7 @@ const production = process.env.NODE_ENV === "production";
 
 module.exports = {
     context: sourceDir,
-    entry: ["bootstrap", "./styles.css", "./main"],
+    entry: "./main",
     mode: production ? "production" : "development",
     output: {
         path: outputDir,
@@ -63,18 +63,10 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: ['.webpack.js', '.web.js', '.js'],
-        alias: {
-            "jquery$": "jquery/dist/jquery.js",
-            "bootstrap$": "bootstrap/dist/js/bootstrap.js"
-        }
+        extensions: ['.webpack.js', '.web.js', '.js']
     },
     plugins: (function() {
         const plugins = [
-            new webpack.ProvidePlugin({
-                // required by bootstrap
-                jQuery: "jquery"
-            }),
             new HtmlWebpackPlugin({
                 title: "Fuel Log",
                 template: "template.html.ejs"
