@@ -1,6 +1,7 @@
 import axios from "axios";
 import {exposeStoreMethodsViaDispatch, UserDataStore} from "../util/Stores";
-import {AutoRefreshLoader} from "../util/Loaders";
+import ajaxObservable from "../util/ajaxObservable";
+import autoRefresh from "../util/autoRefresh";
 
 const initialState = { purchaseList: null, loadFailure: null };
 
@@ -21,26 +22,20 @@ export const reducer = (state = initialState, action) => {
 };
 
 export const actions = exposeStoreMethodsViaDispatch("purchases", ["submit"]);
+const purchasesObservable = ajaxObservable("_api/fuel", { headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" } })
+    .map(data => ({ type: "PurchasesStore/loaded", payload: data }));
 
 export default class PurchasesStore extends UserDataStore {
     constructor(redux) {
-        super(redux);
+        super(redux, autoRefresh(30 * 1000)(purchasesObservable));
+    }
+
+    onError(error) {
+        this.dispatch({ type: "PurchasesStore/loaded", payload: error, error: true });
     }
 
     reset() {
         this.dispatch({ type: "PurchasesStore/reset" });
-    }
-
-    newLoader() {
-        return new AutoRefreshLoader("_api/fuel", 30 * 1000, {
-            foundData: data => {
-                this.dispatch({ type: "PurchasesStore/loaded", payload: data });
-            },
-
-            loadError: ex => {
-                this.dispatch({ type: "PurchasesStore/loaded", payload: ex, error: true });
-            }
-        });
     }
 
     submit() {

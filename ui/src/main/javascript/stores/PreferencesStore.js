@@ -1,5 +1,6 @@
-import {AutoRefreshLoader} from "../util/Loaders";
 import {UserDataStore} from "../util/Stores";
+import autoRefresh from "../util/autoRefresh";
+import ajaxObservable from "../util/ajaxObservable";
 
 const initialState = { preferences: null, loadFailure: null };
 
@@ -19,24 +20,19 @@ export const reducer = (state = initialState, action) => {
     }
 };
 
+const preferencesObservable = ajaxObservable("_api/user/preferences", { headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" } })
+    .map(data => ({ type: "PreferencesStore/loaded", payload: data }));
+
 export default class PreferencesStore extends UserDataStore {
     constructor(redux) {
-        super(redux);
+        super(redux, autoRefresh(30 * 1000)(preferencesObservable));
+    }
+
+    onError(error) {
+        this.dispatch({ type: "PreferencesStore/loaded", payload: error, error: true });
     }
 
     reset() {
         this.dispatch({ type: "PreferencesStore/reset" });
-    }
-
-    newLoader() {
-        return new AutoRefreshLoader("_api/user/preferences", 30 * 1000, {
-            foundData: data => {
-                this.dispatch({ type: "PreferencesStore/loaded", payload: data });
-            },
-
-            loadError: ex => {
-                this.dispatch({ type: "PreferencesStore/loaded", payload: ex, error: true });
-            }
-        });
     }
 }

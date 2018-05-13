@@ -1,5 +1,3 @@
-import {LoaderBase, noopLoader} from "./Loaders";
-
 export function resetOn(r) {
     const predicate = typeof r === "function" ? r : ({type}) => type === r;
     return reducer => {
@@ -14,18 +12,13 @@ export function bindActionPayload(type, initialValue = null) {
     return reducer;
 }
 
-export class NoopLoader extends LoaderBase {
-    constructor() {
-        super();
-    }
-}
-
 export class UserDataStore {
-    constructor(redux) {
+    constructor(redux, observable) {
         this._redux = redux;
+        this._observable = observable;
         this._reduxUnsubscribe = null;
         this._userId = null;
-        this._loader = null;
+        this._subscription = null;
     }
 
     start() {
@@ -37,17 +30,35 @@ export class UserDataStore {
         if (this._reduxUnsubscribe) {
             this._reduxUnsubscribe();
         }
-        if (this._loader) {
-            this._loader.abort();
-            this._loader = null;
-        }
+        this._abort();
     }
 
     reset () {
     }
 
-    newLoader() {
-        return new NoopLoader();
+    onError() {
+    }
+
+    _begin() {
+        this._subscription = this._observable.subscribe(
+            value => {
+                this.dispatch(value);
+            },
+            error => {
+                this.onError(error);
+                this._subscription = null;
+            },
+            () => {
+                this._subscription = null;
+            }
+        );
+    }
+
+    _abort() {
+        if (this._subscription) {
+            this._subscription.unsubscribe();
+            this._subscription = null;
+        }
     }
 
     dispatch(action) {
@@ -68,25 +79,20 @@ export class UserDataStore {
     }
 
     kick() {
-        if (this._loader) {
-            this._loader.abort();
-            this._loader = this.newLoader();
-            this._loader.begin();
+        if (this._subscription) {
+            this._subscription.unsunscribe();
+            this._begin();
         }
     }
 
     onReduxAction() {
         const nextUserId = this._reduxUserId;
         if (nextUserId !== this._userId) {
-            if (this._loader) {
-                this._loader.abort();
-                this._loader = null;
-            }
+            this._abort();
             this._userId = nextUserId;
             this.reset();
             if (nextUserId) {
-                this._loader = this.newLoader();
-                this._loader.begin();
+                this._begin();
             }
         }
     }
