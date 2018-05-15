@@ -3,6 +3,7 @@ package org.araqnid.fuellog.tools
 import com.fasterxml.uuid.Generators
 import com.fasterxml.uuid.impl.NameBasedGenerator
 import com.google.common.base.Splitter
+import com.google.common.io.MoreFiles
 import com.google.common.io.Resources
 import org.araqnid.eventstore.StreamId
 import org.araqnid.eventstore.filesystem.TieredFilesystemEventSource
@@ -12,11 +13,9 @@ import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
 import org.araqnid.fuellog.events.UserExternalIdAssigned
 import org.araqnid.fuellog.filterNotNull
-import org.araqnid.fuellog.toListAndClose
 import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Clock
 import java.time.LocalDate
@@ -27,7 +26,7 @@ object BackfillFuelPurchases {
     @JvmStatic fun main(args: Array<String>) {
         val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/google/112460655559871226975")
         val eventsDirectory = Paths.get(if (args.isNotEmpty()) args[0] else "events")
-        with(eventsDirectory.resolve("fuel")) { if (Files.exists(this)) deleteRecursively(this) }
+        eventsDirectory.resolve("fuel").takeIf { Files.exists(it) }?.let { MoreFiles.deleteRecursively(it) }
         val userId = TieredFilesystemEventSource(eventsDirectory, Clock.systemDefaultZone())
                 .categoryReader.readCategoryForwards("user")
                 .map { it.event }
@@ -62,16 +61,6 @@ object BackfillFuelPurchases {
     }
 
     const val KM_PER_MILE: Double = 1.60934
-
-    fun deleteRecursively(parent: Path) {
-        Files.list(parent).toListAndClose().forEach { member ->
-            if (Files.isDirectory(member))
-                deleteRecursively(member)
-            else
-                Files.delete(member)
-        }
-        Files.delete(parent)
-    }
 
     fun String.isYes(): Boolean = this.equals("yes", ignoreCase = true)
 }
