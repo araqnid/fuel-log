@@ -1,6 +1,9 @@
 package org.araqnid.fuellog
 
 import com.google.common.util.concurrent.AbstractIdleService
+import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.experimental.asCoroutineDispatcher
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
@@ -23,14 +26,18 @@ import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 import javax.servlet.DispatcherType
+import kotlin.coroutines.experimental.CoroutineContext
 
 @Singleton
 class JettyService @Inject constructor(@Named("PORT") port: Int,
                                        @Named("DOCUMENT_ROOT") documentRoot: String,
-                                       resteasyBootstrap: GuiceResteasyBootstrapServletContextListener) : AbstractIdleService() {
-    val threadPool = QueuedThreadPool().apply {
+                                       resteasyBootstrap: GuiceResteasyBootstrapServletContextListener) : AbstractIdleService(), CoroutineScope {
+    private val threadPool = QueuedThreadPool().apply {
         name = "Jetty"
     }
+
+    val job = Job()
+
     val server: Server = Server(threadPool).apply {
         addConnector(ServerConnector(this, 1, 1).apply {
             this.port = port
@@ -59,11 +66,15 @@ class JettyService @Inject constructor(@Named("PORT") port: Int,
         }
     }
 
+    override val coroutineContext: CoroutineContext
+        get() = server.threadPool.asCoroutineDispatcher() + job
+
     override fun startUp() {
         server.start()
     }
 
     override fun shutDown() {
+        job.cancel()
         server.stop()
     }
 

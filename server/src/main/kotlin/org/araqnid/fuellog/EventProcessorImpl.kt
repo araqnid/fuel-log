@@ -2,12 +2,11 @@ package org.araqnid.fuellog
 
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.guava.GuavaModule
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.araqnid.eventstore.EventReader
 import org.araqnid.eventstore.EventRecord
 import org.araqnid.eventstore.subscription.SnapshotEventProcessor
@@ -31,8 +30,7 @@ class EventProcessorImpl @Inject constructor(@Named("SNAPSHOT_SPOOL") baseDirect
     private val logger = LoggerFactory.getLogger(EventProcessorImpl::class.java)
 
     companion object {
-        private val objectMapper = ObjectMapper()
-                .registerModule(KotlinModule())
+        private val objectMapper = jacksonObjectMapper()
                 .registerModule(JavaTimeModule())
                 .registerModule(Jdk8Module())
                 .registerModule(GuavaModule())

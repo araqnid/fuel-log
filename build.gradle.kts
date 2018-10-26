@@ -6,16 +6,16 @@ import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 
 plugins {
-    kotlin("jvm") version "1.2.41" apply false
+    kotlin("jvm") version "1.2.71" apply false
     id("com.timgroup.webpack") version "1.0.37" apply false
 }
 
-val jettyVersion by extra("9.4.10.v20180503")
-val jacksonVersion by extra("2.9.5")
+val jettyVersion by extra("9.4.12.v20180830")
+val jacksonVersion by extra("2.9.7")
 val resteasyVersion by extra("3.1.4.Final")
-val guiceVersion by extra("4.2.0")
-val guavaVersion by extra("25.0-jre")
-val kotlinCoroutinesVersion by extra("0.22.5")
+val guiceVersion by extra("4.2.1")
+val guavaVersion by extra("27.0-jre")
+val kotlinCoroutinesVersion by extra("0.30.2")
 
 val gitVersion by extra {
     val capture = ByteArrayOutputStream()

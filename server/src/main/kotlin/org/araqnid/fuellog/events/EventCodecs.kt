@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.guava.GuavaModule
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.araqnid.eventstore.Blob
 import org.araqnid.eventstore.EventRecord
 import org.araqnid.eventstore.NewEvent
@@ -14,8 +14,7 @@ import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 
 object EventCodecs {
-    val objectMapper: ObjectMapper = ObjectMapper()
-            .registerModule(KotlinModule())
+    val objectMapper: ObjectMapper = jacksonObjectMapper()
             .registerModule(JavaTimeModule())
             .registerModule(Jdk8Module())
             .registerModule(GuavaModule())

@@ -1,8 +1,7 @@
 package org.araqnid.fuellog.integration
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.common.io.ByteStreams
 import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
@@ -53,7 +52,6 @@ abstract class IntegrationTest {
 
 internal fun formEntity(params: Map<String, String>) = UrlEncodedFormEntity(params.map { (k, v) -> BasicNameValuePair(k, v) }.toList())
 
-internal val userInfoReader = ObjectMapper()
-        .registerModule(KotlinModule())
+internal val userInfoReader = jacksonObjectMapper()
         .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
         .readerFor(IdentityResources.UserInfo::class.java)

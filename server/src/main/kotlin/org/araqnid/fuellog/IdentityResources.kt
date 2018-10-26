@@ -120,6 +120,6 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     }
 
     private fun <T> respondTo(asyncResponse: AsyncResponse, block: suspend CoroutineScope.() -> T) {
-        respondAsynchronously(asyncResponse, executor = jettyService.server.threadPool, block = block)
+        jettyService.respondAsynchronously(asyncResponse, block = block)
     }
 }

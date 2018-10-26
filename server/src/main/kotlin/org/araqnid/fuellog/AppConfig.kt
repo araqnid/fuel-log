@@ -1,12 +1,11 @@
 package org.araqnid.fuellog
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.guava.GuavaModule
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.common.util.concurrent.MoreExecutors.directExecutor
 import com.google.common.util.concurrent.Service
 import com.google.common.util.concurrent.ServiceManager
@@ -117,8 +116,8 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
     fun eventStreamWriter(source: EventSource) = source.streamWriter
 
     @Provides
-    fun jacksonJsonProvider() = JacksonJsonProvider(ObjectMapper()
-            .registerModules(KotlinModule(), JavaTimeModule(), Jdk8Module(), GuavaModule())
+    fun jacksonJsonProvider() = JacksonJsonProvider(jacksonObjectMapper()
+            .registerModules(JavaTimeModule(), Jdk8Module(), GuavaModule())
             .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE))
 
     @Provides
