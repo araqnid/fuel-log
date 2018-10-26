@@ -19,7 +19,7 @@ const production = process.env.NODE_ENV === "production";
 
 module.exports = {
     context: sourceDir,
-    entry: "./main",
+    entry: "./index",
     mode: production ? "production" : "development",
     output: {
         path: outputDir,
@@ -47,8 +47,8 @@ module.exports = {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: [['env', { modules: false }], 'react'],
-                        plugins: ["transform-object-rest-spread", "lodash"]
+                        presets: [['@babel/preset-env', { modules: false }], '@babel/preset-react'],
+                        plugins: ["@babel/plugin-proposal-object-rest-spread", "babel-plugin-lodash"]
                     }
                 }
             },
