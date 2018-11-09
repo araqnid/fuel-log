@@ -1,9 +1,9 @@
 package org.araqnid.fuellog
 
-import kotlinx.coroutines.experimental.CoroutineScope
+import kotlinx.coroutines.CoroutineScope
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.events.FacebookProfileData
-import org.araqnid.kotlin.coroutines.experimental.resteasy.respondAsynchronously
+import org.araqnid.kotlin.coroutines.resteasy.respondAsynchronously
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock

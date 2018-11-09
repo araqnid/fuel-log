@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.Coroutines
-
 plugins {
     `java-library`
     kotlin("jvm")
@@ -15,14 +13,11 @@ val jettyVersion: String by rootProject.extra
 val resteasyVersion: String by rootProject.extra
 val kotlinCoroutinesVersion: String by rootProject.extra
 
-kotlin {
-    experimental.coroutines = Coroutines.ENABLE
-}
-
 dependencies {
     testImplementation(project(":server"))
     testImplementation(project(":test-utils"))
     testImplementation(kotlin("stdlib-jdk8"))
+    testImplementation(kotlin("reflect"))
     testImplementation("com.timgroup:clocks-testing:1.0.1070")
     testImplementation("org.araqnid:hamkrest-json:1.0.3")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")

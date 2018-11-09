@@ -1,7 +1,7 @@
 package org.araqnid.fuellog.integration
 
 import com.natpryce.hamkrest.isA
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.araqnid.fuellog.GoogleClient
 import org.araqnid.fuellog.GoogleClientConfig

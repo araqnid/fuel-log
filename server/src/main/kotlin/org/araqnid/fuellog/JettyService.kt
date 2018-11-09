@@ -1,9 +1,9 @@
 package org.araqnid.fuellog
 
 import com.google.common.util.concurrent.AbstractIdleService
-import kotlinx.coroutines.experimental.CoroutineScope
-import kotlinx.coroutines.experimental.Job
-import kotlinx.coroutines.experimental.asCoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
@@ -26,7 +26,7 @@ import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 import javax.servlet.DispatcherType
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 @Singleton
 class JettyService @Inject constructor(@Named("PORT") port: Int,

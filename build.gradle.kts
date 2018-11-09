@@ -1,12 +1,11 @@
 import org.araqnid.gradle.RuntimeDependenciesTask
 import org.gradle.kotlin.dsl.get
 import org.jetbrains.kotlin.daemon.common.toHexString
-import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 
 plugins {
-    kotlin("jvm") version "1.2.71" apply false
+    kotlin("jvm") version "1.3.0" apply false
     id("com.timgroup.webpack") version "1.0.37" apply false
 }
 
@@ -15,7 +14,7 @@ val jacksonVersion by extra("2.9.7")
 val resteasyVersion by extra("3.1.4.Final")
 val guiceVersion by extra("4.2.1")
 val guavaVersion by extra("27.0-jre")
-val kotlinCoroutinesVersion by extra("0.30.2")
+val kotlinCoroutinesVersion by extra("1.0.1")
 
 val gitVersion by extra {
     val capture = ByteArrayOutputStream()
