@@ -12,6 +12,7 @@ configurations {
 val jettyVersion: String by rootProject.extra
 val resteasyVersion: String by rootProject.extra
 val kotlinCoroutinesVersion: String by rootProject.extra
+val jacksonVersion: String by rootProject.extra
 
 dependencies {
     testImplementation(project(":server"))
@@ -24,5 +25,10 @@ dependencies {
     testImplementation("org.apache.httpcomponents:httpasyncclient:4.1.3")
     testImplementation("org.eclipse.jetty:jetty-server:$jettyVersion")
     testImplementation("org.jboss.resteasy:resteasy-jaxrs:$resteasyVersion")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    testImplementation(kotlin("stdlib-jdk8"))
+    testImplementation(kotlin("reflect"))
     testRuntimeOnly("org.slf4j:slf4j-simple:1.7.25")
 }

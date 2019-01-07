@@ -55,7 +55,7 @@ dependencies {
     api("com.google.inject:guice:$guiceVersion")
     api("com.google.guava:guava:$guavaVersion")
     implementation("org.araqnid:app-status:0.0.18")
-    implementation("org.araqnid:kotlin-coroutines-resteasy:1.3.0")
+    implementation("org.araqnid:kotlin-coroutines-resteasy:1.3.1")
     implementation("com.google.inject.extensions:guice-servlet:$guiceVersion")
     implementation("com.google.inject.extensions:guice-multibindings:$guiceVersion")
     implementation("org.slf4j:slf4j-api:1.7.25")
