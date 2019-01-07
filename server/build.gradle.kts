@@ -6,6 +6,7 @@ val jettyVersion: String by rootProject.extra
 val resteasyVersion: String by rootProject.extra
 val kotlinCoroutinesVersion: String by rootProject.extra
 val guavaVersion: String by rootProject.extra
+val appStatusVersion: String by rootProject.extra
 
 plugins {
     application
@@ -54,7 +55,7 @@ dependencies {
     api("org.araqnid:eventstore:0.0.23")
     api("com.google.inject:guice:$guiceVersion")
     api("com.google.guava:guava:$guavaVersion")
-    implementation("org.araqnid:app-status:0.0.18")
+    implementation("org.araqnid:app-status:$appStatusVersion")
     implementation("org.araqnid:kotlin-coroutines-resteasy:1.3.1")
     implementation("com.google.inject.extensions:guice-servlet:$guiceVersion")
     implementation("com.google.inject.extensions:guice-multibindings:$guiceVersion")

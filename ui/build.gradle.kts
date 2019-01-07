@@ -4,23 +4,28 @@ plugins {
     id("com.timgroup.webpack")
 }
 
+val appStatusVersion: String by rootProject.extra
+
 node {
     version = "10.15.0"
     download = true
 }
 
 val web by configurations.creating
+val appStatus by configurations.creating
+
+dependencies {
+    appStatus("org.araqnid:app-status:$appStatusVersion")
+}
 
 tasks.withType(WebpackTask::class).configureEach {
-    val runtimeClasspath = project(":server").configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
-
-    inputs.files(runtimeClasspath.fileCollection { dep -> dep.group == "org.araqnid" && dep.name == "app-status" })
+    inputs.files(appStatus.fileCollection { dep -> dep.group == "org.araqnid" && dep.name == "app-status" })
 
     gzipResources = false
     generateManifest = false
 
     doFirst {
-        val jarFile = runtimeClasspath
+        val jarFile = appStatus
                 .resolvedConfiguration.resolvedArtifacts
                 .filter { artifact ->
                     artifact.moduleVersion.id.group == "org.araqnid" && artifact.moduleVersion.id.name == "app-status"

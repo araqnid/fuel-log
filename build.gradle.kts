@@ -9,6 +9,7 @@ val resteasyVersion by extra("3.1.4.Final")
 val guiceVersion by extra("4.2.1")
 val guavaVersion by extra("27.0-jre")
 val kotlinCoroutinesVersion by extra("1.0.1")
+val appStatusVersion by extra("0.0.18")
 
 allprojects {
     group = "org.araqnid.fuel-log"
