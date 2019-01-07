@@ -11,7 +11,7 @@ node {
 
 val web by configurations.creating
 
-val webpack by tasks.getting(WebpackTask::class) {
+tasks.withType(WebpackTask::class).configureEach {
     val runtimeClasspath = project(":server").configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
 
     inputs.files(runtimeClasspath.fileCollection { dep -> dep.group == "org.araqnid" && dep.name == "app-status" })
@@ -44,6 +44,7 @@ val webpack by tasks.getting(WebpackTask::class) {
 }
 
 dependencies {
+    val webpack by tasks.named("webpack")
     web(files("$buildDir/site") {
         builtBy(webpack)
     })
