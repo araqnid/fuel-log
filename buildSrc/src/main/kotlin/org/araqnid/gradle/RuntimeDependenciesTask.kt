@@ -1,7 +1,6 @@
 package org.araqnid.gradle
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.Input
@@ -9,7 +8,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.task
 import java.io.File
 import java.security.MessageDigest
 
@@ -64,8 +62,5 @@ fun ByteArray.toHexString(): String {
     }
     return String(chars)
 }
-
-fun Project.withRuntimeDependencies() =
-        task<RuntimeDependenciesTask>("runtimeDeps")
 
 data class Dep(val digest: String, val gav: String, val type: String)

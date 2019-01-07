@@ -30,7 +30,7 @@ configurations {
 }
 
 tasks {
-    val runtimeDeps by creating(RuntimeDependenciesTask::class) {
+    val runtimeDeps by registering(RuntimeDependenciesTask::class) {
         appName = "fuel-log"
     }
 
