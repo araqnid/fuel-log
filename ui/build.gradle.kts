@@ -4,10 +4,8 @@ plugins {
     id("com.timgroup.webpack")
 }
 
-val appStatusVersion: String by rootProject.extra
-
 node {
-    version = "10.15.0"
+    version = "12.10.0"
     download = true
 }
 
@@ -15,7 +13,7 @@ val web by configurations.creating
 val appStatus by configurations.creating
 
 dependencies {
-    appStatus("org.araqnid:app-status:$appStatusVersion")
+    appStatus("org.araqnid:app-status:${LibraryVersions.appStatus}")
 }
 
 tasks.withType(WebpackTask::class).configureEach {

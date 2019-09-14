@@ -9,11 +9,6 @@ configurations {
     }
 }
 
-val jettyVersion: String by rootProject.extra
-val resteasyVersion: String by rootProject.extra
-val kotlinCoroutinesVersion: String by rootProject.extra
-val jacksonVersion: String by rootProject.extra
-
 dependencies {
     testImplementation(project(":server"))
     testImplementation(project(":test-utils"))
@@ -21,13 +16,13 @@ dependencies {
     testImplementation(kotlin("reflect"))
     testImplementation("com.timgroup:clocks-testing:1.0.1070")
     testImplementation("org.araqnid:hamkrest-json:1.0.3")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${LibraryVersions.kotlinCoroutines}")
     testImplementation("org.apache.httpcomponents:httpasyncclient:4.1.3")
-    testImplementation("org.eclipse.jetty:jetty-server:$jettyVersion")
-    testImplementation("org.jboss.resteasy:resteasy-jaxrs:$resteasyVersion")
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    testImplementation("org.eclipse.jetty:jetty-server:${LibraryVersions.jetty}")
+    testImplementation("org.jboss.resteasy:resteasy-jaxrs:${LibraryVersions.resteasy}")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:${LibraryVersions.jackson}")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${LibraryVersions.jackson}")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${LibraryVersions.jackson}")
     testImplementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("reflect"))
     testRuntimeOnly("org.slf4j:slf4j-simple:1.7.25")
