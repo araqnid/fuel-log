@@ -1,25 +1,22 @@
-import React from "react";
-import {connect} from "react-redux";
+import React, {useEffect, useState} from "react";
 import {Instant, ZonedDateTime, ZoneId} from "js-joda";
-import _ from "lodash";
-import {reverse, sortBy} from "lodash/fp";
+import * as ajax from "./util/Ajax";
+import autoRefresh from "./util/autoRefresh";
 
-function formatDistance(value, preferences) {
-    const unit = preferences.distance_unit || "KM";
+function formatDistance(value, unit) {
     const convertedValue = unit === "MILES" ? value / 1.60934 : value;
     return convertedValue.toFixed(0);
 }
 
-function formatFuelVolume(value, preferences) {
-    const unit = preferences.fuel_unit || "LITRES";
+function formatFuelVolume(value, unit) {
     const convertedValue = unit === "GALLONS" ? value / 4.54609 : value;
     return convertedValue.toFixed(2);
 }
 
-const currencies = { 'GBP': { symbol: '£', places: 2 } };
+const currencies = {'GBP': {symbol: '£', places: 2}};
 
-function formatCost(value, preferences) {
-    const definition = currencies[value.currency] || { symbol: value.currency + " ", places : 2 };
+function formatCost(value) {
+    const definition = currencies[value.currency] || {symbol: value.currency + " ", places: 2};
     return definition.symbol + value.amount.toFixed(definition.places);
 }
 
@@ -29,29 +26,39 @@ function instantFromEpochSecondsDecimal(epochTime) {
     return Instant.ofEpochSecond(epochSecond, nanoAdjustment);
 }
 
-const FuelPurchase = ({purchase, preferences}) => {
+const FuelPurchase = ({purchase, distanceUnit, fuelVolumeUnit}) => {
     const purchaseInstant = instantFromEpochSecondsDecimal(purchase.purchased_at);
     const purchaseDateTime = ZonedDateTime.ofInstant(purchaseInstant, ZoneId.SYSTEM);
     const purchaseDate = purchaseDateTime.toLocalDate();
     return <tr>
-        <td>{ purchaseDate.toString() }</td>
-        <td>{ formatDistance(purchase.odometer, preferences) }</td>
-        <td>{ formatFuelVolume(purchase.fuel_volume, preferences) }</td>
-        <td>{ purchase.full_fill ? "Yes" : "" }</td>
-        <td>{ formatCost(purchase.cost, preferences) }</td>
-        <td>{ purchase.location_string }</td>
+        <td>{purchaseDate.toString()}</td>
+        <td>{formatDistance(purchase.odometer, distanceUnit)}</td>
+        <td>{formatFuelVolume(purchase.fuel_volume, fuelVolumeUnit)}</td>
+        <td>{purchase.full_fill ? "Yes" : ""}</td>
+        <td>{formatCost(purchase.cost)}</td>
+        <td>{purchase.location_string}</td>
     </tr>
 };
 
-const FuelPurchaseList = ({purchases, preferences}) => {
+const FuelPurchaseList = ({preferences: {distanceUnit, fuelVolumeUnit}, saveCounter}) => {
+    const [purchases, setPurchases] = useState(null);
+    useEffect(() => {
+        const subscription = autoRefresh(60000)(ajax.get("_api/fuel")).subscribe(
+            payload => {
+                payload.sort((a, b) => b.purchased_at - a.purchased_at);
+                setPurchases(payload);
+            }
+        );
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, [saveCounter]);
+
     if (!purchases) {
-        return <div className="col-sm-8" />;
+        return <div className="col-sm-8"/>;
     }
 
-    const distanceUnit = preferences.distance_unit || "KM";
     const distanceLabel = distanceUnit === "MILES" ? "Miles" : "Km";
-
-    const fuelVolumeUnit = preferences.fuel_unit || "LITRES";
     const fuelVolumeLabel = fuelVolumeUnit === "GALLONS" ? "Gallons" : "Litres";
 
     return <div className="col-sm-8">
@@ -60,26 +67,20 @@ const FuelPurchaseList = ({purchases, preferences}) => {
             <thead>
             <tr>
                 <td>Date</td>
-                <td>{ distanceLabel }</td>
-                <td>{ fuelVolumeLabel }</td>
+                <td>{distanceLabel}</td>
+                <td>{fuelVolumeLabel}</td>
                 <td>Full fill?</td>
                 <td>Cost</td>
                 <td>Where?</td>
             </tr>
             </thead>
             <tbody>
-            { purchases.map(purchase => (
-                <FuelPurchase key={ purchase.fuel_purchase_id } purchase={purchase} preferences={preferences} />
-            )) }
+            {purchases.map(purchase => (
+                <FuelPurchase key={purchase.fuel_purchase_id} purchase={purchase} distanceUnit={distanceUnit} fuelVolumeUnit={fuelVolumeUnit}/>
+            ))}
             </tbody>
         </table>
     </div>;
 };
 
-export default connect(
-    ({ purchases: { purchaseList }, preferences: { preferences } }) => ({
-        purchases: _.flow(sortBy("purchased_at"), reverse)(purchaseList),
-        preferences
-    }),
-    dispatch => ({})
-)(FuelPurchaseList);
+export default FuelPurchaseList;

@@ -1,3 +1,9 @@
 import React from "react";
 
-export default ({}) => <div className="throbber">Loading</div>;
+const Throbber = ({ children = "Loading..." }) => (
+    <div className="spinner-border" role="status">
+        <span className="sr-only">{children}</span>
+    </div>
+);
+
+export default Throbber;

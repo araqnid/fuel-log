@@ -1,11 +1,23 @@
 import React from "react";
 import {mount} from "enzyme";
-import {createStore} from "redux";
-import {Provider} from "react-redux";
+import MockAdapter from "axios-mock-adapter";
 import Root from "../../main/javascript/Root";
-import reducers from "../../main/javascript/reducers";
 import Identity from "../../main/javascript/Identity";
-import Content from "../../main/javascript/Content";
+import * as Ajax from "../../main/javascript/util/Ajax";
+
+let mockAxios;
+
+beforeAll(() => {
+    mockAxios = new MockAdapter(Ajax.localAxios);
+});
+
+afterEach(() => {
+    mockAxios.reset();
+});
+
+afterAll(() => {
+    mockAxios.restore();
+});
 
 let component = null;
 
@@ -14,9 +26,20 @@ afterEach(() => {
         component.unmount();
 });
 
+beforeEach(() => {
+    window.__api_hooks = {
+        googleApi: {
+            promise: new Promise(() => {
+            })
+        },
+        facebookSdk: {
+            promise: new Promise(() => {
+            })
+        }
+    };
+});
+
 it("shows root page", () => {
-    const store = createStore(reducers);
-    component = mount(<Provider store={store}><Root/></Provider>);
+    component = mount(<Root/>);
     expect(component.find(Identity).length).toBe(1);
-    expect(component.find(Content).length).toBe(1);
 });

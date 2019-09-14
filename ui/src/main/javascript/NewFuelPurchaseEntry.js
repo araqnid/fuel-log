@@ -1,12 +1,10 @@
-import React from "react";
-import {combineReducers} from "redux";
-import {connect} from "react-redux";
-import {bindActionPayload, resetOn} from "./util/Stores";
-import {actions as purchasesActions} from "./stores/PurchasesStore";
+import React, {useCallback, useEffect, useState} from "react";
+import {geoLocationSource} from "./util/GeoLocator";
+import * as ajax from "./util/Ajax";
 
-const currencies = { 'GBP': { symbol: '£', places: 2 } };
-const volumeUnits = { LITRES: "l", GALLONS: "gal" };
-const distanceUnits = { MILES: "miles", KM: "km" };
+const currencies = {'GBP': {symbol: '£', places: 2}};
+const volumeUnits = {LITRES: "l", GALLONS: "gal"};
+const distanceUnits = {MILES: "miles", KM: "km"};
 const apiKey = "AIzaSyBcWvaL2aftj6o1PK3Jq5Hqm2lgUoh6amk";
 
 function formatVolumeUnit(key) {
@@ -17,121 +15,154 @@ function formatDistanceUnit(key) {
     return distanceUnits[key] || key + "?";
 }
 
-export const reducer = combineReducers({
-    attributes: resetOn((({type, error}) => type === "PurchasesStore/submission" && !error))(combineReducers({
-        fuelVolume: bindActionPayload("NewFuelPurchaseEntry/fuelVolume", ""),
-        odometer: bindActionPayload("NewFuelPurchaseEntry/odometer", ""),
-        location: bindActionPayload("NewFuelPurchaseEntry/location", ""),
-        cost: bindActionPayload("NewFuelPurchaseEntry/cost", ""),
-        fullFill: bindActionPayload("NewFuelPurchaseEntry/fullFill", false)
-    })),
-    geoLocation: bindActionPayload("NewFuelPurchaseEntry/geolocation", null),
-    registering: resetOn("PurchasesStore/submission")(bindActionPayload("NewFuelPurchaseEntry/_registering", false))
-});
-
 const GeoLocation = ({latitude, longitude}) => (
     <div>Geo-location available:
-        <img src={"https://maps.googleapis.com/maps/api/staticmap?center=" + latitude + "," + longitude + "&zoom=13&size=300x300&sensor=false&key=" + apiKey} />
+        <img
+            src={`https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=13&size=300x300&sensor=false&key=${apiKey}`}/>
     </div>
 );
 
-class NewFuelPurchaseEntry extends React.Component {
-    constructor() {
-        super();
-        this._onSubmit = this.onSubmit.bind(this);
-        this._onInputChange = this.onInputChange.bind(this);
-        this._geolocationWatchId = null;
+function changeTextState(setter) {
+    return e => {
+        e.preventDefault();
+        setter(e.target.value);
     }
+}
 
-    render() {
-        const { preferences: { currency, fuel_volume_unit: fuelVolumeUnit, distance_unit: distanceUnit }, newPurchase, geoLocation, registering } = this.props;
+function changeCheckboxState(setter) {
+    return e => {
+        e.preventDefault();
+        setter(!!e.target.checked);
+    }
+}
 
-        const currencyDefinition = currencies[currency] || { symbol: currency, places: 2 };
-        const costLabel = "Cost (" + currencyDefinition.symbol + ")";
-        const fuelVolumeLabel = "Fuel volume (" + formatVolumeUnit(fuelVolumeUnit) + ")";
-        const odoLabel = "Odometer reading (" + formatDistanceUnit(distanceUnit) + ")";
+const NewFuelPurchaseEntry = ({preferences: {currency, fuelVolumeUnit, distanceUnit}, onPurchaseSaved}) => {
+    const currencyDefinition = currencies[currency] || {symbol: currency, places: 2};
+    const costLabel = `Cost (${currencyDefinition.symbol})`;
+    const fuelVolumeLabel = `Fuel volume (${formatVolumeUnit(fuelVolumeUnit)})`;
+    const odoLabel = `Odometer reading (${formatDistanceUnit(distanceUnit)})`;
 
-        return <div className="col-sm-4">
+    const [fuelVolume, setFuelVolume] = useState("");
+    const [odometer, setOdometer] = useState("");
+    const [location, setLocation] = useState("");
+    const [cost, setCost] = useState("");
+    const [fullFill, setFullFill] = useState(false);
+
+    const [registering, setRegistering] = useState(false);
+
+    const [geoLocation, setGeoLocation] = useState(null);
+    useEffect(() => {
+        const subscription = geoLocationSource.subscribe(
+            ({coords: {latitude, longitude}}) => setGeoLocation({latitude, longitude})
+        );
+        return () => {
+            subscription.unsubscribe();
+        }
+    });
+
+    const onSubmit = useCallback(e => {
+        e.preventDefault();
+        setRegistering(true);
+    }, []);
+
+    useEffect(() => {
+        if (!registering) return;
+        const distanceFactor = distanceUnit === "MILES" ? 1.60934 : 1;
+        const fuelVolumeFactor = fuelVolumeUnit === "GALLONS" ? 4.54609 : 1;
+
+        const newPurchase = {
+            odometer: odometer * distanceFactor,
+            cost: {
+                currency: currency,
+                amount: cost
+            },
+            fuel_volume: fuelVolume * fuelVolumeFactor,
+            full_fill: fullFill,
+            location: location,
+            geo_location: geoLocation
+        };
+        console.log("save purchase", newPurchase);
+        const subscription = ajax.postRaw("_api/fuel", newPurchase).subscribe(
+            ({ status, headers }) => {
+                if (status !== 201) {
+                    console.error(`status was ${status}`);
+                    return;
+                }
+                const location = headers.location;
+                const matches = location.match(/\/_api\/fuel\/(.+)$/);
+                if (!matches) {
+                    console.warn("invalid creation URI", location);
+                    return;
+                }
+                const fuelPurchaseId = matches[1];
+                console.log("saved purchase ", fuelPurchaseId);
+                setFuelVolume("");
+                setOdometer("");
+                setLocation("");
+                setCost("");
+                setFullFill(false);
+                onPurchaseSaved(fuelPurchaseId);
+            }
+        );
+        return () => {
+            subscription.unsubscribe();
+        }
+    }, [registering]);
+
+    const onFuelVolumeChange = useCallback(changeTextState(setFuelVolume), []);
+    const onOdometerChange = useCallback(changeTextState(setOdometer), []);
+    const onLocationChange = useCallback(changeTextState(setLocation), []);
+    const onCostChange = useCallback(changeTextState(setCost), []);
+    const onFullFillChange = useCallback(changeCheckboxState(setFullFill), []);
+
+    return (
+        <div className="col-sm-4">
             <h2>Enter purchase</h2>
-            <form onSubmit={ this._onSubmit }>
+            <form onSubmit={onSubmit}>
                 <div className="form-group">
                     <label htmlFor="inputFuelVolume">{fuelVolumeLabel}</label>
-                    <input type="number" onChange={this._onInputChange} className="form-control"
-                           name="fuelVolume" id="inputFuelVolume" value={newPurchase.fuelVolume} placeholder="45.79" />
+                    <input type="number" onChange={onFuelVolumeChange} className="form-control"
+                           name="fuelVolume" id="inputFuelVolume" value={fuelVolume}
+                           placeholder="45.79"/>
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="inputCost">{costLabel}</label>
-                    <input type="number" onChange={this._onInputChange} className="form-control"
-                           name="cost" id="inputCost" value={newPurchase.cost} placeholder="68.80" />
+                    <input type="number" onChange={onCostChange} className="form-control"
+                           name="cost" id="inputCost" value={cost} placeholder="68.80"/>
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="inputOdometer">{odoLabel}</label>
-                    <input type="number" onChange={this._onInputChange} className="form-control"
-                           name="odometer" id="inputOdometer" value={newPurchase.odometer} placeholder="111000" />
+                    <input type="number" onChange={onOdometerChange} className="form-control"
+                           name="odometer" id="inputOdometer" value={odometer} placeholder="111000"/>
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="inputFullFill">Filled tank to full?</label>
                     <div className="form-check">
                         <label className="form-check-label">
-                            <input type="checkbox" onChange={this._onInputChange} className="form-check-input"
-                                   name="fullFill" id="inputFullFill" checked={newPurchase.fullFill ? "checked" : ""} />
+                            <input type="checkbox" onChange={onFullFillChange} className="form-check-input"
+                                   name="fullFill" id="inputFullFill"
+                                   checked={fullFill ? "checked" : ""}/>
                         </label>
                     </div>
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="inputLocation">Location</label>
-                    <input type="text" onChange={this._onInputChange} className="form-control"
-                           name="location" id="inputLocation" value={newPurchase.location} placeholder="Tesco Elmers End" />
+                    <input type="text" onChange={onLocationChange} className="form-control"
+                           name="location" id="inputLocation" value={location}
+                           placeholder="Tesco Elmers End"/>
                 </div>
 
                 <button type="submit" className="btn btn-primary" disabled={registering}>Submit</button>
 
-                {geoLocation ? <GeoLocation latitude={geoLocation.latitude} longitude={geoLocation.longitude} /> : null}
+                {geoLocation ?
+                    <GeoLocation latitude={geoLocation.latitude} longitude={geoLocation.longitude}/> : null}
             </form>
-        </div>;
-    }
-    componentDidMount() {
-        if (navigator.geolocation) {
-            const options = {
-                maximumAge: 60000
-            };
-            this._geolocationWatchId = navigator.geolocation.watchPosition(this.onGeolocationResult.bind(this), this.onGeolocationError.bind(this), options);
-        }
-    }
-    componentWillUnmount() {
-        if (this._geolocationWatchId) {
-            navigator.geolocation.clearWatch(this._geolocationWatchId);
-        }
-    }
-    onInputChange(e) {
-        const target = e.target;
-        const value = target.type === 'checkbox' ? target.checked : target.value;
-        const name = target.name;
-        const newPurchase = this.props.newPurchase;
-        if (newPurchase[name] !== undefined) {
-            this.props.dispatch({ type: "NewFuelPurchaseEntry/" + name, payload: value });
-        }
-        else {
-            console.warn("input change for unknown input", name, value, target);
-        }
-    }
-    onSubmit(e) {
-        e.preventDefault();
-        this.props.purchasesActions.submit();
-    }
-    onGeolocationResult(position) {
-        this.props.dispatch({ type: "NewFuelPurchaseEntry/geolocation", payload: { latitude: position.coords.latitude, longitude: position.coords.longitude } });
-    }
-    onGeolocationError(error) {
-        this.props.dispatch({ type: "NewFuelPurchaseEntry/geolocation", payload: error, error: true });
-    }
-}
+        </div>
+    );
+};
 
-export default connect(
-    ({ preferences: { preferences }, newPurchase: { attributes: newPurchase, geoLocation, registering } }) => ({ preferences, newPurchase, geoLocation, registering }),
-    (dispatch) => ({ dispatch, purchasesActions: purchasesActions(dispatch) })
-)(NewFuelPurchaseEntry);
+export default NewFuelPurchaseEntry;

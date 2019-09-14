@@ -1,6 +1,5 @@
+import Observable from "zen-observable";
 import axios from "axios";
-import {combineReducers} from "redux";
-import {bindActionPayload} from "../util/Stores";
 import {logFactory} from "../util/ConsoleLog";
 import GoogleIdentityProvider from "./GoogleIdentityProvider";
 import FacebookIdentityProvider from "./FacebookIdentityProvider";
@@ -16,45 +15,20 @@ import FacebookIdentityProvider from "./FacebookIdentityProvider";
 
 const log = logFactory("IdentityStore");
 
-export const reducer = combineReducers({
-    googleAvailable: bindActionPayload("IdentityStore/googleAvailable", false),
-    facebookAvailable: bindActionPayload("IdentityStore/facebookAvailable", false),
-    localUserIdentity: bindActionPayload("IdentityStore/localUserIdentity", null)
-});
-
-export const actions = dispatch => ({
-    beginGoogleSignIn() {
-        dispatch(({stores}) => {
-            stores.identity.signInWithGoogle();
-        })
-    },
-
-    beginFacebookSignIn() {
-        dispatch(({stores}) => {
-            stores.identity.signInWithFacebook();
-        })
-    },
-
-    beginSignOut() {
-        dispatch(({stores}) => {
-            stores.identity.signOut();
-        })
-    }
-});
-
 export default class IdentityStore {
-    constructor(redux) {
-        this._redux = redux;
+    constructor() {
         this._realmProviders = {
             GOOGLE: new GoogleIdentityProvider(),
             FACEBOOK: new FacebookIdentityProvider()
         };
+        this._subscribers = new Set();
+        this.localUserIdentity = null;
     }
 
     start() {
-        this._realmProviders.GOOGLE.onAvailable(() => this.dispatch({ type: "IdentityStore/googleAvailable", payload: true }));
-        this._realmProviders.FACEBOOK.onAvailable(() => this.dispatch({ type: "IdentityStore/facebookAvailable", payload: true }));
-        this._realmProviders.GOOGLE.onUserUpdate(userInfo => this.dispatch({ type: "IdentityStore/localUserIdentity", payload: userInfo }));
+        this._realmProviders.GOOGLE.onAvailable(() => this._emit("googleAvailable", true));
+        this._realmProviders.FACEBOOK.onAvailable(() => this._emit("facebookAvailable", true));
+        this._realmProviders.GOOGLE.onUserUpdate(userInfo => this._emit("localUserIdentity", userInfo));
         Object.values(this._realmProviders).forEach(p => p.start());
         this._launch();
     }
@@ -69,7 +43,8 @@ export default class IdentityStore {
         const userInfo = await (provisionalUserInfo ? this._confirm(provisionalUserInfo) : this._probe());
 
         log.info("final user: ", userInfo);
-        this.dispatch({ type: "IdentityStore/localUserIdentity", payload: userInfo });
+        this._emit("localUserIdentity", userInfo);
+        this.localUserIdentity = userInfo;
     }
 
     async _confirm(provisionalUserInfo) {
@@ -117,11 +92,6 @@ export default class IdentityStore {
         }
     }
 
-    get _reduxUserInfo() {
-        const userIdentity = this._redux.getState().identity;
-        return userIdentity ? userIdentity.localUserIdentity : null;
-    }
-
     signInWithGoogle() {
         return this._signIn(this._realmProviders.GOOGLE);
     }
@@ -131,21 +101,33 @@ export default class IdentityStore {
     }
 
     async signOut() {
-        const userInfo = this._reduxUserInfo;
-        if (!userInfo) return;
-        log.info("Sign out", userInfo);
-        await this._realmProviders[userInfo.realm].signOut();
+        if (!this.localUserIdentity) return;
+        log.info("Sign out", this.localUserIdentity);
+        await this._realmProviders[this.localUserIdentity.realm].signOut();
         await axios.delete("/_api/user/identity");
-        this.dispatch({ type: "IdentityStore/localUserIdentity", payload: null });
+        this._emit("localUserIdentity", null);
+        this.localUserIdentity = null;
     }
 
     async _signIn(realm) {
         const userInfo = await realm.signIn();
         log.info("completed realm sign in", userInfo);
-        this.dispatch({ type: "IdentityStore/localUserIdentity", payload: userInfo });
+        this._emit("localUserIdentity", userInfo);
+        this.localUserIdentity = userInfo;
     }
 
-    dispatch(action) {
-        this._redux.dispatch(action);
+    _emit(type, payload, error = false) {
+        for (const observer of this._subscribers) {
+            observer.next({ type, payload, error });
+        }
+    }
+
+    [Symbol.observable]() {
+        return new Observable(observer => {
+            this._subscribers.add(observer);
+            return () => {
+                this._subscribers.delete(observer);
+            };
+        });
     }
 }
