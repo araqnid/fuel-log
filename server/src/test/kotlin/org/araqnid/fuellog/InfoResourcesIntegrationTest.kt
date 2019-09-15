@@ -1,9 +1,10 @@
 package org.araqnid.fuellog
 
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.anything
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import org.apache.http.HttpStatus
+import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.araqnid.hamkrest.json.jsonObject
 import org.araqnid.hamkrest.json.jsonString
@@ -13,7 +14,7 @@ import javax.ws.rs.core.MediaType
 class InfoResourcesIntegrationTest : IntegrationTest() {
     @Test fun readiness_has_text() {
         val response = execute(HttpGet(server.uri("/_api/info/readiness")).accepting(MediaType.TEXT_PLAIN))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
+        assertThat(response, Matcher(HttpResponse::isSuccess))
         assertThat(response.entity, hasMimeType(MediaType.TEXT_PLAIN))
         assertThat(response.entity.text, equalTo("READY"))
     }
@@ -28,7 +29,7 @@ class InfoResourcesIntegrationTest : IntegrationTest() {
 
     @Test fun version_has_text() {
         val response = execute(HttpGet(server.uri("/_api/info/version")).accepting(MediaType.TEXT_PLAIN))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
+        assertThat(response, Matcher(HttpResponse::isSuccess))
         assertThat(response.entity, hasMimeType(MediaType.TEXT_PLAIN))
         assertThat(response.entity.text, anything)
     }

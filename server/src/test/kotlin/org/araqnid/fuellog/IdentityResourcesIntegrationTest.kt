@@ -7,7 +7,6 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.hasElement
 import org.apache.http.HttpResponse
-import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpDelete
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
@@ -31,7 +30,7 @@ class IdentityResourcesIntegrationTest : IntegrationTest() {
         val response = execute(HttpPost("/_api/user/identity/test").apply {
             entity = formEntity(mapOf("identifier" to "test0", "name" to "Test User"))
         })
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
+        assertThat(response, Matcher(HttpResponse::isSuccess))
 
         val userEvents = fetchUserEvents()
         assertThat(userEvents.map { it.event }, hasElement(UserExternalIdAssigned(URI.create("https://fuel.araqnid.org/_api/user/identity/test/test0")) as Event))

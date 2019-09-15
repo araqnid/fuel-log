@@ -1,11 +1,13 @@
 package org.araqnid.fuellog
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
+import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
@@ -45,7 +47,7 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
         ))
 
         val response = execute(HttpGet("/_api/fuel/$purchaseId"))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
+        assertThat(response, Matcher(HttpResponse::isSuccess))
         val fuelRecord = response.readJson<FuelRecord>()
         assertThat(fuelRecord.userId, equalTo(currentUser.userId))
         assertThat(fuelRecord.fuelPurchaseId, equalTo(purchaseId))
@@ -145,7 +147,7 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
         ))
 
         val response = execute(HttpGet("/_api/fuel"))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
+        assertThat(response, Matcher(HttpResponse::isSuccess))
         val fuelRecords = response.readJson<Collection<FuelRecord>>().toList()
         assertThat(fuelRecords[0].userId, equalTo(currentUser.userId))
         assertThat(fuelRecords[0].fuelPurchaseId, equalTo(purchaseId))
