@@ -20,8 +20,7 @@ class InfoResourcesIntegrationTest : IntegrationTest() {
 
     @Test fun version_has_json() {
         val response = execute(HttpGet(server.uri("/_api/info/version")).accepting(MediaType.APPLICATION_JSON))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        assertThat(response.entity, hasJson(jsonObject()
+        assertThat(response, isJsonOk(jsonObject()
                         .withProperty("version", jsonScalar())
                         .withProperty("title", jsonScalar())
                         .withProperty("vendor", jsonScalar())))
@@ -36,13 +35,11 @@ class InfoResourcesIntegrationTest : IntegrationTest() {
 
     @Test fun status_has_json() {
         val response = execute(HttpGet(server.uri("/_api/info/status")).accepting(MediaType.APPLICATION_JSON))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        assertThat(response.entity,
-                hasJson(jsonObject()
-                        .withProperty("status", jsonString(anything))
-                        .withProperty("components", jsonObject()
-                                .withProperty("jvmVersion", jsonObject().withAnyOtherProperties())
-                                .withAnyOtherProperties()
-                        )))
+        assertThat(response, isJsonOk(jsonObject()
+                .withProperty("status", jsonString(anything))
+                .withProperty("components", jsonObject()
+                        .withProperty("jvmVersion", jsonObject().withAnyOtherProperties())
+                        .withAnyOtherProperties()
+                )))
     }
 }

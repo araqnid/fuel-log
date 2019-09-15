@@ -1,10 +1,12 @@
 package org.araqnid.fuellog
 
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.anyElement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.hasElement
+import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpDelete
 import org.apache.http.client.methods.HttpGet
@@ -21,8 +23,7 @@ import java.net.URI
 class IdentityResourcesIntegrationTest : IntegrationTest() {
     @Test fun identity_resource_returns_nothing_for_unauthenticated_user() {
         val response = execute(HttpGet("/_api/user/identity"))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        assertThat(response.entity, hasJson("{ user_info: null }"))
+        assertThat(response, isJsonOk("{ user_info: null }"))
         assertThat(httpContext.cookieStore.cookies, !anyElement(has(Cookie::getName, equalTo("JSESSIONID"))))
     }
 
@@ -36,7 +37,7 @@ class IdentityResourcesIntegrationTest : IntegrationTest() {
         assertThat(userEvents.map { it.event }, hasElement(UserExternalIdAssigned(URI.create("https://fuel.araqnid.org/_api/user/identity/test/test0")) as Event))
         val userId = userEvents[0].streamId.id
 
-        assertThat(response.entity, hasJson("{ user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null }"))
+        assertThat(response, isJsonOk("{ user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null }"))
     }
 
     @Test fun associated_user_returned_from_identity_resource() {
@@ -44,12 +45,12 @@ class IdentityResourcesIntegrationTest : IntegrationTest() {
             entity = formEntity(mapOf("identifier" to "test0", "name" to "Test User"))
         })
         val response = execute(HttpGet("/_api/user/identity"))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
+        assertThat(response, Matcher(HttpResponse::isSuccess))
 
         val userEvents = fetchUserEvents()
         val userId = userEvents[0].streamId.id
 
-        assertThat(response.entity, hasJson("{ user_info: { user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null } }"))
+        assertThat(response, isJsonOk("{ user_info: { user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null } }"))
         assertThat(httpContext.cookieStore.cookies, anyElement(has(Cookie::getName, equalTo("JSESSIONID"))))
     }
 
@@ -59,15 +60,14 @@ class IdentityResourcesIntegrationTest : IntegrationTest() {
         })
         execute(HttpGet("/_api/user/identity"))
         val deleteResponse = execute(HttpDelete("/_api/user/identity"))
-        assertThat(deleteResponse.statusLine.statusCode, equalTo(HttpStatus.SC_NO_CONTENT))
+        assertThat(deleteResponse, Matcher(HttpResponse::isSuccess))
         val getResponse = execute(HttpGet("/_api/user/identity"))
-        assertThat(getResponse.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        assertThat(getResponse.entity, hasJson("{ user_info: null }"))
+        assertThat(getResponse, isJsonOk("{ user_info: null }"))
     }
 
     @Test fun deleting_identity_does_not_crash_if_no_user_set() {
         val response = execute(HttpDelete("/_api/user/identity"))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_NO_CONTENT))
+        assertThat(response, Matcher(HttpResponse::isSuccess))
     }
 
     data class DecodedEvent(val streamId: StreamId, val event: Event)

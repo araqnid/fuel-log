@@ -15,7 +15,6 @@ class PreferencesResourcesIntegrationTest : IntegrationTest() {
     @Test fun returns_default_preferences_for_user() {
         loginAsNewUser()
         val response = execute(HttpGet("/_api/user/preferences"))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        assertThat(response.entity, hasJson("{ fuel_volume_unit: 'LITRES', distance_unit: 'MILES', currency: 'GBP' }"))
+        assertThat(response, isJsonOk("{ fuel_volume_unit: 'LITRES', distance_unit: 'MILES', currency: 'GBP' }"))
     }
 }
