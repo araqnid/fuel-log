@@ -13,7 +13,6 @@ import java.util.UUID
 abstract class IntegrationTest {
     @Rule @JvmField val server = ServerRunner(mapOf(
             "PORT" to "0",
-            "DOCUMENT_ROOT" to "../ui/build/site",
             "FACEBOOK_APP_ID" to "",
             "FACEBOOK_APP_SECRET" to "",
             "GOOGLE_CLIENT_ID" to "",

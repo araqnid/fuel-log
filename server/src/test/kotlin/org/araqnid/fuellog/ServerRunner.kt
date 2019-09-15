@@ -36,6 +36,7 @@ class ServerRunner(val environment: Map<String, String>) : ExternalResource() {
     inline fun <reified T, Ann : Annotation> instance(annotation: Ann): T = injector.getInstance(Key.get(typeLiteral(), annotation))
 
     val snapshotsFolder = NIOTemporaryFolder()
+    val webContentFolder = NIOTemporaryFolder()
 
     val client: CloseableHttpClient = HttpClients.custom()
             .setRoutePlanner({ target, _, _ ->
@@ -51,6 +52,7 @@ class ServerRunner(val environment: Map<String, String>) : ExternalResource() {
         System.setProperty("org.jboss.logging.provider", "slf4j")
         val fullEnvironment = environment.toMutableMap()
         fullEnvironment["SNAPSHOT_SPOOL"] = snapshotsFolder.root.toString()
+        fullEnvironment["DOCUMENT_ROOT"] = webContentFolder.root.toString()
         injector = Guice.createInjector(Modules.override(AppConfig(fullEnvironment)).with(IntegrationTestModule()))
         instance<CloseableHttpAsyncClient>().start()
         instance<ServiceManager>().startAsync().awaitHealthy()
@@ -65,7 +67,7 @@ class ServerRunner(val environment: Map<String, String>) : ExternalResource() {
     }
 
     override fun apply(base: Statement?, description: Description?): Statement {
-        return snapshotsFolder.apply(super.apply(base, description), description)
+        return webContentFolder.apply(snapshotsFolder.apply(super.apply(base, description), description), description)
     }
 
     val port: Int
