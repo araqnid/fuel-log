@@ -4,10 +4,12 @@ import com.google.common.util.concurrent.AbstractIdleService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
+import org.eclipse.jetty.server.CustomRequestLog
+import org.eclipse.jetty.server.CustomRequestLog.EXTENDED_NCSA_FORMAT
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
-import org.eclipse.jetty.server.Slf4jRequestLog
+import org.eclipse.jetty.server.Slf4jRequestLogWriter
 import org.eclipse.jetty.server.handler.ContextHandlerCollection
 import org.eclipse.jetty.server.handler.HandlerWrapper
 import org.eclipse.jetty.server.handler.ResourceHandler
@@ -45,9 +47,7 @@ class JettyService @Inject constructor(@Named("PORT") port: Int,
         sessionIdManager = DefaultSessionIdManager(this).apply {
             workerName = null
         }
-        requestLog = Slf4jRequestLog().apply {
-            logLatency = true
-        }
+        requestLog = CustomRequestLog(Slf4jRequestLogWriter(), EXTENDED_NCSA_FORMAT)
         handler = StatisticsHandler() wrapping ContextHandlerCollection().apply {
             addHandler(ServletContextHandler().apply {
                 contextPath = "/_api"
