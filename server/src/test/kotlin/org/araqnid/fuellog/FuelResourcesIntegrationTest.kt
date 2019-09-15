@@ -1,12 +1,6 @@
 package org.araqnid.fuellog
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
@@ -31,21 +25,16 @@ import java.time.Instant
 import java.util.UUID
 
 class FuelResourcesIntegrationTest : IntegrationTest() {
-    val objectMapper: ObjectMapper = jacksonObjectMapper()
-            .registerModule(JavaTimeModule())
-            .registerModule(Jdk8Module())
-            .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
-
     val emptyMetadata = object : EventMetadata {}
 
     @Test fun get_fuel_purchase() {
         val purchaseId = UUID.randomUUID()
-        val user = loginAsNewUser()
+        loginAsNewUser()
 
         server.instance<EventStreamWriter>().write(StreamId("fuel", purchaseId.toString()), listOf(
                 EventCodecs.encode(FuelPurchased(
                         Instant.now(server.clock),
-                        user.userId,
+                        currentUser.userId,
                         50.0,
                         MonetaryAmount("GBP", 100.0),
                         110000.0,
@@ -55,10 +44,10 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 ), emptyMetadata)
         ))
 
-        execute(HttpGet("/_api/fuel/$purchaseId"))
+        val response = execute(HttpGet("/_api/fuel/$purchaseId"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        val fuelRecord = readJsonResponse<FuelRecord>()
-        assertThat(fuelRecord.userId, equalTo(user.userId))
+        val fuelRecord = response.readJson<FuelRecord>()
+        assertThat(fuelRecord.userId, equalTo(currentUser.userId))
         assertThat(fuelRecord.fuelPurchaseId, equalTo(purchaseId))
         assertThat(fuelRecord.fuelVolume, equalTo(50.0))
         assertThat(fuelRecord.geoLocation, equalTo(Coordinates(51.2, 0.02)))
@@ -76,12 +65,12 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 geoLocation = Coordinates(51.2, 0.02)
         )
 
-        execute(HttpPost("/_api/fuel").apply { entity = JacksonEntity(newFuelPurchase, objectMapper) })
+        val response = execute(HttpPost("/_api/fuel").apply { entity = JacksonEntity(newFuelPurchase) })
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_CREATED))
 
         val fuelPurchasedEvent = FuelPurchased(
                 timestamp = server.clock.instant(),
-                userId = user.userId,
+                userId = currentUser.userId,
                 fuelVolume = 45.67,
                 cost = MonetaryAmount("GBP", 99.87),
                 odometer = 111234.0,
@@ -112,8 +101,8 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 geoLocation = null
         )
 
-        execute(HttpPost(server.uri("/_api/fuel")).apply {
-            entity = JacksonEntity(newFuelPurchase, objectMapper)
+        val response = execute(HttpPost(server.uri("/_api/fuel")).apply {
+            entity = JacksonEntity(newFuelPurchase)
         })
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_FORBIDDEN))
     }
@@ -134,18 +123,18 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                         , emptyMetadata)
         ))
 
-        execute(HttpGet("/_api/fuel/$purchaseId"))
+        val response = execute(HttpGet("/_api/fuel/$purchaseId"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_FORBIDDEN))
     }
 
     @Test fun get_fuel_purchases_for_current_user() {
         val purchaseId = UUID.randomUUID()
-        val user = loginAsNewUser()
+        loginAsNewUser()
 
         server.instance<EventStreamWriter>().write(StreamId("fuel", purchaseId.toString()), listOf(
                 EventCodecs.encode(FuelPurchased(
                         Instant.now(server.clock),
-                        user.userId,
+                        currentUser.userId,
                         50.0,
                         MonetaryAmount("GBP", 100.0),
                         110000.0,
@@ -155,19 +144,17 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 ), emptyMetadata)
         ))
 
-        execute(HttpGet("/_api/fuel"))
+        val response = execute(HttpGet("/_api/fuel"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        val fuelRecords = readJsonResponse<Collection<FuelRecord>>().toList()
-        assertThat(fuelRecords[0].userId, equalTo(user.userId))
+        val fuelRecords = response.readJson<Collection<FuelRecord>>().toList()
+        assertThat(fuelRecords[0].userId, equalTo(currentUser.userId))
         assertThat(fuelRecords[0].fuelPurchaseId, equalTo(purchaseId))
         assertThat(fuelRecords[0].fuelVolume, equalTo(50.0))
     }
 
     private fun serverEvents(): List<DecodedEvent> = server.instance<EventCategoryReader>().readCategoryForwards("fuel")
-            .map { (_, event) -> DecodedEvent(event.streamId.category, EventCodecs.decode(event), objectMapper.readTree(event.metadata.openStream())) }
+            .map { (_, event) -> DecodedEvent(event.streamId.category, EventCodecs.decode(event), defaultObjectMapper.readTree(event.metadata.openStream())) }
             .toListAndClose()
 
     data class DecodedEvent(val category: String, val data: Event, val metadata: JsonNode)
-
-    private inline fun <reified T : Any> readJsonResponse(): T = objectMapper.readValue(response.entity.content)
 }

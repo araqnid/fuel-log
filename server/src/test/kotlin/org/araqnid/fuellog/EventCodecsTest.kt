@@ -1,7 +1,5 @@
 package org.araqnid.fuellog
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import org.araqnid.eventstore.Blob
 import org.araqnid.eventstore.EventRecord
@@ -13,7 +11,6 @@ import org.araqnid.fuellog.events.GoogleProfileChanged
 import org.araqnid.fuellog.events.GoogleProfileData
 import org.araqnid.fuellog.events.UserExternalIdAssigned
 import org.araqnid.fuellog.events.UserNameChanged
-import org.araqnid.hamkrest.json.equivalentTo
 import org.junit.Test
 import java.net.URI
 import java.time.Instant
@@ -89,8 +86,4 @@ class EventCodecsTest {
         assertThat(EventCodecs.encode(FacebookProfileChanged(FacebookProfileData(URI.create("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/22365519_10155849960609669_4611817305999182053_n.jpg?oh=dbbd4324f5adf21776510ed0cd5dd3b9&oe=5A9F07D2")))),
                 jsonBlobEquivalentTo("""{"new_value":{"picture":"https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/22365519_10155849960609669_4611817305999182053_n.jpg?oh=dbbd4324f5adf21776510ed0cd5dd3b9&oe=5A9F07D2"}}"""))
     }
-}
-
-fun jsonBlobEquivalentTo(referenceJson: String): Matcher<Blob> {
-    return equivalentTo(referenceJson, { it.openStream().use { stream -> ObjectMapper().readTree(stream) } })
 }

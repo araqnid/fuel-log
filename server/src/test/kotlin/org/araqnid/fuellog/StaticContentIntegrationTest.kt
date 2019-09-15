@@ -8,13 +8,13 @@ import org.junit.Test
 
 class StaticContentIntegrationTest : IntegrationTest() {
     @Test fun server_serves_static_content() {
-        execute(HttpGet(server.uri("/index.html")))
+        val response = execute(HttpGet(server.uri("/index.html")))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType("text/html"))
     }
 
     @Test fun server_serves_static_content_as_default_page() {
-        execute(HttpGet(server.uri("/")))
+        val response = execute(HttpGet(server.uri("/")))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType("text/html"))
     }

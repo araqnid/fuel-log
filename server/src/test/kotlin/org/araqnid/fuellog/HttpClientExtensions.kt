@@ -1,29 +1,33 @@
 package org.araqnid.fuellog
 
-import com.google.common.io.ByteSource
-import com.google.common.io.CharSource
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.apache.http.HttpEntity
 import org.apache.http.HttpRequest
-import org.apache.http.entity.ContentType
-import java.io.InputStream
-import java.nio.charset.Charset
+import org.apache.http.HttpResponse
+import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.message.BasicNameValuePair
 import java.nio.charset.StandardCharsets.UTF_8
 
 fun <T : HttpRequest> T.accepting(mimeType: String): T = apply {
     addHeader("Accept", mimeType)
 }
 
-val HttpEntity.mimeType: String
-    get() = ContentType.getOrDefault(this).mimeType
-
-fun HttpEntity.asByteSource(): ByteSource = object : ByteSource() {
-    override fun openStream(): InputStream = content
-}
-
-fun HttpEntity.asCharSource(charset: Charset = UTF_8): CharSource = asByteSource().asCharSource(charset)
-
 val HttpEntity.bytes: ByteArray
-    get() = asByteSource().read()
+    get() = content.readBytes()
 
 val HttpEntity.text: String
-    get() = asCharSource().read()
+    get() = content.reader(UTF_8).readText()
+
+val defaultObjectMapper: ObjectMapper = jacksonObjectMapper()
+        .registerModule(JavaTimeModule())
+        .registerModule(Jdk8Module())
+        .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+
+inline fun <reified T : Any> HttpResponse.readJson(): T = defaultObjectMapper.readValue(entity.content)
+
+fun formEntity(params: Map<String, String>) = UrlEncodedFormEntity(params.entries.map { (k, v) -> BasicNameValuePair(k, v) })

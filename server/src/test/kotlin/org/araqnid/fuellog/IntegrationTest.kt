@@ -1,18 +1,12 @@
 package org.araqnid.fuellog
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.common.io.ByteStreams
 import org.apache.http.HttpResponse
-import org.apache.http.HttpStatus
-import org.apache.http.HttpVersion
-import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.entity.ByteArrayEntity
 import org.apache.http.message.BasicHttpResponse
-import org.apache.http.message.BasicNameValuePair
 import org.junit.Rule
 import java.util.UUID
 
@@ -27,12 +21,11 @@ abstract class IntegrationTest {
             "GOOGLE_MAPS_API_KEY" to "xxx"
     ))
 
-    var response: HttpResponse = BasicHttpResponse(HttpVersion.HTTP_1_0, HttpStatus.SC_INTERNAL_SERVER_ERROR, "No request executed")
-    var currentUser: IdentityResources.UserInfo? = null
+    lateinit var currentUser: IdentityResources.UserInfo
     val httpContext = HttpClientContext()
 
-    fun execute(request: HttpUriRequest) {
-        response = server.client.execute(request, { rawResponse ->
+    fun execute(request: HttpUriRequest): HttpResponse {
+        return server.client.execute(request, { rawResponse ->
             val bufferedResponse = BasicHttpResponse(rawResponse.statusLine)
             rawResponse.allHeaders.forEach { bufferedResponse.addHeader(it) }
             if (rawResponse.entity != null) {
@@ -45,19 +38,11 @@ abstract class IntegrationTest {
         }, httpContext)
     }
 
-    fun loginAsNewUser(): IdentityResources.UserInfo {
+    fun loginAsNewUser() {
         val userName = "Test User"
-        execute(HttpPost("/_api/user/identity/test").apply {
+        val response = execute(HttpPost("/_api/user/identity/test").apply {
             entity = formEntity(mapOf("identifier" to UUID.randomUUID().toString(), "name" to userName))
         })
-        val userInfo = userInfoReader.readValue<IdentityResources.UserInfo>(response.entity.content)
-        currentUser = userInfo
-        return userInfo
+        currentUser = response.readJson()
     }
 }
-
-internal fun formEntity(params: Map<String, String>) = UrlEncodedFormEntity(params.map { (k, v) -> BasicNameValuePair(k, v) }.toList())
-
-internal val userInfoReader = jacksonObjectMapper()
-        .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
-        .readerFor(IdentityResources.UserInfo::class.java)

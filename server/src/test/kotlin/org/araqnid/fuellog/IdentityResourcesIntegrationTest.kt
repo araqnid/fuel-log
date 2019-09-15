@@ -15,21 +15,21 @@ import org.araqnid.eventstore.StreamId
 import org.araqnid.fuellog.events.Event
 import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.UserExternalIdAssigned
-import org.araqnid.hamkrest.json.equivalentTo
+import org.araqnid.hamkrest.json.bytesEquivalentTo
 import org.junit.Test
 import java.net.URI
 
 class IdentityResourcesIntegrationTest : IntegrationTest() {
     @Test fun identity_resource_returns_nothing_for_unauthenticated_user() {
-        execute(HttpGet("/_api/user/identity"))
+        val response = execute(HttpGet("/_api/user/identity"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
         assertThat(response.entity, hasMimeType("application/json"))
-        assertThat(response.entity.text, equivalentTo("{ user_info: null }"))
+        assertThat(response.entity.bytes, bytesEquivalentTo("{ user_info: null }"))
         assertThat(httpContext.cookieStore.cookies, !anyElement(has(Cookie::getName, equalTo("JSESSIONID"))))
     }
 
     @Test fun associating_user_creates_registration_event() {
-        execute(HttpPost("/_api/user/identity/test").apply {
+        val response = execute(HttpPost("/_api/user/identity/test").apply {
             entity = formEntity(mapOf("identifier" to "test0", "name" to "Test User"))
         })
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
@@ -39,21 +39,21 @@ class IdentityResourcesIntegrationTest : IntegrationTest() {
         val userId = userEvents[0].streamId.id
 
         assertThat(response.entity, hasMimeType("application/json"))
-        assertThat(response.entity.text, equivalentTo("{ user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null }"))
+        assertThat(response.entity.bytes, bytesEquivalentTo("{ user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null }"))
     }
 
     @Test fun associated_user_returned_from_identity_resource() {
         execute(HttpPost("/_api/user/identity/test").apply {
             entity = formEntity(mapOf("identifier" to "test0", "name" to "Test User"))
         })
-        execute(HttpGet("/_api/user/identity"))
+        val response = execute(HttpGet("/_api/user/identity"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
 
         val userEvents = fetchUserEvents()
         val userId = userEvents[0].streamId.id
 
         assertThat(response.entity, hasMimeType("application/json"))
-        assertThat(response.entity.text, equivalentTo("{ user_info: { user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null } }"))
+        assertThat(response.entity.bytes, bytesEquivalentTo("{ user_info: { user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null } }"))
         assertThat(httpContext.cookieStore.cookies, anyElement(has(Cookie::getName, equalTo("JSESSIONID"))))
     }
 
@@ -62,16 +62,16 @@ class IdentityResourcesIntegrationTest : IntegrationTest() {
             entity = formEntity(mapOf("identifier" to "test0", "name" to "Test User"))
         })
         execute(HttpGet("/_api/user/identity"))
-        execute(HttpDelete("/_api/user/identity"))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_NO_CONTENT))
-        execute(HttpGet("/_api/user/identity"))
-        assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        assertThat(response.entity, hasMimeType("application/json"))
-        assertThat(response.entity.text, equivalentTo("{ user_info: null }"))
+        val deleteResponse = execute(HttpDelete("/_api/user/identity"))
+        assertThat(deleteResponse.statusLine.statusCode, equalTo(HttpStatus.SC_NO_CONTENT))
+        val getResponse = execute(HttpGet("/_api/user/identity"))
+        assertThat(getResponse.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
+        assertThat(getResponse.entity, hasMimeType("application/json"))
+        assertThat(getResponse.entity.bytes, bytesEquivalentTo("{ user_info: null }"))
     }
 
     @Test fun deleting_identity_does_not_crash_if_no_user_set() {
-        execute(HttpDelete("/_api/user/identity"))
+        val response = execute(HttpDelete("/_api/user/identity"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_NO_CONTENT))
     }
 
