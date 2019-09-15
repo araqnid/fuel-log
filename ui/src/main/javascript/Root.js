@@ -7,8 +7,9 @@ import * as ajax from "./util/Ajax";
 import autoRefresh from "./util/autoRefresh";
 import Throbber from "./Throbber";
 import {logFactory} from "./util/ConsoleLog";
+import IdentityStore from "./identity/IdentityStore";
 
-export const IdentityStoreContext = React.createContext(null /* new IdentityStore() */);
+export const IdentityStoreContext = React.createContext(new IdentityStore());
 
 const log = logFactory("Root");
 
