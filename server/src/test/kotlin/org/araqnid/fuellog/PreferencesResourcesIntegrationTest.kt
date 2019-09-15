@@ -4,7 +4,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
-import org.araqnid.hamkrest.json.bytesEquivalentTo
 import org.junit.Test
 
 class PreferencesResourcesIntegrationTest : IntegrationTest() {
@@ -17,7 +16,6 @@ class PreferencesResourcesIntegrationTest : IntegrationTest() {
         loginAsNewUser()
         val response = execute(HttpGet("/_api/user/preferences"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        assertThat(response.entity, hasMimeType("application/json"))
-        assertThat(response.entity.bytes, bytesEquivalentTo("{ fuel_volume_unit: 'LITRES', distance_unit: 'MILES', currency: 'GBP' }"))
+        assertThat(response.entity, hasJson("{ fuel_volume_unit: 'LITRES', distance_unit: 'MILES', currency: 'GBP' }"))
     }
 }

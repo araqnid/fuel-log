@@ -15,7 +15,6 @@ import org.araqnid.eventstore.StreamId
 import org.araqnid.fuellog.events.Event
 import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.UserExternalIdAssigned
-import org.araqnid.hamkrest.json.bytesEquivalentTo
 import org.junit.Test
 import java.net.URI
 
@@ -23,8 +22,7 @@ class IdentityResourcesIntegrationTest : IntegrationTest() {
     @Test fun identity_resource_returns_nothing_for_unauthenticated_user() {
         val response = execute(HttpGet("/_api/user/identity"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        assertThat(response.entity, hasMimeType("application/json"))
-        assertThat(response.entity.bytes, bytesEquivalentTo("{ user_info: null }"))
+        assertThat(response.entity, hasJson("{ user_info: null }"))
         assertThat(httpContext.cookieStore.cookies, !anyElement(has(Cookie::getName, equalTo("JSESSIONID"))))
     }
 
@@ -38,8 +36,7 @@ class IdentityResourcesIntegrationTest : IntegrationTest() {
         assertThat(userEvents.map { it.event }, hasElement(UserExternalIdAssigned(URI.create("https://fuel.araqnid.org/_api/user/identity/test/test0")) as Event))
         val userId = userEvents[0].streamId.id
 
-        assertThat(response.entity, hasMimeType("application/json"))
-        assertThat(response.entity.bytes, bytesEquivalentTo("{ user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null }"))
+        assertThat(response.entity, hasJson("{ user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null }"))
     }
 
     @Test fun associated_user_returned_from_identity_resource() {
@@ -52,8 +49,7 @@ class IdentityResourcesIntegrationTest : IntegrationTest() {
         val userEvents = fetchUserEvents()
         val userId = userEvents[0].streamId.id
 
-        assertThat(response.entity, hasMimeType("application/json"))
-        assertThat(response.entity.bytes, bytesEquivalentTo("{ user_info: { user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null } }"))
+        assertThat(response.entity, hasJson("{ user_info: { user_id: '$userId', name: 'Test User', realm: 'TEST', picture: null } }"))
         assertThat(httpContext.cookieStore.cookies, anyElement(has(Cookie::getName, equalTo("JSESSIONID"))))
     }
 
@@ -66,8 +62,7 @@ class IdentityResourcesIntegrationTest : IntegrationTest() {
         assertThat(deleteResponse.statusLine.statusCode, equalTo(HttpStatus.SC_NO_CONTENT))
         val getResponse = execute(HttpGet("/_api/user/identity"))
         assertThat(getResponse.statusLine.statusCode, equalTo(HttpStatus.SC_OK))
-        assertThat(getResponse.entity, hasMimeType("application/json"))
-        assertThat(getResponse.entity.bytes, bytesEquivalentTo("{ user_info: null }"))
+        assertThat(getResponse.entity, hasJson("{ user_info: null }"))
     }
 
     @Test fun deleting_identity_does_not_crash_if_no_user_set() {
