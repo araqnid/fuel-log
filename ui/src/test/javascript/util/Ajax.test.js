@@ -17,9 +17,9 @@ afterAll(() => {
 
 describe("get", () => {
     it("executes a GET request", async () => {
-        mockAxios.onGet("/api/example").reply(200, { responseData: true });
+        mockAxios.onGet("/_api/example").reply(200, { responseData: true });
         const responses = [];
-        await Ajax.get("/api/example").forEach(it => responses.push(it));
+        await Ajax.get("example").forEach(it => responses.push(it));
         expect(responses[0]).toEqual({ responseData: true });
         expect(responses.length).toBe(1);
     });
