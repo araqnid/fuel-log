@@ -1,11 +1,11 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {geoLocationSource} from "./util/GeoLocator";
+import {useGeoLocation} from "./util/GeoLocator";
 import * as ajax from "./util/Ajax";
+import GeoLocationMap from "./GeoLocationMap";
 
 const currencies = {'GBP': {symbol: '£', places: 2}};
 const volumeUnits = {LITRES: "l", GALLONS: "gal"};
 const distanceUnits = {MILES: "miles", KM: "km"};
-const apiKey = "AIzaSyBcWvaL2aftj6o1PK3Jq5Hqm2lgUoh6amk";
 
 function formatVolumeUnit(key) {
     return volumeUnits[key] || key + "?";
@@ -14,13 +14,6 @@ function formatVolumeUnit(key) {
 function formatDistanceUnit(key) {
     return distanceUnits[key] || key + "?";
 }
-
-const GeoLocation = ({latitude, longitude}) => (
-    <div>Geo-location available:
-        <img
-            src={`https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=13&size=300x300&sensor=false&key=${apiKey}`}/>
-    </div>
-);
 
 function changeTextState(setter) {
     return e => {
@@ -50,15 +43,7 @@ const NewFuelPurchaseEntry = ({preferences: {currency, fuelVolumeUnit, distanceU
 
     const [registering, setRegistering] = useState(false);
 
-    const [geoLocation, setGeoLocation] = useState(null);
-    useEffect(() => {
-        const subscription = geoLocationSource.subscribe(
-            ({coords: {latitude, longitude}}) => setGeoLocation({latitude, longitude})
-        );
-        return () => {
-            subscription.unsubscribe();
-        }
-    });
+    const geoLocation = useGeoLocation();
 
     const onSubmit = useCallback(e => {
         e.preventDefault();
@@ -82,7 +67,7 @@ const NewFuelPurchaseEntry = ({preferences: {currency, fuelVolumeUnit, distanceU
             geo_location: geoLocation
         };
         console.log("save purchase", newPurchase);
-        const subscription = ajax.postRaw("_api/fuel", newPurchase).subscribe(
+        const subscription = ajax.postRaw("fuel", newPurchase).subscribe(
             ({ status, headers }) => {
                 if (status !== 201) {
                     console.error(`status was ${status}`);
@@ -159,7 +144,7 @@ const NewFuelPurchaseEntry = ({preferences: {currency, fuelVolumeUnit, distanceU
                 <button type="submit" className="btn btn-primary" disabled={registering}>Submit</button>
 
                 {geoLocation ?
-                    <GeoLocation latitude={geoLocation.latitude} longitude={geoLocation.longitude}/> : null}
+                    <GeoLocationMap latitude={geoLocation.latitude} longitude={geoLocation.longitude}/> : null}
             </form>
         </div>
     );

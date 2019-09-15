@@ -25,7 +25,6 @@ import org.araqnid.eventstore.filesystem.TieredFilesystemEventSource
 import org.araqnid.eventstore.subscription.PollingEventSubscriptionService
 import org.araqnid.eventstore.subscription.SnapshotEventSubscriptionService
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Clock
 import java.time.Duration
@@ -33,13 +32,13 @@ import javax.inject.Named
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
-class AppConfig(val environment: Map<String, String>) : AbstractModule() {
-    val usingSnapshots: Boolean = with (environment["SNAPSHOT_SPOOL"] ?: "") {
+class AppConfig(private val environment: Map<String, String>) : AbstractModule() {
+    private val usingSnapshots: Boolean = with (environment["SNAPSHOT_SPOOL"] ?: "") {
         !isEmpty() && Files.isDirectory(Paths.get(this))
     }
 
     override fun configure() {
-        environment.forEach { k, v -> bindConstant().annotatedWith(Names.named(k)).to(v) }
+        environment.forEach { (k, v) -> bindConstant().annotatedWith(Names.named(k)).to(v) }
 
         bind(EventSource::class.java).to(TieredFilesystemEventSource::class.java)
         bind(Clock::class.java).toInstance(Clock.systemDefaultZone())
@@ -82,7 +81,7 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
     @Provides
     @Singleton
     fun filesystemEventSource(clock: Clock): TieredFilesystemEventSource {
-        return TieredFilesystemEventSource(getenv("EVENT_SPOOL").toPath(), clock)
+        return TieredFilesystemEventSource(Paths.get(getenv("EVENT_SPOOL")), clock)
     }
 
     @Provides
@@ -137,8 +136,6 @@ class AppConfig(val environment: Map<String, String>) : AbstractModule() {
     @Provides
     @Singleton
     fun httpAsyncClient(): CloseableHttpAsyncClient = HttpAsyncClients.createDefault()
-
-    fun String.toPath(): Path = Paths.get(this)
 
     private fun getenv(key: String): String = environment[key] ?: throw ProvisionException("$key not specified in environment")
 }

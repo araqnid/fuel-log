@@ -43,7 +43,7 @@ const FuelPurchase = ({purchase, distanceUnit, fuelVolumeUnit}) => {
 const FuelPurchaseList = ({preferences: {distanceUnit, fuelVolumeUnit}, saveCounter}) => {
     const [purchases, setPurchases] = useState(null);
     useEffect(() => {
-        const subscription = autoRefresh(60000)(ajax.get("_api/fuel")).subscribe(
+        const subscription = autoRefresh(60000)(ajax.get("fuel")).subscribe(
             payload => {
                 payload.sort((a, b) => b.purchased_at - a.purchased_at);
                 setPurchases(payload);

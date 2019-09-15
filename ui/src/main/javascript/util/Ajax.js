@@ -8,11 +8,15 @@ export const localAxios = axios.create({
     }
 });
 
+function fullUrl(url) {
+    return `/_api/${url}`;
+}
+
 export function get(url) {
     return new Observable(observer => {
         const cancelSource = axios.CancelToken.source();
 
-        localAxios.get(url, { cancelToken: cancelSource.token }).then(
+        localAxios.get(fullUrl(url), { cancelToken: cancelSource.token }).then(
             (response) => {
                 observer.next(response.data);
                 observer.complete();
@@ -31,7 +35,7 @@ export function postRaw(url, payload) {
     return new Observable(observer => {
         const cancelSource = axios.CancelToken.source();
 
-        localAxios.post(url, payload, { cancelToken: cancelSource.token }).then(
+        localAxios.post(fullUrl(url), payload, { cancelToken: cancelSource.token }).then(
             (response) => {
                 observer.next(response);
                 observer.complete();

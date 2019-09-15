@@ -99,7 +99,7 @@ const Content = ({userIdentity}) => {
 const UserContent = ({userId}) => {
     const [preferences, setPreferences] = useState(null);
     useEffect(() => {
-        const subscription = autoRefresh(60000)(ajax.get("/_api/user/preferences")).subscribe(
+        const subscription = autoRefresh(60000)(ajax.get("user/preferences")).subscribe(
             ({currency, distance_unit: distanceUnit, fuel_volume_unit: fuelVolumeUnit}) => {
                 setPreferences({currency, distanceUnit, fuelVolumeUnit});
             }
