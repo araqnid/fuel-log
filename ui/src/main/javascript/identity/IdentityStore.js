@@ -1,8 +1,8 @@
 import Observable from "zen-observable";
-import axios from "axios";
 import {logFactory} from "../util/ConsoleLog";
 import GoogleIdentityProvider from "./GoogleIdentityProvider";
 import FacebookIdentityProvider from "./FacebookIdentityProvider";
+import {localAxios} from "../util/Ajax";
 
 // IdentityProvider interface:
 //  start() // void
@@ -38,7 +38,7 @@ export default class IdentityStore {
     }
 
     async _launch() {
-        const {data: {user_info: provisionalUserInfo}} = await axios.get("_api/user/identity", ({ headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" }}));
+        const {data: {user_info: provisionalUserInfo}} = await localAxios.get("_api/user/identity", ({ headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" }}));
 
         const userInfo = await (provisionalUserInfo ? this._confirm(provisionalUserInfo) : this._probe());
 
@@ -58,13 +58,13 @@ export default class IdentityStore {
             }
             else {
                 log.info("User details not confirmed");
-                await axios.delete("_api/user/identity", ({ headers: { "X-Requested-With": "XMLHttpRequest" } }));
+                await localAxios.delete("_api/user/identity", ({ headers: { "X-Requested-With": "XMLHttpRequest" } }));
                 return null;
             }
         }
         else {
             log.warn("last known user identity is in unknown realm");
-            await axios.delete("_api/user/identity", ({ headers: { "X-Requested-With": "XMLHttpRequest" } }));
+            await localAxios.delete("_api/user/identity", ({ headers: { "X-Requested-With": "XMLHttpRequest" } }));
             return null;
         }
     }
@@ -104,7 +104,7 @@ export default class IdentityStore {
         if (!this.localUserIdentity) return;
         log.info("Sign out", this.localUserIdentity);
         await this._realmProviders[this.localUserIdentity.realm].signOut();
-        await axios.delete("/_api/user/identity");
+        await localAxios.delete("/_api/user/identity");
         this._emit("localUserIdentity", null);
         this.localUserIdentity = null;
     }

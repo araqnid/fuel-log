@@ -1,5 +1,5 @@
-import axios from "axios";
 import {logFactory} from "../util/ConsoleLog";
+import {localAxios} from "../util/Ajax";
 
 const log = logFactory("FacebookIdentityProvider");
 
@@ -86,7 +86,7 @@ export default class FacebookIdentityProvider {
     }
 
     _associate(authResponse) {
-        return axios.post('/_api/user/identity/facebook', authResponse.accessToken, { headers: { "Content-Type": "text/plain", "X-Requested-With": "XMLHttpRequest" } })
+        return localAxios.post('/_api/user/identity/facebook', authResponse.accessToken, { headers: { "Content-Type": "text/plain", "X-Requested-With": "XMLHttpRequest" } })
             .then(({data}) => {
                 return this._fbApi("/me/picture").then(({ data: pictureData }) => {
                     if (pictureData.url !== data.picture) {
