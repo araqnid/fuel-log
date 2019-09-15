@@ -10,6 +10,7 @@ import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.server.Slf4jRequestLogWriter
+import org.eclipse.jetty.server.handler.ContextHandler
 import org.eclipse.jetty.server.handler.ContextHandlerCollection
 import org.eclipse.jetty.server.handler.HandlerWrapper
 import org.eclipse.jetty.server.handler.ResourceHandler
@@ -60,9 +61,11 @@ class JettyService @Inject constructor(@Named("PORT") port: Int,
                 addEventListener(resteasyBootstrap)
                 gzipHandler = GzipHandler()
             })
-            addContext("/", documentRoot).apply {
+            addHandler(ContextHandler().apply {
+                contextPath = "/"
+                resourceBase = documentRoot
                 handler = ResourceHandler()
-            }
+            })
         }
     }
 
