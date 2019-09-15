@@ -6,14 +6,17 @@ import FuelPurchaseList from "./FuelPurchaseList";
 import * as ajax from "./util/Ajax";
 import autoRefresh from "./util/autoRefresh";
 import Throbber from "./Throbber";
+import {logFactory} from "./util/ConsoleLog";
 
 export const IdentityStoreContext = React.createContext(null /* new IdentityStore() */);
+
+const log = logFactory("Root");
 
 const Root = ({}) => {
     const identityStore = useContext(IdentityStoreContext);
     const [userIdentity, setUserIdentity] = useState(identityStore.localUserIdentity);
-    const [googleAvailable, setGoogleAvailable] = useState(false);
-    const [facebookAvailable, setFacebookAvailable] = useState(false);
+    const [googleAvailable, setGoogleAvailable] = useState(identityStore.realmAvailable("GOOGLE"));
+    const [facebookAvailable, setFacebookAvailable] = useState(identityStore.realmAvailable("FACEBOOK"));
     useEffect(() => {
         const subscription = Observable.from(identityStore).subscribe(
             ({type, payload, error}) => {
@@ -21,18 +24,22 @@ const Root = ({}) => {
                     case "localUserIdentity":
                         setUserIdentity(payload);
                         break;
-                    case "googleAvailable":
-                        setGoogleAvailable(payload);
-                        break;
-                    case "facebookAvailable":
-                        setFacebookAvailable(payload);
+                    case "realmAvailable":
+                        switch (payload) {
+                            case "GOOGLE":
+                                setGoogleAvailable(true);
+                                break;
+                            case "FACEBOOK":
+                                setFacebookAvailable(true);
+                                break;
+                        }
                         break;
                     default:
                         if (error) {
-                            console.warn("ignoring IdentityStore error", type, payload);
+                            log.warn("ignoring IdentityStore error", type, payload);
                         }
                         else {
-                            console.log("ignoring IdentityStore message", type, payload);
+                            log.info("ignoring IdentityStore message", type, payload);
                         }
                         break;
                 }
@@ -43,15 +50,15 @@ const Root = ({}) => {
         }
     }, []);
     const signInWithGoogle = useCallback(() => {
-        identityStore.signInWithGoogle();
+        identityStore.signInWith("GOOGLE");
     }, []);
     const signInWithFacebook = useCallback(() => {
-        identityStore.signInWithFacebook();
+        identityStore.signInWith("FACEBOOK");
     }, []);
     const signOut = useCallback(() => {
-        console.log("sign out");
+        log.info("sign out");
         identityStore.signOut().then(() => {
-            console.log("sign out complete");
+            log.info("sign out complete");
         });
     }, []);
     return (

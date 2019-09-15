@@ -26,6 +26,10 @@ export default class FacebookIdentityProvider {
             this._availableListeners.push(listener);
     }
 
+    onUserUpdate(listener) {
+        // not supported
+    }
+
     _markAvailable() {
         this._available = true;
         this._availableListeners.forEach(listener => {

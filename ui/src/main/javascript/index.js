@@ -5,12 +5,12 @@ import Root, {IdentityStoreContext} from "./Root";
 import "bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles.css";
-import IdentityStore from "./identity/IdentityStore";
+import {buildDefaultIdentityStore} from "./identity/IdentityStore";
 
 const componentRootElt = document.createElement("div");
 document.body.appendChild(componentRootElt);
 
-const identityStore = new IdentityStore();
+const identityStore = buildDefaultIdentityStore();
 
 function render(RootComponent) {
     ReactDOM.render(<IdentityStoreContext.Provider value={identityStore}><RootComponent /></IdentityStoreContext.Provider>, componentRootElt);

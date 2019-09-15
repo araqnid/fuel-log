@@ -29,7 +29,7 @@ afterEach(() => {
 });
 
 beforeEach(() => {
-    identityStore = new IdentityStore(false, false);
+    identityStore = new IdentityStore();
 });
 
 it("shows root page", () => {

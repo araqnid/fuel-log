@@ -5,6 +5,8 @@ import FacebookIdentityProvider from "./FacebookIdentityProvider";
 import {localAxios} from "../util/Ajax";
 
 // IdentityProvider interface:
+//  onAvailable(listener) // listener called when realm is able to accept calls
+//  onUserUpdate(listener) // listener called when realm syncs async update to user info
 //  start() // void
 //  stop() // void
 //  probe() // Promise<Boolean>
@@ -15,30 +17,33 @@ import {localAxios} from "../util/Ajax";
 
 const log = logFactory("IdentityStore");
 
+export function buildDefaultIdentityStore() {
+    const identityStore = new IdentityStore();
+    identityStore.addRealmProvider("GOOGLE", new GoogleIdentityProvider());
+    identityStore.addRealmProvider("FACEBOOK", new FacebookIdentityProvider());
+    return identityStore;
+}
+
 export default class IdentityStore {
-    constructor(googleEnabled = true, facebookEnabled = true) {
+    constructor() {
         this._realmProviders = {};
-        if (googleEnabled)
-            this._realmProviders.GOOGLE = new GoogleIdentityProvider();
-        if (facebookEnabled)
-            this._realmProviders.FACEBOOK = new FacebookIdentityProvider();
+        this._realmsAvailable = new Set();
         this._subscribers = new Set();
         this.localUserIdentity = null;
     }
 
+    addRealmProvider(name, provider) {
+        this._realmProviders[name] = provider;
+    }
+
     start() {
-        if (this._realmProviders.GOOGLE) {
-            this._realmProviders.GOOGLE.onAvailable(() => this._emit("googleAvailable", true));
-            this._realmProviders.GOOGLE.onUserUpdate(userInfo => this._emit("localUserIdentity", userInfo));
-        }
-        else {
-            this._emit("googleAvailable", false);
-        }
-        if (this._realmProviders.FACEBOOK) {
-            this._realmProviders.FACEBOOK.onAvailable(() => this._emit("facebookAvailable", true));
-        }
-        else {
-            this._emit("facebookAvailable", false);
+        for (const [name, provider] of Object.entries(this._realmProviders)) {
+            provider.onAvailable(() => {
+                this._realmsAvailable.add(name);
+                this._emit("realmAvailable", name);
+            });
+            provider.onUserUpdate(userInfo => this._emit("localUserIdentity", userInfo));
+            provider.start();
         }
         Object.values(this._realmProviders).forEach(p => p.start());
         this._launch();
@@ -92,23 +97,22 @@ export default class IdentityStore {
         });
 
         log.info("Assembled probe results", result);
-        if (result.GOOGLE) {
-            return this._realmProviders.GOOGLE.autoLogin();
+        for (const [name, provider] in Object.entries(this._realmProviders)) {
+            if (result[name]) {
+                return provider.autoLogin();
+            }
         }
-        else if (result.FACEBOOK) {
-            return this._realmProviders.FACEBOOK.autoLogin();
-        }
-        else {
-            return null;
-        }
+        return null;
     }
 
-    signInWithGoogle() {
-        return this._signIn(this._realmProviders.GOOGLE);
+    realmAvailable(realmName) {
+        return this._realmsAvailable.has(realmName);
     }
 
-    signInWithFacebook() {
-        return this._signIn(this._realmProviders.FACEBOOK);
+    signInWith(realmName) {
+        if (!this.realmAvailable(realmName))
+            throw new Error(`Realm not available: ${realmName}`);
+        return this._signIn(this._realmProviders[realmName]);
     }
 
     async signOut() {
