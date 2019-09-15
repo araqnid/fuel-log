@@ -1,5 +1,8 @@
 package org.araqnid.fuellog.integration
 
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import kotlinx.coroutines.runBlocking
 import org.apache.http.impl.nio.client.HttpAsyncClients
@@ -37,7 +40,8 @@ class GoogleClientIntegrationTest {
     @Test
     fun `validates ID token`() {
         val googleClient = GoogleClient(googleClientConfig, httpClient, clock)
-        runBlocking { googleClient.validateToken(googleIdToken) }
+        val tokenInfo = runBlocking { googleClient.validateToken(googleIdToken) }
+        assertThat(tokenInfo, has(GoogleClient.TokenInfo::clientId, equalTo(googleClientConfig.id)))
     }
 
     @Test

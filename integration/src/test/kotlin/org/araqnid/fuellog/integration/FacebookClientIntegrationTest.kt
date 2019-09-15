@@ -6,7 +6,6 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.isEmptyString
-import com.natpryce.hamkrest.present
 import kotlinx.coroutines.runBlocking
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.araqnid.fuellog.FacebookClient
@@ -59,9 +58,7 @@ class FacebookClientIntegrationTest {
         val facebookClient = FacebookClient(facebookClientConfig, httpClient)
         val result = runBlocking { facebookClient.fetchUserProfile("10155233566049669") }
 
-        assertThat(result, has(FacebookClient.UserIdentity::name, equalTo("Steve Haslam"))
-                and has(FacebookClient.UserIdentity::id, equalTo("10155233566049669"))
-                and has(FacebookClient.UserIdentity::picture, present()))
+        assertThat(result, has(FacebookClient.UserIdentity::id, equalTo("10155233566049669")))
     }
 
     @Test
@@ -71,9 +68,7 @@ class FacebookClientIntegrationTest {
         val facebookClient = FacebookClient(facebookClientConfig, httpClient)
         val result = runBlocking { facebookClient.fetchUsersOwnProfile(accessToken) }
 
-        assertThat(result, has(FacebookClient.UserIdentity::name, equalTo("Steve Haslam"))
-                and has(FacebookClient.UserIdentity::id, equalTo("10155233566049669"))
-                and has(FacebookClient.UserIdentity::picture, present()))
+        assertThat(result, has(FacebookClient.UserIdentity::id, equalTo("10155233566049669")))
     }
 
     @Test
