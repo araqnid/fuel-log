@@ -1,4 +1,4 @@
-package org.araqnid.fuellog.integration
+package org.araqnid.fuellog
 
 import com.natpryce.hamkrest.anyElement
 import com.natpryce.hamkrest.assertion.assertThat
@@ -15,7 +15,6 @@ import org.araqnid.eventstore.StreamId
 import org.araqnid.fuellog.events.Event
 import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.UserExternalIdAssigned
-import org.araqnid.fuellog.toListAndClose
 import org.araqnid.hamkrest.json.equivalentTo
 import org.junit.Test
 import java.net.URI

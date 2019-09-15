@@ -1,4 +1,4 @@
-package org.araqnid.fuellog.integration
+package org.araqnid.fuellog
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.http.entity.BasicHttpEntity

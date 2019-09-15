@@ -1,4 +1,4 @@
-package org.araqnid.fuellog.integration
+package org.araqnid.fuellog
 
 import com.google.common.base.Preconditions
 import com.google.common.util.concurrent.ServiceManager
@@ -19,8 +19,6 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient
 import org.araqnid.eventstore.EventSource
 import org.araqnid.eventstore.InMemoryEventSource
-import org.araqnid.fuellog.AppConfig
-import org.araqnid.fuellog.JettyService
 import org.araqnid.fuellog.test.NIOTemporaryFolder
 import org.eclipse.jetty.server.NetworkConnector
 import org.junit.rules.ExternalResource

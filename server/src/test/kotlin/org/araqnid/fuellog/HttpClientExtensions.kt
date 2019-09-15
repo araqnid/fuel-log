@@ -1,4 +1,4 @@
-package org.araqnid.fuellog.integration
+package org.araqnid.fuellog
 
 import com.google.common.io.ByteSource
 import com.google.common.io.CharSource

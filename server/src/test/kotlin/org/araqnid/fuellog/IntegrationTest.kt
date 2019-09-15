@@ -1,4 +1,4 @@
-package org.araqnid.fuellog.integration
+package org.araqnid.fuellog
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -13,7 +13,6 @@ import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.entity.ByteArrayEntity
 import org.apache.http.message.BasicHttpResponse
 import org.apache.http.message.BasicNameValuePair
-import org.araqnid.fuellog.IdentityResources
 import org.junit.Rule
 import java.util.UUID
 

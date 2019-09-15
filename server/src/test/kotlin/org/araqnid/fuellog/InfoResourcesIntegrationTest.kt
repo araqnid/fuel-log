@@ -1,4 +1,4 @@
-package org.araqnid.fuellog.integration
+package org.araqnid.fuellog
 
 import com.natpryce.hamkrest.anything
 import com.natpryce.hamkrest.assertion.assertThat

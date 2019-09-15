@@ -1,4 +1,4 @@
-package org.araqnid.fuellog.integration
+package org.araqnid.fuellog
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -18,21 +18,17 @@ import org.apache.http.client.methods.HttpPost
 import org.araqnid.eventstore.EventCategoryReader
 import org.araqnid.eventstore.EventStreamWriter
 import org.araqnid.eventstore.StreamId
-import org.araqnid.fuellog.FuelRecord
-import org.araqnid.fuellog.FuelResources
 import org.araqnid.fuellog.events.Coordinates
 import org.araqnid.fuellog.events.Event
 import org.araqnid.fuellog.events.EventCodecs
 import org.araqnid.fuellog.events.EventMetadata
 import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
-import org.araqnid.fuellog.findFirstAndClose
 import org.araqnid.fuellog.hamkrest.containsInOrder
-import org.araqnid.fuellog.toListAndClose
 import org.araqnid.hamkrest.json.jsonObject
 import org.junit.Test
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 class FuelResourcesIntegrationTest : IntegrationTest() {
     val objectMapper: ObjectMapper = jacksonObjectMapper()
