@@ -16,19 +16,30 @@ import {localAxios} from "../util/Ajax";
 const log = logFactory("IdentityStore");
 
 export default class IdentityStore {
-    constructor() {
-        this._realmProviders = {
-            GOOGLE: new GoogleIdentityProvider(),
-            FACEBOOK: new FacebookIdentityProvider()
-        };
+    constructor(googleEnabled = true, facebookEnabled = true) {
+        this._realmProviders = {};
+        if (googleEnabled)
+            this._realmProviders.GOOGLE = new GoogleIdentityProvider();
+        if (facebookEnabled)
+            this._realmProviders.FACEBOOK = new FacebookIdentityProvider();
         this._subscribers = new Set();
         this.localUserIdentity = null;
     }
 
     start() {
-        this._realmProviders.GOOGLE.onAvailable(() => this._emit("googleAvailable", true));
-        this._realmProviders.FACEBOOK.onAvailable(() => this._emit("facebookAvailable", true));
-        this._realmProviders.GOOGLE.onUserUpdate(userInfo => this._emit("localUserIdentity", userInfo));
+        if (this._realmProviders.GOOGLE) {
+            this._realmProviders.GOOGLE.onAvailable(() => this._emit("googleAvailable", true));
+            this._realmProviders.GOOGLE.onUserUpdate(userInfo => this._emit("localUserIdentity", userInfo));
+        }
+        else {
+            this._emit("googleAvailable", false);
+        }
+        if (this._realmProviders.FACEBOOK) {
+            this._realmProviders.FACEBOOK.onAvailable(() => this._emit("facebookAvailable", true));
+        }
+        else {
+            this._emit("facebookAvailable", false);
+        }
         Object.values(this._realmProviders).forEach(p => p.start());
         this._launch();
     }

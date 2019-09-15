@@ -1,20 +1,21 @@
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useContext, useEffect, useState} from "react";
 import Observable from "zen-observable";
 import Identity from "./Identity";
 import NewFuelPurchaseEntry from "./NewFuelPurchaseEntry";
 import FuelPurchaseList from "./FuelPurchaseList";
-import IdentityStore from "./identity/IdentityStore";
 import * as ajax from "./util/Ajax";
 import autoRefresh from "./util/autoRefresh";
 import Throbber from "./Throbber";
 
+export const IdentityStoreContext = React.createContext(null /* new IdentityStore() */);
+
 const Root = ({}) => {
-    const identityStore = useRef(new IdentityStore());
-    const [userIdentity, setUserIdentity] = useState(identityStore.current.localUserIdentity);
+    const identityStore = useContext(IdentityStoreContext);
+    const [userIdentity, setUserIdentity] = useState(identityStore.localUserIdentity);
     const [googleAvailable, setGoogleAvailable] = useState(false);
     const [facebookAvailable, setFacebookAvailable] = useState(false);
     useEffect(() => {
-        const subscription = Observable.from(identityStore.current).subscribe(
+        const subscription = Observable.from(identityStore).subscribe(
             ({type, payload, error}) => {
                 switch (type) {
                     case "localUserIdentity":
@@ -37,21 +38,19 @@ const Root = ({}) => {
                 }
             }
         );
-        identityStore.current.start();
         return () => {
             subscription.unsubscribe();
-            identityStore.current.stop();
         }
     }, []);
     const signInWithGoogle = useCallback(() => {
-        identityStore.current.signInWithGoogle();
+        identityStore.signInWithGoogle();
     }, []);
     const signInWithFacebook = useCallback(() => {
-        identityStore.current.signInWithFacebook();
+        identityStore.signInWithFacebook();
     }, []);
     const signOut = useCallback(() => {
         console.log("sign out");
-        identityStore.current.signOut().then(() => {
+        identityStore.signOut().then(() => {
             console.log("sign out complete");
         });
     }, []);

@@ -1,11 +1,13 @@
 import React from "react";
 import {mount} from "enzyme";
 import MockAdapter from "axios-mock-adapter";
-import Root from "../../main/javascript/Root";
+import Root, {IdentityStoreContext} from "../../main/javascript/Root";
 import Identity from "../../main/javascript/Identity";
 import * as Ajax from "../../main/javascript/util/Ajax";
+import IdentityStore from "../../main/javascript/identity/IdentityStore";
 
 let mockAxios;
+let identityStore;
 
 beforeAll(() => {
     mockAxios = new MockAdapter(Ajax.localAxios);
@@ -27,19 +29,10 @@ afterEach(() => {
 });
 
 beforeEach(() => {
-    window.__api_hooks = {
-        googleApi: {
-            promise: new Promise(() => {
-            })
-        },
-        facebookSdk: {
-            promise: new Promise(() => {
-            })
-        }
-    };
+    identityStore = new IdentityStore(false, false);
 });
 
 it("shows root page", () => {
-    component = mount(<Root/>);
+    component = mount(<IdentityStoreContext.Provider value={identityStore}><Root/></IdentityStoreContext.Provider>);
     expect(component.find(Identity).length).toBe(1);
 });

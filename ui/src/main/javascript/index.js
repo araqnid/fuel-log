@@ -1,16 +1,19 @@
 import "@babel/polyfill";
 import React from "react";
 import ReactDOM from "react-dom";
-import Root from "./Root";
+import Root, {IdentityStoreContext} from "./Root";
 import "bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles.css";
+import IdentityStore from "./identity/IdentityStore";
 
 const componentRootElt = document.createElement("div");
 document.body.appendChild(componentRootElt);
 
+const identityStore = new IdentityStore();
+
 function render(RootComponent) {
-    ReactDOM.render(<RootComponent />, componentRootElt);
+    ReactDOM.render(<IdentityStoreContext.Provider value={identityStore}><RootComponent /></IdentityStoreContext.Provider>, componentRootElt);
 }
 
 if (process.env.NODE_ENV !== "production" && module.hot) {
@@ -18,5 +21,7 @@ if (process.env.NODE_ENV !== "production" && module.hot) {
         render(require("./Root.js")["default"]);
     });
 }
+
+identityStore.start();
 
 render(Root);
