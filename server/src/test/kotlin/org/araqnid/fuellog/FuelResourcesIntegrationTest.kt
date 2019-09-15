@@ -54,7 +54,7 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
     }
 
     @Test fun post_new_fuel_purchase() {
-        val user = loginAsNewUser()
+        loginAsNewUser()
 
         val newFuelPurchase = FuelResources.NewFuelPurchase(
                 fuelVolume = 45.67,

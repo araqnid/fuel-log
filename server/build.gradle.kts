@@ -72,7 +72,7 @@ dependencies {
     testImplementation(kotlin("test-junit"))
     testImplementation(project(":test-utils"))
     testImplementation("com.timgroup:clocks-testing:1.0.1070")
-    testImplementation("org.araqnid:hamkrest-json:1.0.3")
+    testImplementation("org.araqnid:hamkrest-json:1.1.0")
     runtimeOnly("ch.qos.logback:logback-classic:1.2.2")
     runtimeOnly("org.slf4j:jcl-over-slf4j:1.7.25")
     web(project(path = ":ui", configuration = "web"))
