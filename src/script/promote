@@ -2,7 +2,7 @@
 
 artifact=fuel-log
 site=fuel
-server_host=ob.araqnid.org
+server_host=ozero.araqnid.org
 
 set -e
 
