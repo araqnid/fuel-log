@@ -11,17 +11,17 @@ import org.apache.http.HttpRequest
 import org.apache.http.HttpResponse
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.message.BasicNameValuePair
-import java.nio.charset.StandardCharsets.UTF_8
+import org.apache.http.util.EntityUtils
 
 fun <T : HttpRequest> T.accepting(mimeType: String): T = apply {
     addHeader("Accept", mimeType)
 }
 
 val HttpEntity.bytes: ByteArray
-    get() = content.readBytes()
+    get() = EntityUtils.toByteArray(this)
 
 val HttpEntity.text: String
-    get() = content.reader(UTF_8).readText()
+    get() = EntityUtils.toString(this)
 
 val defaultObjectMapper: ObjectMapper = jacksonObjectMapper()
         .registerModule(JavaTimeModule())

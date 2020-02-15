@@ -22,21 +22,26 @@ import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
 import org.araqnid.fuellog.hamkrest.containsInOrder
 import org.araqnid.hamkrest.json.jsonObject
+import org.junit.Rule
 import org.junit.Test
 import java.time.Instant
 import java.util.UUID
 
-class FuelResourcesIntegrationTest : IntegrationTest() {
-    val emptyMetadata = object : EventMetadata {}
+class FuelResourcesTest {
+    @get:Rule
+    val server = ServerRunner()
 
-    @Test fun get_fuel_purchase() {
+    private val emptyMetadata = object : EventMetadata {}
+
+    @Test
+    fun get_fuel_purchase() {
         val purchaseId = UUID.randomUUID()
-        loginAsNewUser()
+        server.loginAsNewUser()
 
         server.instance<EventStreamWriter>().write(StreamId("fuel", purchaseId.toString()), listOf(
                 EventCodecs.encode(FuelPurchased(
                         Instant.now(server.clock),
-                        currentUser.userId,
+                        server.currentUser.userId,
                         50.0,
                         MonetaryAmount("GBP", 100.0),
                         110000.0,
@@ -46,17 +51,17 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 ), emptyMetadata)
         ))
 
-        val response = execute(HttpGet("/_api/fuel/$purchaseId"))
+        val response = server.execute(HttpGet("/_api/fuel/$purchaseId"))
         assertThat(response, Matcher(HttpResponse::isSuccess))
         val fuelRecord = response.readJson<FuelRecord>()
-        assertThat(fuelRecord.userId, equalTo(currentUser.userId))
+        assertThat(fuelRecord.userId, equalTo(server.currentUser.userId))
         assertThat(fuelRecord.fuelPurchaseId, equalTo(purchaseId))
         assertThat(fuelRecord.fuelVolume, equalTo(50.0))
         assertThat(fuelRecord.geoLocation, equalTo(Coordinates(51.2, 0.02)))
     }
 
     @Test fun post_new_fuel_purchase() {
-        loginAsNewUser()
+        server.loginAsNewUser()
 
         val newFuelPurchase = FuelResources.NewFuelPurchase(
                 fuelVolume = 45.67,
@@ -67,12 +72,12 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 geoLocation = Coordinates(51.2, 0.02)
         )
 
-        val response = execute(HttpPost("/_api/fuel").apply { entity = JacksonEntity(newFuelPurchase) })
+        val response = server.execute(HttpPost("/_api/fuel").apply { entity = JacksonEntity(newFuelPurchase) })
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_CREATED))
 
         val fuelPurchasedEvent = FuelPurchased(
                 timestamp = server.clock.instant(),
-                userId = currentUser.userId,
+                userId = server.currentUser.userId,
                 fuelVolume = 45.67,
                 cost = MonetaryAmount("GBP", 99.87),
                 odometer = 111234.0,
@@ -103,7 +108,7 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 geoLocation = null
         )
 
-        val response = execute(HttpPost(server.uri("/_api/fuel")).apply {
+        val response = server.execute(HttpPost(server.uri("/_api/fuel")).apply {
             entity = JacksonEntity(newFuelPurchase)
         })
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_FORBIDDEN))
@@ -125,18 +130,18 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                         , emptyMetadata)
         ))
 
-        val response = execute(HttpGet("/_api/fuel/$purchaseId"))
+        val response = server.execute(HttpGet("/_api/fuel/$purchaseId"))
         assertThat(response.statusLine.statusCode, equalTo(HttpStatus.SC_FORBIDDEN))
     }
 
     @Test fun get_fuel_purchases_for_current_user() {
         val purchaseId = UUID.randomUUID()
-        loginAsNewUser()
+        server.loginAsNewUser()
 
         server.instance<EventStreamWriter>().write(StreamId("fuel", purchaseId.toString()), listOf(
                 EventCodecs.encode(FuelPurchased(
                         Instant.now(server.clock),
-                        currentUser.userId,
+                        server.currentUser.userId,
                         50.0,
                         MonetaryAmount("GBP", 100.0),
                         110000.0,
@@ -146,10 +151,10 @@ class FuelResourcesIntegrationTest : IntegrationTest() {
                 ), emptyMetadata)
         ))
 
-        val response = execute(HttpGet("/_api/fuel"))
+        val response = server.execute(HttpGet("/_api/fuel"))
         assertThat(response, Matcher(HttpResponse::isSuccess))
         val fuelRecords = response.readJson<Collection<FuelRecord>>().toList()
-        assertThat(fuelRecords[0].userId, equalTo(currentUser.userId))
+        assertThat(fuelRecords[0].userId, equalTo(server.currentUser.userId))
         assertThat(fuelRecords[0].fuelPurchaseId, equalTo(purchaseId))
         assertThat(fuelRecords[0].fuelVolume, equalTo(50.0))
     }

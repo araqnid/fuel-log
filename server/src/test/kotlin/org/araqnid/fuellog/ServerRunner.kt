@@ -13,6 +13,7 @@ import com.google.inject.util.Modules
 import com.timgroup.clocks.testing.ManualClock
 import org.apache.http.HttpException
 import org.apache.http.HttpHost
+import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.conn.routing.HttpRoute
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
@@ -27,26 +28,43 @@ import org.junit.runners.model.Statement
 import java.net.URI
 import java.time.Clock
 
-class ServerRunner(val environment: Map<String, String>) : ExternalResource() {
+class ServerRunner(val environment: Map<String, String> = defaultEnvironment) : ExternalResource() {
+    companion object {
+        val defaultEnvironment = mapOf(
+                "PORT" to "0",
+                "FACEBOOK_APP_ID" to "",
+                "FACEBOOK_APP_SECRET" to "",
+                "GOOGLE_CLIENT_ID" to "",
+                "GOOGLE_CLIENT_SECRET" to "",
+                "GOOGLE_MAPS_API_KEY" to "xxx"
+        )
+    }
+
     lateinit var injector: Injector
 
-    inline fun <reified T> typeLiteral(): TypeLiteral<T> = object : TypeLiteral<T>() { }
+    inline fun <reified T> typeLiteral(): TypeLiteral<T> = object : TypeLiteral<T>() {}
     inline fun <reified T> instance(): T = injector.getInstance(Key.get(typeLiteral()))
-    inline fun <reified T, Ann : Annotation> instance(annotationClass: Class<Ann>): T = injector.getInstance(Key.get(typeLiteral(), annotationClass))
-    inline fun <reified T, Ann : Annotation> instance(annotation: Ann): T = injector.getInstance(Key.get(typeLiteral(), annotation))
+    inline fun <reified T, Ann : Annotation> instance(annotationClass: Class<Ann>): T = injector.getInstance(Key.get(
+            typeLiteral(),
+            annotationClass))
+
+    inline fun <reified T, Ann : Annotation> instance(annotation: Ann): T = injector.getInstance(Key.get(typeLiteral(),
+            annotation))
 
     val snapshotsFolder = NIOTemporaryFolder()
     val webContentFolder = NIOTemporaryFolder()
 
     val client: CloseableHttpClient = HttpClients.custom()
-            .setRoutePlanner({ target, _, _ ->
+            .setRoutePlanner { target, _, _ ->
                 val serverHost = HttpHost("localhost", this@ServerRunner.port)
                 when (target) {
                     null, serverHost -> HttpRoute(serverHost)
                     else -> throw HttpException("Host is not local server: $target")
                 }
-            })
+            }
             .build()
+
+    val httpContext = HttpClientContext()
 
     override fun before() {
         System.setProperty("org.jboss.logging.provider", "slf4j")
