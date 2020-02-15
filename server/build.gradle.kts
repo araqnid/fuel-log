@@ -22,6 +22,11 @@ configurations {
     }
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_12
+    targetCompatibility = JavaVersion.VERSION_12
+}
+
 tasks {
     val runtimeDeps by registering(RuntimeDependenciesTask::class) {
         appName = "fuel-log"

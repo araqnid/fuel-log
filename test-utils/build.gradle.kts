@@ -3,6 +3,11 @@ plugins {
     kotlin("jvm")
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_12
+    targetCompatibility = JavaVersion.VERSION_12
+}
+
 dependencies {
     api(kotlin("test-junit"))
     api("com.natpryce:hamkrest:1.7.0.0")
