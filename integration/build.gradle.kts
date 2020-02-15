@@ -30,5 +30,5 @@ dependencies {
     testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${LibraryVersions.jackson}")
     testImplementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("reflect"))
-    testRuntimeOnly("org.slf4j:slf4j-simple:1.7.25")
+    testRuntimeOnly("org.slf4j:slf4j-simple:${LibraryVersions.slf4j}")
 }
