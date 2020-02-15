@@ -2,12 +2,7 @@ package org.araqnid.fuellog.hamkrest
 
 import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
-import com.natpryce.hamkrest.and
-import com.natpryce.hamkrest.anything
 import com.natpryce.hamkrest.describe
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.hasElement
 
 fun <T> containsOnly(matcher: Matcher<T>): Matcher<Collection<T>> {
     return object : Matcher.Primitive<Collection<T>>() {
@@ -47,14 +42,30 @@ fun <T> containsInOrder(vararg matchers: Matcher<T>): Matcher<Collection<T>> {
         }
 
         override val description: String
-            get() = "exactly in order: ${describe(matchers.toList())}"
+            get() = "contains in order: ${describe(matchers.toList())}"
     }
 }
 
-fun <T> containsInAnyOrder(vararg values: T): Matcher<Collection<T>> {
-    return values.fold(anything as Matcher<Collection<T>>) { acc, v -> acc and hasElement(v) }
-}
+fun <T> containsInAnyOrder(vararg matchers: Matcher<T>): Matcher<Collection<T>> {
+    return object : Matcher.Primitive<Collection<T>>() {
+        override fun invoke(actual: Collection<T>): MatchResult {
+            for ((actualIndex, actualValue) in actual.withIndex()) {
+                val matched = mutableListOf<Matcher<T>>()
+                for (matcher in matchers) {
+                    val result = matcher(actualValue)
+                    if (result == MatchResult.Match) {
+                        matched.add(matcher)
+                    }
+                }
+                if (matched.isEmpty())
+                    return MatchResult.Mismatch("element at $actualIndex did not satisfy any matcher: ${describe(actualValue)}")
+                else if (matched.size > 1)
+                    return MatchResult.Mismatch("element at $actualIndex matched multiple matchers: ${describe(actualValue)}")
+            }
+            return MatchResult.Match
+        }
 
-fun <K, V> hasEntry(key: K, value: V): Matcher<Map<K, V>> {
-    return has("entry $key -> $value", { it[key] }, equalTo(value))
+        override val description: String
+            get() = "contains in any order: ${describe(matchers.toList())}"
+    }
 }

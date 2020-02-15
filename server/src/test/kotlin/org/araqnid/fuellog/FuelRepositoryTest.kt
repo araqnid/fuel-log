@@ -78,8 +78,8 @@ class FuelRepositoryTest {
         submit(StreamId("fuel", purchaseId3.toString()),
                 FuelPurchased(Instant.parse("2017-06-10T16:54:00Z"), userId2, fuelVolume, MonetaryAmount(currency, amount), odometer, true, location, null))
 
-        assertThat(repo.byUserId(userId1).map { it.fuelPurchaseId }, containsInAnyOrder(purchaseId1, purchaseId2))
-        assertThat(repo.byUserId(userId2).map { it.fuelPurchaseId }, containsInAnyOrder(purchaseId3))
+        assertThat(repo.byUserId(userId1).map { it.fuelPurchaseId }, containsInAnyOrder(equalTo(purchaseId1), equalTo(purchaseId2)))
+        assertThat(repo.byUserId(userId2).map { it.fuelPurchaseId }, containsInAnyOrder(equalTo(purchaseId3)))
     }
 
     fun submit(streamId: StreamId, event: Event) {
