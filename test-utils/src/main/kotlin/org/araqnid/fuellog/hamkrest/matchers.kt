@@ -47,6 +47,7 @@ fun <T> containsInOrder(vararg matchers: Matcher<T>): Matcher<Collection<T>> =
 fun <T> containsInAnyOrder(vararg matchers: Matcher<T>): Matcher<Collection<T>> =
         object : Matcher.Primitive<Collection<T>>() {
             override fun invoke(actual: Collection<T>): MatchResult {
+                val remaining = matchers.toMutableList()
                 for ((actualIndex, actualValue) in actual.withIndex()) {
                     val matched = matchers.filter { matcher -> matcher(actualValue) == MatchResult.Match }
                     if (matched.isEmpty())
@@ -55,6 +56,11 @@ fun <T> containsInAnyOrder(vararg matchers: Matcher<T>): Matcher<Collection<T>> 
                     else if (matched.size > 1)
                         return MatchResult.Mismatch("element at $actualIndex matched multiple matchers: ${describe(
                                 actualValue)}")
+                    remaining.remove(matched.first())
+                }
+                if (remaining.isNotEmpty()) {
+                    val remainingString = remaining.joinToString("; ") { describe(it) }
+                    return MatchResult.Mismatch("expected at least ${matchers.size} elements: these did not match: $remainingString")
                 }
                 return MatchResult.Match
             }
