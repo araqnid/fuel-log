@@ -7,13 +7,10 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.isEmptyString
 import kotlinx.coroutines.runBlocking
-import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.araqnid.fuellog.FacebookClient
 import org.araqnid.fuellog.FacebookClientConfig
 import org.araqnid.fuellog.hamkrest.assumeThat
 import org.araqnid.fuellog.hamkrest.expect
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
@@ -21,20 +18,11 @@ import javax.ws.rs.BadRequestException
 import kotlin.test.assertNotEquals
 
 class FacebookClientIntegrationTest {
-    @Before
-    fun startHttpClient() {
-        httpClient.start()
-    }
-
-    @After
-    fun cleanupHttpClient() {
-        httpClient.close()
-    }
+    @get:Rule
+    val httpClient = HttpAsyncClientRule()
 
     @get:Rule
     val expected = ExpectedException.none()
-
-    private val httpClient = HttpAsyncClients.createDefault()
 
     private val facebookClientConfig by lazy { FacebookClientConfig(facebookAppId, facebookAppSecret) }
 
