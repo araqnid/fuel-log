@@ -51,20 +51,20 @@ class FacebookClientIntegrationTest {
 
     @Test
     fun `fetches user's own profile`() {
-        assumeThat(accessToken, !isEmptyString)
+        assumeThat(facebookUserAccessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(facebookClientConfig, httpClient)
-        val result = runBlocking { facebookClient.fetchUsersOwnProfile(accessToken) }
+        val result = runBlocking { facebookClient.fetchUsersOwnProfile(facebookUserAccessToken) }
 
         assertThat(result, has(FacebookClient.UserIdentity::id, equalTo("10155233566049669")))
     }
 
     @Test
     fun `validates user access token`() {
-        assumeThat(accessToken, !isEmptyString)
+        assumeThat(facebookUserAccessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(facebookClientConfig, httpClient)
-        val result = runBlocking { facebookClient.validateUserAccessToken(accessToken) }
+        val result = runBlocking { facebookClient.validateUserAccessToken(facebookUserAccessToken) }
 
         assertThat(result, has(FacebookClient.DebugTokenResponse::appId, equalTo(facebookClientConfig.id))
                 and has(FacebookClient.DebugTokenResponse::type, equalTo("USER"))
