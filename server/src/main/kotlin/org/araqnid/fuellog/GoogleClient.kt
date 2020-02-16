@@ -2,10 +2,9 @@ package org.araqnid.fuellog
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.apache.http.HttpStatus
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.HttpPost
@@ -17,8 +16,10 @@ import java.time.Clock
 import java.time.Instant
 import javax.ws.rs.BadRequestException
 
-class GoogleClient(val config: GoogleClientConfig, private val asyncHttpClient: HttpAsyncClient, private val clock: Clock) {
-    val tokenInfoUri = URI.create("https://www.googleapis.com/oauth2/v3/tokeninfo")
+class GoogleClient(private val config: GoogleClientConfig,
+                   private val asyncHttpClient: HttpAsyncClient,
+                   private val clock: Clock) {
+    private val tokenInfoUri = URI("https://www.googleapis.com/oauth2/v3/tokeninfo")
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class TokenInfo(val name: String,
@@ -33,8 +34,7 @@ class GoogleClient(val config: GoogleClientConfig, private val asyncHttpClient: 
         fun toProfileData(): GoogleProfileData = GoogleProfileData(givenName, familyName, picture)
     }
 
-    private val objectMapperForGoogleEndpoint = ObjectMapper()
-            .registerModule(KotlinModule())
+    private val objectMapperForGoogleEndpoint = jacksonObjectMapper()
             .registerModule(JavaTimeModule())
             .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
 
