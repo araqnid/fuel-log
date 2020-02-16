@@ -49,7 +49,9 @@ tasks {
 }
 
 dependencies {
-    api("org.araqnid:eventstore:0.0.23")
+    api("org.araqnid.eventstore:eventstore-api:0.0.24")
+    api("org.araqnid.eventstore:eventstore-filesystem:0.0.24")
+    api("org.araqnid.eventstore:eventstore-subscription:0.0.24")
     api("com.google.inject:guice:${LibraryVersions.guice}")
     api("com.google.guava:guava:${LibraryVersions.guava}")
     implementation("org.araqnid:app-status:${LibraryVersions.appStatus}")
