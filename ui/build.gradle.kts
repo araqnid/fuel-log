@@ -13,7 +13,7 @@ val web by configurations.creating
 val appStatus by configurations.creating
 
 dependencies {
-    appStatus("org.araqnid:app-status:${LibraryVersions.appStatus}")
+    appStatus("org.araqnid.app-status:app-status-core:${LibraryVersions.appStatus}")
 }
 
 tasks.withType(WebpackTask::class).configureEach {

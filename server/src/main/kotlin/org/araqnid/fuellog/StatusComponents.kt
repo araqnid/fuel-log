@@ -7,6 +7,7 @@ import org.araqnid.appstatus.StatusReport
 import org.eclipse.jetty.util.Jetty
 
 class StatusComponents {
+    @Suppress("UnstableApiUsage")
     @OnStatusPage
     fun services(serviceManager: ServiceManager) = serviceManager.servicesByState().values()
             .map { service ->
@@ -16,18 +17,19 @@ class StatusComponents {
                     StatusReport.Priority.OK
                 StatusReport(priority, service.toString())
             }
-            .reduce { l, r ->
-                StatusReport(StatusReport.Priority.higher(l.priority, r.priority),
-                        l.text + " | " + r.text)
+            .let { reports ->
+                StatusReport(
+                        reports.map { it.priority }.max() ?: StatusReport.Priority.OK,
+                        reports.joinToString("|") { it.text }
+                )
             }
 }
 
 object BasicStatusComponents {
     @OnStatusPage(label = "JVM version")
-    val jvmVersion: String by lazy {
-        val basicVersion = System.getProperty("java.version")
-        when (basicVersion) {
-            "10" -> System.getProperty("java.vendor.version")
+    val jvmVersion by lazy {
+        when (val basicVersion = System.getProperty("java.version")!!) {
+            "10", "11", "12", "13" -> System.getProperty("java.vendor.version")!!
             else -> basicVersion
         }
     }
@@ -36,5 +38,5 @@ object BasicStatusComponents {
     val kotlinVersion = KotlinVersion.CURRENT.toString()
 
     @OnStatusPage(label = "Jetty version")
-    val jettyVersion: String = Jetty.VERSION
+    val jettyVersion = Jetty.VERSION!!
 }

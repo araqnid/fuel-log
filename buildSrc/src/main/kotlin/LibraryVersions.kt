@@ -7,7 +7,7 @@ object LibraryVersions {
     const val guice = "4.2.2"
     const val guava = "28.1-jre"
     const val kotlinCoroutines = "1.3.3"
-    const val appStatus = "0.1.2"
+    const val appStatus = "0.1.5"
     const val slf4j = "1.7.30"
 
     fun toMap() =

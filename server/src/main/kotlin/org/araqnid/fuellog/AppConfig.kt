@@ -18,8 +18,8 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.appstatus.AppVersion
-import org.araqnid.appstatus.ComponentsBuilder
 import org.araqnid.appstatus.StatusComponent
+import org.araqnid.appstatus.guice.ComponentsBuilder
 import org.araqnid.eventstore.EventSource
 import org.araqnid.eventstore.filesystem.TieredFilesystemEventSource
 import org.araqnid.eventstore.subscription.PollingEventSubscriptionService

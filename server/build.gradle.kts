@@ -54,7 +54,7 @@ dependencies {
     api("org.araqnid.eventstore:eventstore-subscription:0.0.24")
     api("com.google.inject:guice:${LibraryVersions.guice}")
     api("com.google.guava:guava:${LibraryVersions.guava}")
-    implementation("org.araqnid:app-status:${LibraryVersions.appStatus}")
+    implementation("org.araqnid.app-status:app-status-guice:${LibraryVersions.appStatus}")
     implementation("org.araqnid:kotlin-coroutines-resteasy:1.3.1")
     implementation("com.google.inject.extensions:guice-servlet:${LibraryVersions.guice}")
     implementation("com.google.inject.extensions:guice-multibindings:${LibraryVersions.guice}")
