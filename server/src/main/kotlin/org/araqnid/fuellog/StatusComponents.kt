@@ -28,10 +28,11 @@ class StatusComponents {
 object BasicStatusComponents {
     @OnStatusPage(label = "JVM version")
     val jvmVersion by lazy {
+        val runtimeVersion = Runtime.version().toString()
         val vendorVersion = System.getProperty("java.vendor.version")?.takeIf { it.isNotBlank() }
         when {
-            vendorVersion != null -> "${Runtime.version()} ($vendorVersion)"
-            else -> Runtime.version().toString()
+            vendorVersion != null -> "$runtimeVersion ($vendorVersion)"
+            else -> runtimeVersion
         }
     }
 
