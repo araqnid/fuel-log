@@ -1,3 +1,5 @@
 language: java
 sudo: false
 jdk: openjdk12
+script:
+  - ./gradlew -i check
