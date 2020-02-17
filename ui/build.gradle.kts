@@ -5,7 +5,7 @@ plugins {
 }
 
 node {
-    version = "12.10.0"
+    version = "12.14.1"
     download = true
 }
 
@@ -13,7 +13,9 @@ val web by configurations.creating
 val appStatus by configurations.creating
 
 dependencies {
-    appStatus("org.araqnid.app-status:app-status-core:${LibraryVersions.appStatus}")
+    appStatus("org.araqnid.app-status:app-status-core:${LibraryVersions.appStatus}") {
+        isTransitive = false
+    }
 }
 
 tasks.withType(WebpackTask::class).configureEach {
@@ -26,7 +28,7 @@ tasks.withType(WebpackTask::class).configureEach {
         val jarFile = appStatus
                 .resolvedConfiguration.resolvedArtifacts
                 .filter { artifact ->
-                    artifact.moduleVersion.id.group == "org.araqnid" && artifact.moduleVersion.id.name == "app-status"
+                    artifact.moduleVersion.id.group == "org.araqnid.app-status" && artifact.moduleVersion.id.name == "app-status-core"
                 }
                 .map { it.file }
                 .single()
