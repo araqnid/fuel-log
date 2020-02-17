@@ -49,11 +49,14 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @Produces("application/json")
     @PermitAll
     fun associateTestUser(@FormParam("identifier") identifier: String, @FormParam("name") name: String,
-                          @Context servletRequest: HttpServletRequest): UserInfo {
-        val user = associateUser(servletRequest, URI.create("https://fuel.araqnid.org/_api/user/identity/test/$identifier"))
-        user.name = name
-        userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
-        return UserInfo.from(user)
+                          @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
+        respondTo(asyncResponse) {
+            val user = associateUser(servletRequest,
+                    URI.create("https://fuel.araqnid.org/_api/user/identity/test/$identifier"))
+            user.name = name
+            userRepository.save(user, RequestMetadata.fromServletRequest(servletRequest))
+            UserInfo.from(user)
+        }
     }
 
     @POST

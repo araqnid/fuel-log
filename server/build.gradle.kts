@@ -49,13 +49,13 @@ tasks {
 }
 
 dependencies {
-    api("org.araqnid.eventstore:eventstore-api:0.0.24")
-    api("org.araqnid.eventstore:eventstore-filesystem:0.0.24")
-    api("org.araqnid.eventstore:eventstore-subscription:0.0.24")
+    api("org.araqnid.eventstore:eventstore-api:${LibraryVersions.eventstore}")
+    api("org.araqnid.eventstore:eventstore-filesystem:${LibraryVersions.eventstore}")
+    api("org.araqnid.eventstore:eventstore-subscription:${LibraryVersions.eventstore}")
     api("com.google.inject:guice:${LibraryVersions.guice}")
     api("com.google.guava:guava:${LibraryVersions.guava}")
     implementation("org.araqnid.app-status:app-status-guice:${LibraryVersions.appStatus}")
-    implementation("org.araqnid:kotlin-coroutines-resteasy:1.3.1")
+    implementation("org.araqnid:kotlin-coroutines-resteasy:1.4.3")
     implementation("com.google.inject.extensions:guice-servlet:${LibraryVersions.guice}")
     implementation("com.google.inject.extensions:guice-multibindings:${LibraryVersions.guice}")
     implementation("org.slf4j:slf4j-api:${LibraryVersions.slf4j}")
