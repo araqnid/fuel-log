@@ -19,7 +19,7 @@ dependencies {
 }
 
 tasks.withType(WebpackTask::class).configureEach {
-    inputs.files(appStatus.fileCollection { dep -> dep.group == "org.araqnid" && dep.name == "app-status" })
+    inputs.files(appStatus)
 
     gzipResources = false
     generateManifest = false
@@ -27,9 +27,6 @@ tasks.withType(WebpackTask::class).configureEach {
     doFirst {
         val jarFile = appStatus
                 .resolvedConfiguration.resolvedArtifacts
-                .filter { artifact ->
-                    artifact.moduleVersion.id.group == "org.araqnid.app-status" && artifact.moduleVersion.id.name == "app-status-core"
-                }
                 .map { it.file }
                 .single()
         logger.info("Include app-status UI from $jarFile")
