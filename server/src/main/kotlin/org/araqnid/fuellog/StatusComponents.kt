@@ -39,5 +39,5 @@ object BasicStatusComponents {
     val kotlinVersion = KotlinVersion.CURRENT.toString()
 
     @OnStatusPage(label = "Jetty version")
-    val jettyVersion = Jetty.VERSION!!
+    val jettyVersion = Jetty.VERSION ?: "<unknown>"
 }
