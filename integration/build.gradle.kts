@@ -8,6 +8,14 @@ java {
     targetCompatibility = JavaVersion.VERSION_12
 }
 
+tasks {
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
+}
+
 configurations {
     "testRuntime" {
         exclude(group = "ch.qos.logback", module = "logback-classic")
