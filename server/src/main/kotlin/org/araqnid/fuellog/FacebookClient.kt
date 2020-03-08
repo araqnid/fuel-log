@@ -92,7 +92,7 @@ class FacebookClient(private val config: FacebookClientConfig, private val async
         if (response.statusLine.statusCode != HttpStatus.SC_OK)
             throw BadRequestException("$uri: ${response.statusLine}")
 
-        val contentType = ContentType.get(response.entity)
+        val contentType = ContentType.get(response.entity) ?: throw BadRequestException("$uri: no content-type")
         if (contentType.mimeType.toLowerCase() !in permittedMimeTypes)
             throw BadRequestException("$uri: unhandled content-type: $contentType")
 
