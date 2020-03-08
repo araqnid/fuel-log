@@ -38,6 +38,8 @@ class GoogleClient(private val config: GoogleClientConfig,
             .registerModule(JavaTimeModule())
             .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
 
+    private val tokenInfoReader = objectMapperForGoogleEndpoint.readerFor(TokenInfo::class.java)
+
     suspend fun validateToken(idToken: String): TokenInfo {
         val request = HttpPost(tokenInfoUri).apply {
             entity = UrlEncodedFormEntity(listOf(BasicNameValuePair("id_token", idToken)))
@@ -48,8 +50,7 @@ class GoogleClient(private val config: GoogleClientConfig,
         if (response.statusLine.statusCode != HttpStatus.SC_OK)
             throw BadRequestException("$tokenInfoUri: ${response.statusLine}")
 
-        val tokenInfo = objectMapperForGoogleEndpoint.readerFor(TokenInfo::class.java)
-                .readValue<TokenInfo>(response.entity.content)!!
+        val tokenInfo = tokenInfoReader.readValue<TokenInfo>(response.entity.content)!!
         if (tokenInfo.clientId != config.id)
             throw BadRequestException("Token is not for our client ID: $tokenInfo")
         if (tokenInfo.expiresAt < Instant.now(clock))
