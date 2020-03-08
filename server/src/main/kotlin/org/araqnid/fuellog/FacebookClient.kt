@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
@@ -39,6 +38,11 @@ class FacebookClient(private val config: FacebookClientConfig, private val async
             .registerModule(JavaTimeModule())
             .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
 
+    private val accessTokenResponseReader = objectMapperForFacebookEndpoint.readerFor(AccessTokenResponse::class.java)
+    private val debugTokenResponseReader = objectMapperForFacebookEndpoint.readerFor(DebugTokenResponse::class.java)
+            .withRootName("data")
+    private val userIdentityReader = objectMapperForFacebookEndpoint.readerFor(UserIdentity::class.java)
+
     suspend fun fetchFacebookAppToken(): String {
         val request = HttpGet(oauthAccessTokenUri.withParameters(
                 "client_id" to config.id,
@@ -48,7 +52,9 @@ class FacebookClient(private val config: FacebookClientConfig, private val async
 
         val response = asyncHttpClient.executeAsyncHttpRequest(request)
 
-        return parseJsonResponse<AccessTokenResponse>(oauthAccessTokenUri, response).accessToken
+        return parseJsonResponse<AccessTokenResponse>(oauthAccessTokenUri,
+                response,
+                accessTokenResponseReader).accessToken
     }
 
     suspend fun validateUserAccessToken(token: String): DebugTokenResponse {
@@ -57,7 +63,7 @@ class FacebookClient(private val config: FacebookClientConfig, private val async
 
         val response = asyncHttpClient.executeAsyncHttpRequest(request)
 
-        return parseJsonResponse(debugTokenUri, response) { withRootName("data") }
+        return parseJsonResponse(debugTokenUri, response, debugTokenResponseReader)
     }
 
     suspend fun fetchUsersOwnProfile(accessToken: String): UserIdentity {
@@ -66,7 +72,7 @@ class FacebookClient(private val config: FacebookClientConfig, private val async
                 "access_token" to accessToken,
                 "fields" to "id,name,picture"
         )))
-        return parseJsonResponse(uri, response)
+        return parseJsonResponse(uri, response, userIdentityReader)
     }
 
     suspend fun fetchUserProfile(userId: String): UserIdentity {
@@ -75,14 +81,14 @@ class FacebookClient(private val config: FacebookClientConfig, private val async
                 "access_token" to "${config.id}|${config.secret}",
                 "fields" to "id,name,picture"
         )))
-        return parseJsonResponse(uri, response)
+        return parseJsonResponse(uri, response, userIdentityReader)
     }
 
     private val permittedMimeTypes = setOf("text/javascript", "application/json")
 
-    private inline fun <reified T : Any> parseJsonResponse(uri: URI,
-                                                           response: HttpResponse,
-                                                           configureReader: ObjectReader.() -> ObjectReader = { this }): T {
+    private fun <T : Any> parseJsonResponse(uri: URI,
+                                            response: HttpResponse,
+                                            objectReader: ObjectReader): T {
         if (response.statusLine.statusCode != HttpStatus.SC_OK)
             throw BadRequestException("$uri: ${response.statusLine}")
 
@@ -90,7 +96,7 @@ class FacebookClient(private val config: FacebookClientConfig, private val async
         if (contentType.mimeType.toLowerCase() !in permittedMimeTypes)
             throw BadRequestException("$uri: unhandled content-type: $contentType")
 
-        return objectMapperForFacebookEndpoint.readerFor(jacksonTypeRef<T>()).let(configureReader).readValue<T>(response.entity.content)
+        return objectReader.readValue(response.entity.content)
     }
 
     private fun URI.withParameters(vararg parameters: Pair<String, String>): URI =
