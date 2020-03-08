@@ -61,7 +61,9 @@ dependencies {
     api("com.google.inject:guice:${LibraryVersions.guice}")
     api("com.google.guava:guava:${LibraryVersions.guava}")
     implementation("org.araqnid.app-status:app-status-guice:${LibraryVersions.appStatus}")
-    implementation("org.araqnid:kotlin-coroutines-resteasy:1.4.3")
+    implementation("org.araqnid:kotlin-coroutines-resteasy:1.4.3") {
+        exclude(group = "org.jboss.spec.javax.ws.rs")
+    }
     implementation("com.google.inject.extensions:guice-servlet:${LibraryVersions.guice}")
     implementation("com.google.inject.extensions:guice-multibindings:${LibraryVersions.guice}")
     implementation("org.slf4j:slf4j-api:${LibraryVersions.slf4j}")

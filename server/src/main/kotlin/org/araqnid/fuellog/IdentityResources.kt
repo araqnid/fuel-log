@@ -1,13 +1,15 @@
 package org.araqnid.fuellog
 
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.future.future
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.events.FacebookProfileData
-import org.araqnid.kotlin.coroutines.resteasy.respondAsynchronously
+import org.araqnid.kotlin.coroutines.resteasy.ResteasyContext
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock
 import java.util.UUID
+import java.util.concurrent.CompletionStage
 import javax.annotation.security.PermitAll
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,8 +21,6 @@ import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.container.AsyncResponse
-import javax.ws.rs.container.Suspended
 import javax.ws.rs.core.Context
 
 @Singleton
@@ -49,8 +49,8 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @Produces("application/json")
     @PermitAll
     fun associateTestUser(@FormParam("identifier") identifier: String, @FormParam("name") name: String,
-                          @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
-        respondTo(asyncResponse) {
+                          @Context servletRequest: HttpServletRequest): CompletionStage<UserInfo> {
+        return jettyService.future(CoroutineName("associateTestUser") + ResteasyContext()) {
             val user = associateUser(servletRequest,
                     URI.create("https://fuel.araqnid.org/_api/user/identity/test/$identifier"))
             user.name = name
@@ -65,8 +65,8 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @Produces("application/json")
     @PermitAll
     fun associateFacebookUser(token: String,
-                              @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
-        respondTo(asyncResponse) {
+                              @Context servletRequest: HttpServletRequest): CompletionStage<UserInfo> {
+        return jettyService.future(CoroutineName("associateFacebookUser") + ResteasyContext()) {
             val parsed = FacebookClient(facebookClientConfig, asyncHttpClient).fetchUsersOwnProfile(token)
             val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.id}")!!
 
@@ -84,8 +84,8 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @Consumes("text/plain")
     @Produces("application/json")
     @PermitAll
-    fun associateGoogleUserAsync(idToken: String, @Context servletRequest: HttpServletRequest, @Suspended asyncResponse: AsyncResponse) {
-        respondTo(asyncResponse) {
+    fun associateGoogleUser(idToken: String, @Context servletRequest: HttpServletRequest): CompletionStage<UserInfo> {
+        return jettyService.future(CoroutineName("associateGoogleUser") + ResteasyContext()) {
             val tokenInfo = GoogleClient(googleClientConfig, asyncHttpClient, clock).validateToken(idToken)
             val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/google/${tokenInfo.userId}")!!
 
@@ -120,9 +120,5 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
         companion object {
             fun from(user: UserRecord): UserInfo = UserInfo(user.userId, user.name, user.realm, user.picture)
         }
-    }
-
-    private fun <T> respondTo(asyncResponse: AsyncResponse, block: suspend CoroutineScope.() -> T) {
-        jettyService.respondAsynchronously(asyncResponse, block = block)
     }
 }
