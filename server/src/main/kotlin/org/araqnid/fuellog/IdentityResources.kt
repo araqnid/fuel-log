@@ -5,7 +5,6 @@ import kotlinx.coroutines.future.future
 import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.events.FacebookProfileData
 import org.araqnid.kotlin.coroutines.resteasy.ResteasyContext
-import org.slf4j.LoggerFactory
 import java.net.URI
 import java.time.Clock
 import java.util.UUID
@@ -25,9 +24,16 @@ import javax.ws.rs.core.Context
 
 @Singleton
 @Path("/user/identity")
-class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClient: HttpAsyncClient, val jettyService: JettyService, val userRepository: UserRepository,
-                                            val facebookClientConfig: FacebookClientConfig, val googleClientConfig: GoogleClientConfig) {
-    private val logger = LoggerFactory.getLogger(IdentityResources::class.java)
+class IdentityResources @Inject constructor(
+        clock: Clock,
+        asyncHttpClient: HttpAsyncClient,
+        private val jettyService: JettyService,
+        private val userRepository: UserRepository,
+        facebookClientConfig: FacebookClientConfig,
+        googleClientConfig: GoogleClientConfig
+) {
+    private val googleClient = GoogleClient(googleClientConfig, asyncHttpClient, clock)
+    private val facebookClient = FacebookClient(facebookClientConfig, asyncHttpClient)
 
     @GET
     @Produces("application/json")
@@ -67,7 +73,7 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     fun associateFacebookUser(token: String,
                               @Context servletRequest: HttpServletRequest): CompletionStage<UserInfo> {
         return jettyService.future(CoroutineName("associateFacebookUser") + ResteasyContext()) {
-            val parsed = FacebookClient(facebookClientConfig, asyncHttpClient).fetchUsersOwnProfile(token)
+            val parsed = facebookClient.fetchUsersOwnProfile(token)
             val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/facebook/${parsed.id}")!!
 
             val user = associateUser(servletRequest, externalId)
@@ -86,7 +92,7 @@ class IdentityResources @Inject constructor(val clock: Clock, val asyncHttpClien
     @PermitAll
     fun associateGoogleUser(idToken: String, @Context servletRequest: HttpServletRequest): CompletionStage<UserInfo> {
         return jettyService.future(CoroutineName("associateGoogleUser") + ResteasyContext()) {
-            val tokenInfo = GoogleClient(googleClientConfig, asyncHttpClient, clock).validateToken(idToken)
+            val tokenInfo = googleClient.validateToken(idToken)
             val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/google/${tokenInfo.userId}")!!
 
             val user = associateUser(servletRequest, externalId)
