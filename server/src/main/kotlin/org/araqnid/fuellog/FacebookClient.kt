@@ -2,20 +2,15 @@ package org.araqnid.fuellog
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.apache.http.HttpResponse
-import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.utils.URIBuilder
-import org.apache.http.entity.ContentType
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.nio.client.HttpAsyncClient
 import java.net.URI
 import java.time.Instant
-import javax.ws.rs.BadRequestException
 
 class FacebookClient(private val config: FacebookClientConfig, private val asyncHttpClient: HttpAsyncClient) {
     private val debugTokenUri = URI("https://graph.facebook.com/debug_token")
@@ -82,21 +77,6 @@ class FacebookClient(private val config: FacebookClientConfig, private val async
                 "fields" to "id,name,picture"
         )))
         return parseJsonResponse(uri, response, userIdentityReader)
-    }
-
-    private val permittedMimeTypes = setOf("text/javascript", "application/json")
-
-    private fun <T : Any> parseJsonResponse(uri: URI,
-                                            response: HttpResponse,
-                                            objectReader: ObjectReader): T {
-        if (response.statusLine.statusCode != HttpStatus.SC_OK)
-            throw BadRequestException("$uri: ${response.statusLine}")
-
-        val contentType = ContentType.get(response.entity) ?: throw BadRequestException("$uri: no content-type")
-        if (contentType.mimeType.toLowerCase() !in permittedMimeTypes)
-            throw BadRequestException("$uri: unhandled content-type: $contentType")
-
-        return objectReader.readValue(response.entity.content)
     }
 
     private fun URI.withParameters(vararg parameters: Pair<String, String>): URI =

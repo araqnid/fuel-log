@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.apache.http.HttpStatus
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.message.BasicNameValuePair
@@ -47,10 +46,7 @@ class GoogleClient(private val config: GoogleClientConfig,
 
         val response = asyncHttpClient.executeAsyncHttpRequest(request)
 
-        if (response.statusLine.statusCode != HttpStatus.SC_OK)
-            throw BadRequestException("$tokenInfoUri: ${response.statusLine}")
-
-        val tokenInfo = tokenInfoReader.readValue<TokenInfo>(response.entity.content)!!
+        val tokenInfo = parseJsonResponse<TokenInfo>(tokenInfoUri, response, tokenInfoReader)
         if (tokenInfo.clientId != config.id)
             throw BadRequestException("Token is not for our client ID: $tokenInfo")
         if (tokenInfo.expiresAt < Instant.now(clock))
