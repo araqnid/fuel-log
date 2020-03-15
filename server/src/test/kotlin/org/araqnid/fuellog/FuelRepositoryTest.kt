@@ -13,15 +13,13 @@ import org.araqnid.fuellog.events.EventMetadata
 import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
 import org.araqnid.fuellog.hamkrest.containsInAnyOrder
-import org.junit.Rule
+import org.araqnid.fuellog.test.assertThrows
 import org.junit.Test
-import org.junit.rules.ExpectedException
 import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
 class FuelRepositoryTest {
-    @Rule @JvmField val thrown: ExpectedException = ExpectedException.none()
     val clock = ManualClock.initiallyAt(Clock.systemDefaultZone())
     val eventSource = InMemoryEventSource(clock)
     val repo = FuelRepository(eventSource.streamReader, eventSource.categoryReader)
@@ -54,8 +52,9 @@ class FuelRepositoryTest {
     }
 
     @Test fun unknown_purchase_throws_error() {
-        thrown.expect(NoSuchStreamException::class.java)
-        repo[randomUUID()]
+        assertThrows<NoSuchStreamException> {
+            repo[randomUUID()]
+        }
     }
 
     @Test fun gets_purchases_by_user_id() {

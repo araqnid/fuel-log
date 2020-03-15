@@ -10,6 +10,7 @@ java {
 
 dependencies {
     api(kotlin("test-junit"))
+    api("junit:junit:4.13")
     api("com.natpryce:hamkrest:1.7.0.0")
     api("com.fasterxml.jackson.core:jackson-databind:${LibraryVersions.jackson}")
     implementation("com.google.guava:guava:${LibraryVersions.guava}")
