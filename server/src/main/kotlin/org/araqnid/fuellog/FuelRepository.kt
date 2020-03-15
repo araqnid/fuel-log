@@ -1,5 +1,8 @@
 package org.araqnid.fuellog
 
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.stream.consumeAsFlow
 import org.araqnid.eventstore.EventCategoryReader
 import org.araqnid.eventstore.EventStreamReader
 import org.araqnid.eventstore.StreamId
@@ -16,37 +19,42 @@ class FuelRepository @Inject constructor(val streamReader: EventStreamReader, va
     operator fun get(fuelPurchaseId: UUID): FuelRecord {
         var record: FuelRecord? = null
         val streamId = StreamId("fuel", fuelPurchaseId.toString())
-        streamReader.readStreamForwards(streamId)
+        runBlocking {
+            streamReader.readStreamForwards(streamId)
                 .map { EventCodecs.decode(it.event) }
-                .forEachOrderedAndClose { event ->
-                    if (record == null) {
+                .consumeAsFlow()
+                .collect { event ->
+                    record = if (record == null) {
                         when (event) {
-                            is FuelPurchased -> record = FuelRecord.from(fuelPurchaseId, event)
+                            is FuelPurchased -> FuelRecord.from(fuelPurchaseId, event)
                             else -> throw RuntimeException("unhandled initial event in $streamId")
                         }
-                    }
-                    else {
-                        record = record!!.accept(event)
+                    } else {
+                        record!!.accept(event)
                     }
                 }
+        }
         return record!!
     }
 
     fun byUserId(userId: UUID): Collection<FuelRecord> {
         val records = mutableMapOf<UUID, FuelRecord>()
-        categoryReader.readCategoryForwards("fuel")
-                .map { it.event }
-                .forEachOrderedAndClose { eventRecord ->
+        runBlocking {
+            categoryReader.readCategoryForwards("fuel")
+                .consumeAsFlow()
+                .collect { (_, eventRecord) ->
                     val streamId = eventRecord.streamId
                     val event = EventCodecs.decode(eventRecord)
                     val purchaseId = UUID.fromString(streamId.id)
                     val existingRecord = records[purchaseId]
                     when {
                         existingRecord != null -> existingRecord.accept(event)
-                        event is FuelPurchased && event.userId == userId -> records.put(purchaseId, FuelRecord.from(purchaseId, event))
+                        event is FuelPurchased && event.userId == userId ->
+                            records[purchaseId] = FuelRecord.from(purchaseId, event)
                         // else ignore
                     }
                 }
+        }
         return records.values
     }
 }

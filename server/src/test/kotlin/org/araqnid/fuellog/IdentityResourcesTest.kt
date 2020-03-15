@@ -6,6 +6,10 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.hasElement
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.stream.consumeAsFlow
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpDelete
 import org.apache.http.client.methods.HttpGet
@@ -79,12 +83,17 @@ class IdentityResourcesTest {
     data class DecodedEvent(val streamId: StreamId, val event: Event)
 
     private fun fetchUserEvents(): List<DecodedEvent> {
-        return server.instance<EventReader>()
+        return runBlocking {
+            server.instance<EventReader>()
                 .readAllForwards()
-                .map { it.event }
-                .filter { it.streamId.category == "user" }
-                .map { DecodedEvent(it.streamId, EventCodecs.decode(it)) }
-                .toListAndClose()
+                .consumeAsFlow()
+                .transform { (_, eventRecord) ->
+                    if (eventRecord.streamId.category == "user") {
+                        emit(DecodedEvent(eventRecord.streamId, EventCodecs.decode(eventRecord)))
+                    }
+                }
+                .toList()
+        }
     }
 
 }

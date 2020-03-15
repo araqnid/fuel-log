@@ -5,6 +5,10 @@ import com.fasterxml.uuid.impl.NameBasedGenerator
 import com.google.common.base.Splitter
 import com.google.common.io.MoreFiles
 import com.google.common.io.Resources
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.stream.consumeAsFlow
 import org.araqnid.eventstore.StreamId
 import org.araqnid.eventstore.filesystem.TieredFilesystemEventSource
 import org.araqnid.fuellog.events.EventCodecs
@@ -12,7 +16,6 @@ import org.araqnid.fuellog.events.EventMetadata
 import org.araqnid.fuellog.events.FuelPurchased
 import org.araqnid.fuellog.events.MonetaryAmount
 import org.araqnid.fuellog.events.UserExternalIdAssigned
-import org.araqnid.fuellog.filterNotNull
 import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
@@ -27,21 +30,21 @@ object BackfillFuelPurchases {
         val externalId = URI.create("https://fuel.araqnid.org/_api/user/identity/google/112460655559871226975")
         val eventsDirectory = Paths.get(if (args.isNotEmpty()) args[0] else "events")
         eventsDirectory.resolve("fuel").takeIf { Files.exists(it) }?.let { MoreFiles.deleteRecursively(it) }
-        val userId = TieredFilesystemEventSource(eventsDirectory, Clock.systemDefaultZone())
+        val userId = runBlocking {
+            TieredFilesystemEventSource(eventsDirectory, Clock.systemDefaultZone())
                 .categoryReader.readCategoryForwards("user")
-                .map { it.event }
-                .map{
-                    val event = EventCodecs.decode(it)
+                .map { (_, eventRecord) ->
+                    val event = EventCodecs.decode(eventRecord)
                     if (event is UserExternalIdAssigned && event.externalId == externalId) {
-                        UUID.fromString(it.streamId.id)
-                    }
-                    else {
+                        UUID.fromString(eventRecord.streamId.id)
+                    } else {
                         null
                     }
                 }
+                .consumeAsFlow()
                 .filterNotNull()
-                .findFirst()
-                .orElseThrow { IllegalStateException("user with external ID $externalId not found") }
+                .first()
+        }
 
         val metadata = object : EventMetadata {
         }

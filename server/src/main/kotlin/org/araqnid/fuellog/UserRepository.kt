@@ -2,6 +2,9 @@ package org.araqnid.fuellog
 
 import com.fasterxml.uuid.Generators
 import com.fasterxml.uuid.impl.NameBasedGenerator
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.stream.consumeAsFlow
 import org.araqnid.eventstore.EventCategoryReader
 import org.araqnid.eventstore.EventStreamReader
 import org.araqnid.eventstore.EventStreamWriter
@@ -31,25 +34,31 @@ class UserRepository @Inject constructor(val categoryReader: EventCategoryReader
 
     @Synchronized
     fun sync() {
-        categoryReader.readCategoryForwards(category, lastPosition)
+        runBlocking {
+            categoryReader.readCategoryForwards(category, lastPosition)
                 .map { Partial(it.position, it.event.streamId.id, EventCodecs.decode(it.event)) }
-                .forEachOrderedAndClose { (position, streamId, event) ->
+                .consumeAsFlow()
+                .collect { (position, streamId, event) ->
                     val userId = UUID.fromString(streamId)
                     knownUsers.add(userId)
                     if (event is UserExternalIdAssigned)
                         externalIdLookup[event.externalId] = userId
                     lastPosition = position
                 }
+        }
     }
 
     operator fun get(userId: UUID): UserRecord {
         val user = UserRecord(userId)
-        streamReader.readStreamForwards(StreamId("user", userId.toString()))
+        runBlocking {
+            streamReader.readStreamForwards(StreamId("user", userId.toString()))
                 .map { Pair(EventCodecs.decode(it.event), it.event.eventNumber) }
-                .forEachOrderedAndClose {
-                    user.accept(it.first)
-                    user.version = it.second
+                .consumeAsFlow()
+                .collect { (event, eventNumber) ->
+                    user.accept(event)
+                    user.version = eventNumber
                 }
+        }
         user.unsyncedChanges.clear()
         return user
     }

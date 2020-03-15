@@ -38,8 +38,7 @@ class EventProcessorImpl @Inject constructor(@Named("SNAPSHOT_SPOOL") baseDirect
     }
 
     override fun process(eventRecord: EventRecord) {
-        val event = EventCodecs.decode(eventRecord)
-        when (event) {
+        when (val event = EventCodecs.decode(eventRecord)) {
             is FuelPurchased -> logger.info("Ignoring $event")
             else -> logger.warn("Unhandled $event")
         }

@@ -10,6 +10,7 @@ java {
 
 dependencies {
     implementation(project(":server"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.4")
     implementation("com.fasterxml.uuid:java-uuid-generator:3.1.3")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))

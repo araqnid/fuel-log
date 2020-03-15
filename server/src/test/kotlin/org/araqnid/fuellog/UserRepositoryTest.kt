@@ -38,9 +38,15 @@ class UserRepositoryTest {
     @Test fun create_user_with_external_id() {
         val externalId = URI.create("http://www.example.com")
         repo.findOrCreateUserByExternalId(externalId, emptyMetadata)
-        assertThat(eventSource.storeReader.readAllForwards().map { it.event }.toListAndClose(),
-                containsOnly(eventRecord(StreamId("user", externalId.toUUID().toString()), 0, "UserExternalIdAssigned",
-                                        bytesEquivalentTo("{ external_id: '$externalId' }"))))
+        assertThat(
+            eventSource.storeReader.events(),
+            containsOnly(
+                eventRecord(
+                    StreamId("user", externalId.toUUID().toString()), 0, "UserExternalIdAssigned",
+                    bytesEquivalentTo("{ external_id: '$externalId' }")
+                )
+            )
+        )
     }
 
     @Test fun find_user_by_id() {
@@ -92,10 +98,14 @@ class UserRepositoryTest {
         user.name = "A User"
         repo.save(user, emptyMetadata)
 
-        assertThat(eventSource.streamReader.readStreamForwards(streamId).map { it.event }.toListAndClose(),
-                containsInOrder(eventRecord("UserExternalIdAssigned", "{ external_id: '$externalId' }"),
-                        eventRecord("UserNameChanged", "{ new_value: 'A Suer' }"),
-                        eventRecord("UserNameChanged", "{ new_value: 'A User' }")))
+        assertThat(
+            eventSource.streamReader.events(streamId),
+            containsInOrder(
+                eventRecord("UserExternalIdAssigned", "{ external_id: '$externalId' }"),
+                eventRecord("UserNameChanged", "{ new_value: 'A Suer' }"),
+                eventRecord("UserNameChanged", "{ new_value: 'A User' }")
+            )
+        )
     }
 
     @Test fun spurious_changes_not_recorded() {
@@ -112,9 +122,13 @@ class UserRepositoryTest {
         user.name = "A Suer"
         repo.save(user, emptyMetadata)
 
-        assertThat(eventSource.streamReader.readStreamForwards(streamId).map { it.event }.toListAndClose(),
-                containsInOrder(eventRecord("UserExternalIdAssigned", "{ external_id: '$externalId' }"),
-                        eventRecord("UserNameChanged", "{ new_value: 'A Suer' }")))
+        assertThat(
+            eventSource.streamReader.events(streamId),
+            containsInOrder(
+                eventRecord("UserExternalIdAssigned", "{ external_id: '$externalId' }"),
+                eventRecord("UserNameChanged", "{ new_value: 'A Suer' }")
+            )
+        )
     }
 
     fun URI.toUUID(): UUID = Generators.nameBasedGenerator(NameBasedGenerator.NAMESPACE_URL).generate(toString())
