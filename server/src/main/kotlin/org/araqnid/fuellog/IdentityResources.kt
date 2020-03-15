@@ -2,7 +2,6 @@ package org.araqnid.fuellog
 
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.future.future
-import org.apache.http.nio.client.HttpAsyncClient
 import org.araqnid.fuellog.events.FacebookProfileData
 import org.araqnid.kotlin.coroutines.resteasy.ResteasyContext
 import java.net.URI
@@ -25,16 +24,12 @@ import javax.ws.rs.core.Context
 @Singleton
 @Path("/user/identity")
 class IdentityResources @Inject constructor(
-        clock: Clock,
-        asyncHttpClient: HttpAsyncClient,
-        private val jettyService: JettyService,
-        private val userRepository: UserRepository,
-        facebookClientConfig: FacebookClientConfig,
-        googleClientConfig: GoogleClientConfig
+    clock: Clock,
+    private val googleClient: GoogleClient,
+    private val facebookClient: FacebookClient,
+    private val jettyService: JettyService,
+    private val userRepository: UserRepository
 ) {
-    private val googleClient = GoogleClient(googleClientConfig, asyncHttpClient, clock)
-    private val facebookClient = FacebookClient(facebookClientConfig, asyncHttpClient)
-
     @GET
     @Produces("application/json")
     @PermitAll

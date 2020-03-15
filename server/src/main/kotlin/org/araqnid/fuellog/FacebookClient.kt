@@ -11,8 +11,12 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.nio.client.HttpAsyncClient
 import java.net.URI
 import java.time.Instant
+import javax.inject.Inject
 
-class FacebookClient(private val config: FacebookClientConfig, private val asyncHttpClient: HttpAsyncClient) {
+class FacebookClient @Inject constructor(
+    private val config: FacebookClientConfig,
+    private val asyncHttpClient: HttpAsyncClient
+) {
     private val debugTokenUri = URI("https://graph.facebook.com/debug_token")
     private val oauthAccessTokenUri = URI("https://graph.facebook.com/oauth/access_token")
 
@@ -20,8 +24,10 @@ class FacebookClient(private val config: FacebookClientConfig, private val async
     data class AccessTokenResponse(val accessToken: String, val tokenType: String)
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    data class DebugTokenResponse(val userId: String, val type: String, val appId: String, val application: String,
-                                  val expiresAt: Instant, val isValid: Boolean, val scopes: Set<String>)
+    data class DebugTokenResponse(
+        val userId: String, val type: String, val appId: String, val application: String,
+        val expiresAt: Instant, val isValid: Boolean, val scopes: Set<String>
+    )
 
     data class UserIdentity(val name: String, val id: String, val picture: Picture)
     data class Picture(val data: PictureData)

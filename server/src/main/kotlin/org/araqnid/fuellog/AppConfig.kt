@@ -24,6 +24,7 @@ import org.araqnid.eventstore.EventSource
 import org.araqnid.eventstore.filesystem.TieredFilesystemEventSource
 import org.araqnid.eventstore.subscription.PollingEventSubscriptionService
 import org.araqnid.eventstore.subscription.SnapshotEventSubscriptionService
+import java.net.http.HttpClient
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.Clock
@@ -129,7 +130,10 @@ class AppConfig(private val environment: Map<String, String>) : AbstractModule()
 
     @Provides
     @Singleton
-    fun statusComponents(builder: ComponentsBuilder, @StatusSource statusComponentSources: @JvmSuppressWildcards Set<Any>): Collection<StatusComponent> {
+    fun statusComponents(
+        builder: ComponentsBuilder,
+        @StatusSource statusComponentSources: @JvmSuppressWildcards Set<Any>
+    ): Collection<StatusComponent> {
         return builder.buildStatusComponents(*statusComponentSources.toTypedArray())
     }
 
@@ -137,7 +141,12 @@ class AppConfig(private val environment: Map<String, String>) : AbstractModule()
     @Singleton
     fun httpAsyncClient(): CloseableHttpAsyncClient = HttpAsyncClients.createDefault()
 
-    private fun getenv(key: String): String = environment[key] ?: throw ProvisionException("$key not specified in environment")
+    @Provides
+    @Singleton
+    fun jdkHttpClient(): HttpClient = httpClient { }
+
+    private fun getenv(key: String): String =
+        environment[key] ?: throw ProvisionException("$key not specified in environment")
 }
 
 @Qualifier
