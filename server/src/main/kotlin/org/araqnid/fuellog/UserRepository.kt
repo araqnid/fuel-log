@@ -3,8 +3,8 @@ package org.araqnid.fuellog
 import com.fasterxml.uuid.Generators
 import com.fasterxml.uuid.impl.NameBasedGenerator
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.stream.consumeAsFlow
 import org.araqnid.eventstore.EventCategoryReader
 import org.araqnid.eventstore.EventStreamReader
 import org.araqnid.eventstore.EventStreamWriter
@@ -37,7 +37,6 @@ class UserRepository @Inject constructor(val categoryReader: EventCategoryReader
         runBlocking {
             categoryReader.readCategoryForwards(category, lastPosition)
                 .map { Partial(it.position, it.event.streamId.id, EventCodecs.decode(it.event)) }
-                .consumeAsFlow()
                 .collect { (position, streamId, event) ->
                     val userId = UUID.fromString(streamId)
                     knownUsers.add(userId)
@@ -53,7 +52,6 @@ class UserRepository @Inject constructor(val categoryReader: EventCategoryReader
         runBlocking {
             streamReader.readStreamForwards(StreamId("user", userId.toString()))
                 .map { Pair(EventCodecs.decode(it.event), it.event.eventNumber) }
-                .consumeAsFlow()
                 .collect { (event, eventNumber) ->
                     user.accept(event)
                     user.version = eventNumber

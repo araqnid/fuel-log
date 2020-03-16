@@ -1,8 +1,8 @@
 package org.araqnid.fuellog
 
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.stream.consumeAsFlow
 import org.araqnid.eventstore.EventCategoryReader
 import org.araqnid.eventstore.EventStreamReader
 import org.araqnid.eventstore.StreamId
@@ -22,7 +22,6 @@ class FuelRepository @Inject constructor(val streamReader: EventStreamReader, va
         runBlocking {
             streamReader.readStreamForwards(streamId)
                 .map { EventCodecs.decode(it.event) }
-                .consumeAsFlow()
                 .collect { event ->
                     record = if (record == null) {
                         when (event) {
@@ -41,7 +40,6 @@ class FuelRepository @Inject constructor(val streamReader: EventStreamReader, va
         val records = mutableMapOf<UUID, FuelRecord>()
         runBlocking {
             categoryReader.readCategoryForwards("fuel")
-                .consumeAsFlow()
                 .collect { (_, eventRecord) ->
                     val streamId = eventRecord.streamId
                     val event = EventCodecs.decode(eventRecord)

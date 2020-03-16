@@ -5,10 +5,9 @@ import com.fasterxml.uuid.impl.NameBasedGenerator
 import com.google.common.base.Splitter
 import com.google.common.io.MoreFiles
 import com.google.common.io.Resources
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.stream.consumeAsFlow
 import org.araqnid.eventstore.StreamId
 import org.araqnid.eventstore.filesystem.TieredFilesystemEventSource
 import org.araqnid.fuellog.events.EventCodecs
@@ -33,16 +32,12 @@ object BackfillFuelPurchases {
         val userId = runBlocking {
             TieredFilesystemEventSource(eventsDirectory, Clock.systemDefaultZone())
                 .categoryReader.readCategoryForwards("user")
-                .map { (_, eventRecord) ->
+                .transform { (_, eventRecord) ->
                     val event = EventCodecs.decode(eventRecord)
                     if (event is UserExternalIdAssigned && event.externalId == externalId) {
-                        UUID.fromString(eventRecord.streamId.id)
-                    } else {
-                        null
+                        emit(UUID.fromString(eventRecord.streamId.id))
                     }
                 }
-                .consumeAsFlow()
-                .filterNotNull()
                 .first()
         }
 

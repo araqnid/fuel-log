@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.stream.consumeAsFlow
 import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpGet
@@ -105,7 +104,6 @@ class FuelResourcesTest {
         val streamId = runBlocking {
             server.instance<EventCategoryReader>()
                 .readCategoryForwards("fuel")
-                .consumeAsFlow()
                 .first().event.streamId
         }
 
@@ -179,7 +177,6 @@ class FuelResourcesTest {
 
     private fun serverEvents(): List<DecodedEvent> = runBlocking {
         server.instance<EventCategoryReader>().readCategoryForwards("fuel")
-            .consumeAsFlow()
             .map { (_, event) ->
                 DecodedEvent(
                     event.streamId.category,

@@ -9,7 +9,7 @@ object LibraryVersions {
     const val kotlinCoroutines = "1.3.4"
     const val appStatus = "0.1.5"
     const val slf4j = "1.7.30"
-    const val eventstore = "0.0.24"
+    const val eventstore = "0.1.26"
 
     fun toMap() =
             LibraryVersions::class.memberProperties

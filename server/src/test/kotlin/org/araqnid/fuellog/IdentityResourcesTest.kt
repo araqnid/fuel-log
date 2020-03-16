@@ -9,7 +9,6 @@ import com.natpryce.hamkrest.hasElement
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.stream.consumeAsFlow
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpDelete
 import org.apache.http.client.methods.HttpGet
@@ -86,7 +85,6 @@ class IdentityResourcesTest {
         return runBlocking {
             server.instance<EventReader>()
                 .readAllForwards()
-                .consumeAsFlow()
                 .transform { (_, eventRecord) ->
                     if (eventRecord.streamId.category == "user") {
                         emit(DecodedEvent(eventRecord.streamId, EventCodecs.decode(eventRecord)))
