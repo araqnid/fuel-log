@@ -1,0 +1,7 @@
+version: 1
+update_configs:
+  - package_manager: "javascript"
+    directory: "/"
+    automerged_updates:
+      - match:
+          update_type: "semver:patch"
