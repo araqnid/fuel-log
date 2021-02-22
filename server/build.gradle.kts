@@ -2,12 +2,12 @@ import org.araqnid.gradle.RuntimeDependenciesTask
 
 plugins {
     application
-    `java-library`
     kotlin("jvm")
+    kotlin("plugin.serialization")
 }
 
 application {
-    mainClassName = "org.araqnid.fuellog.boot.Main"
+    mainClass.set("org.araqnid.fuellog.boot.Main")
 }
 
 val web by configurations.creating
@@ -23,8 +23,8 @@ configurations {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_12
-    targetCompatibility = JavaVersion.VERSION_12
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 tasks {
@@ -36,7 +36,7 @@ tasks {
         manifest {
             attributes["Implementation-Title"] = project.description ?: project.name
             attributes["Implementation-Version"] = project.version
-            attributes["X-Service-Class"] = application.mainClassName
+            attributes["X-Service-Class"] = application.mainClass
         }
         from(web) {
             into("www")
@@ -47,9 +47,9 @@ tasks {
         }
     }
 
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    withType<org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile> {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "11"
         }
     }
 }
