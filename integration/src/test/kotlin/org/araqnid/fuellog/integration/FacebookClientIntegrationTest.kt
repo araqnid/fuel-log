@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isEmptyString
 import kotlinx.coroutines.runBlocking
+import org.araqnid.fuellog.AppConfig
 import org.araqnid.fuellog.FacebookClient
 import org.araqnid.fuellog.FacebookClientConfig
 import org.araqnid.fuellog.hamkrest.assumeThat
@@ -23,14 +24,24 @@ class FacebookClientIntegrationTest {
 
     @Test
     fun `fetches app token`() {
-        val facebookClient = FacebookClient(facebookClientConfig, httpClient)
+        val facebookClient = FacebookClient(
+            AppConfig.FACEBOOK_DEBUG_TOKEN_ENDPOINT,
+            AppConfig.FACEBOOK_ACCESS_TOKEN_ENDPOINT,
+            facebookClientConfig,
+            httpClient
+        )
         val appToken = runBlocking { facebookClient.fetchFacebookAppToken() }
         assertNotEquals("", appToken)
     }
 
     @Test
     fun `failure to fetch app token produces bad request exception`() {
-        val facebookClient = FacebookClient(FacebookClientConfig("", ""), httpClient)
+        val facebookClient = FacebookClient(
+            AppConfig.FACEBOOK_DEBUG_TOKEN_ENDPOINT,
+            AppConfig.FACEBOOK_ACCESS_TOKEN_ENDPOINT,
+            FacebookClientConfig("", ""),
+            httpClient
+        )
 
         assertThrows<BadRequestException> {
             runBlocking { facebookClient.fetchFacebookAppToken() }
@@ -39,7 +50,12 @@ class FacebookClientIntegrationTest {
 
     @Test
     fun `fetches user profile by id`() {
-        val facebookClient = FacebookClient(facebookClientConfig, httpClient)
+        val facebookClient = FacebookClient(
+            AppConfig.FACEBOOK_DEBUG_TOKEN_ENDPOINT,
+            AppConfig.FACEBOOK_ACCESS_TOKEN_ENDPOINT,
+            facebookClientConfig,
+            httpClient
+        )
         val result = runBlocking { facebookClient.fetchUserProfile("10155233566049669") }
 
         assertThat(result, has(FacebookClient.UserIdentity::id, equalTo("10155233566049669")))
@@ -49,7 +65,12 @@ class FacebookClientIntegrationTest {
     fun `fetches user's own profile`() {
         assumeThat(facebookUserAccessToken, !isEmptyString)
 
-        val facebookClient = FacebookClient(facebookClientConfig, httpClient)
+        val facebookClient = FacebookClient(
+            AppConfig.FACEBOOK_DEBUG_TOKEN_ENDPOINT,
+            AppConfig.FACEBOOK_ACCESS_TOKEN_ENDPOINT,
+            facebookClientConfig,
+            httpClient
+        )
         val result = runBlocking { facebookClient.fetchUsersOwnProfile(facebookUserAccessToken) }
 
         assertThat(result, has(FacebookClient.UserIdentity::id, equalTo("10155233566049669")))
@@ -59,7 +80,12 @@ class FacebookClientIntegrationTest {
     fun `validates user access token`() {
         assumeThat(facebookUserAccessToken, !isEmptyString)
 
-        val facebookClient = FacebookClient(facebookClientConfig, httpClient)
+        val facebookClient = FacebookClient(
+            AppConfig.FACEBOOK_DEBUG_TOKEN_ENDPOINT,
+            AppConfig.FACEBOOK_ACCESS_TOKEN_ENDPOINT,
+            facebookClientConfig,
+            httpClient
+        )
         val result = runBlocking { facebookClient.validateUserAccessToken(facebookUserAccessToken) }
 
         assertThat(result, has(FacebookClient.DebugTokenResponse::appId, equalTo(facebookClientConfig.id))

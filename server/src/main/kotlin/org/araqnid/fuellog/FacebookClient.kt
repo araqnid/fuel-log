@@ -12,14 +12,14 @@ import org.apache.http.nio.client.HttpAsyncClient
 import java.net.URI
 import java.time.Instant
 import javax.inject.Inject
+import javax.inject.Named
 
 class FacebookClient @Inject constructor(
+    @Named("FacebookDebugTokenUri") private val debugTokenUri: URI,
+    @Named("FacebookOauthAccessTokenUri") private val oauthAccessTokenUri: URI,
     private val config: FacebookClientConfig,
     private val asyncHttpClient: HttpAsyncClient
 ) {
-    private val debugTokenUri = URI("https://graph.facebook.com/debug_token")
-    private val oauthAccessTokenUri = URI("https://graph.facebook.com/oauth/access_token")
-
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class AccessTokenResponse(val accessToken: String, val tokenType: String)
 

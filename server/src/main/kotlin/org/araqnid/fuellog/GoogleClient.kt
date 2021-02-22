@@ -11,15 +11,15 @@ import java.net.http.HttpClient
 import java.time.Clock
 import java.time.Instant
 import javax.inject.Inject
+import javax.inject.Named
 import javax.ws.rs.BadRequestException
 
 class GoogleClient @Inject constructor(
+    @Named("GoogleTokenInfo") private val tokenInfoUri: URI,
     private val config: GoogleClientConfig,
     private val httpClient: HttpClient,
     private val clock: Clock
 ) {
-    private val tokenInfoUri = URI("https://www.googleapis.com/oauth2/v3/tokeninfo")
-
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class TokenInfo(
         val name: String,

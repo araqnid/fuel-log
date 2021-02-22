@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import kotlinx.coroutines.runBlocking
+import org.araqnid.fuellog.AppConfig
 import org.araqnid.fuellog.GoogleClient
 import org.araqnid.fuellog.GoogleClientConfig
 import org.araqnid.fuellog.httpClient
@@ -21,14 +22,15 @@ class GoogleClientIntegrationTest {
 
     @Test
     fun `validates ID token`() {
-        val googleClient = GoogleClient(googleClientConfig, httpClient, clock)
+        val googleClient = GoogleClient(AppConfig.GOOGLE_TOKEN_INFO_ENDPOINT, googleClientConfig, httpClient, clock)
         val tokenInfo = runBlocking { googleClient.validateToken(googleIdToken) }
         assertThat(tokenInfo, has(GoogleClient.TokenInfo::clientId, equalTo(googleClientConfig.id)))
     }
 
     @Test
     fun `failure to validate ID token produces BadRequestException`() {
-        val googleClient = GoogleClient(GoogleClientConfig("", ""), httpClient, clock)
+        val googleClient =
+            GoogleClient(AppConfig.GOOGLE_TOKEN_INFO_ENDPOINT, GoogleClientConfig("", ""), httpClient, clock)
 
         assertThrows<BadRequestException> {
             runBlocking { googleClient.validateToken("") }

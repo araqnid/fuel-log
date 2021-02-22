@@ -13,7 +13,7 @@ import com.google.inject.AbstractModule
 import com.google.inject.Provides
 import com.google.inject.ProvisionException
 import com.google.inject.multibindings.Multibinder
-import com.google.inject.name.Names
+import com.google.inject.name.Names.named
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.nio.client.HttpAsyncClient
@@ -24,6 +24,7 @@ import org.araqnid.eventstore.EventSource
 import org.araqnid.eventstore.filesystem.TieredFilesystemEventSource
 import org.araqnid.eventstore.subscription.PollingEventSubscriptionService
 import org.araqnid.eventstore.subscription.SnapshotEventSubscriptionService
+import java.net.URI
 import java.net.http.HttpClient
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -34,13 +35,23 @@ import javax.inject.Qualifier
 import javax.inject.Singleton
 
 class AppConfig(private val environment: Map<String, String>) : AbstractModule() {
-    private val usingSnapshots: Boolean = with (environment["SNAPSHOT_SPOOL"] ?: "") {
+    private val usingSnapshots: Boolean = with(environment["SNAPSHOT_SPOOL"] ?: "") {
         !isEmpty() && Files.isDirectory(Paths.get(this))
     }
 
-    override fun configure() {
-        environment.forEach { (k, v) -> bindConstant().annotatedWith(Names.named(k)).to(v) }
+    companion object {
+        val GOOGLE_TOKEN_INFO_ENDPOINT = URI("https://www.googleapis.com/oauth2/v3/tokeninfo")
+        val FACEBOOK_DEBUG_TOKEN_ENDPOINT = URI("https://graph.facebook.com/debug_token")
+        val FACEBOOK_ACCESS_TOKEN_ENDPOINT = URI("https://graph.facebook.com/oauth/access_token")
+    }
 
+    override fun configure() {
+        environment.forEach { (k, v) -> bindConstant().annotatedWith(named(k)).to(v) }
+
+        bind(URI::class.java).annotatedWith(named("GoogleTokenInfo")).toInstance(GOOGLE_TOKEN_INFO_ENDPOINT)
+        bind(URI::class.java).annotatedWith(named("FacebookDebugTokenUri")).toInstance(FACEBOOK_DEBUG_TOKEN_ENDPOINT)
+        bind(URI::class.java).annotatedWith(named("FacebookOauthAccessTokenUri"))
+            .toInstance(FACEBOOK_ACCESS_TOKEN_ENDPOINT)
         bind(EventSource::class.java).to(TieredFilesystemEventSource::class.java)
         bind(Clock::class.java).toInstance(Clock.systemDefaultZone())
         bind(InfoResources::class.java)
