@@ -1,10 +1,10 @@
+@file:UseSerializers(EpochSecondsSerializer::class, URISerializer::class)
+
 package org.araqnid.fuellog
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 import org.araqnid.fuellog.events.GoogleProfileData
 import java.net.URI
 import java.net.http.HttpClient
@@ -20,28 +20,23 @@ class GoogleClient @Inject constructor(
     private val httpClient: HttpClient,
     private val clock: Clock
 ) {
-    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Serializable
     data class TokenInfo(
         val name: String,
-        @JsonProperty("iat") val issuedAt: Instant,
-        @JsonProperty("exp") val expiresAt: Instant,
-        @JsonProperty("aud") val clientId: String,
-        @JsonProperty("sub") val userId: String,
-        @JsonProperty("iss") val issuedBy: String,
-        val givenName: String?,
-                         val familyName: String?,
-                         val picture: URI?) {
+        @SerialName("iat") val issuedAt: Instant,
+        @SerialName("exp") val expiresAt: Instant,
+        @SerialName("aud") val clientId: String,
+        @SerialName("sub") val userId: String,
+        @SerialName("iss") val issuedBy: String,
+        val givenName: String? = null,
+        val familyName: String? = null,
+        val picture: URI? = null
+    ) {
         fun toProfileData(): GoogleProfileData = GoogleProfileData(givenName, familyName, picture)
     }
 
-    private val objectMapperForGoogleEndpoint = jacksonObjectMapper()
-            .registerModule(JavaTimeModule())
-            .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
-
-    private val tokenInfoReader = objectMapperForGoogleEndpoint.readerFor(TokenInfo::class.java)
-
     suspend fun validateToken(idToken: String): TokenInfo {
-        val tokenInfo = httpClient.getJson<TokenInfo>(tokenInfoReader) {
+        val tokenInfo = httpClient.getJson(TokenInfo.serializer()) {
             POSTFormData("id_token" to idToken)
             uri(tokenInfoUri)
         }

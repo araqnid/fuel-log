@@ -86,6 +86,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:${LibraryVersions.kotlinCoroutines}")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${LibraryVersions.kotlinSerialization}")
     testImplementation(kotlin("test-junit"))
     testImplementation(project(":test-utils"))
     testImplementation("com.timgroup:clocks-testing:1.0.1070")
