@@ -3,10 +3,6 @@ plugins {
     id("com.timgroup.webpack") version "1.0.64" apply false
 }
 
-LibraryVersions.toMap().forEach { (name, value) ->
-    ext["${name}Version"] = value
-}
-
 allprojects {
     group = "org.araqnid.fuel-log"
 

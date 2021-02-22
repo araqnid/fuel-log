@@ -1,5 +1,3 @@
-import kotlin.reflect.full.memberProperties
-
 object LibraryVersions {
     const val jetty = "9.4.27.v20200227"
     const val jackson = "2.10.3"
@@ -10,8 +8,4 @@ object LibraryVersions {
     const val appStatus = "0.1.5"
     const val slf4j = "1.7.30"
     const val eventstore = "0.1.26"
-
-    fun toMap() =
-            LibraryVersions::class.memberProperties
-                    .associate { prop -> prop.name to prop.getter.call() as String }
 }
