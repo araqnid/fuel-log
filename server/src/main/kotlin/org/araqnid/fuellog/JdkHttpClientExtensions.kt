@@ -3,7 +3,6 @@ package org.araqnid.fuellog
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.Json
-import org.apache.http.HttpStatus
 import org.apache.http.client.utils.URLEncodedUtils
 import org.apache.http.entity.ContentType
 import org.apache.http.message.BasicNameValuePair
@@ -52,30 +51,35 @@ private val permittedJsonMimeTypes = setOf("text/javascript", "application/json"
 suspend inline fun <T : Any> HttpClient.getJson(
     deserializer: DeserializationStrategy<T>,
     requestConfig: (HttpRequest.Builder).() -> Unit
-): T {
-    val request = httpRequest(requestConfig)
-    return parseJsonResponse(
-        request.uri(),
-        sendAsync(request, HttpResponse.BodyHandlers.ofByteArray()).await(),
-        deserializer
-    )
-}
+): T = getJson(deserializer, httpRequest(requestConfig))
 
-fun <T : Any> parseJsonResponse(
-    uri: URI,
-    response: HttpResponse<ByteArray>,
-    deserializer: DeserializationStrategy<T>
-): T {
-    if (response.statusCode() != HttpStatus.SC_OK)
-        throw BadRequestException("$uri: ${response.statusCode()}")
+suspend fun <T : Any> HttpClient.getJson(
+    deserializer: DeserializationStrategy<T>,
+    request: HttpRequest
+): T = sendAsync(request, JsonBodyHandler(request.uri(), deserializer)).await().body()
 
-    response.headers().firstValue("content-type")
-        .orElseThrow { BadRequestException("$uri: no content-type") }
-        .let {
-            val contentType = ContentType.parse(it)
-            if (contentType.mimeType.toLowerCase() !in permittedJsonMimeTypes)
-                throw BadRequestException("$uri: unhandled content-type: $contentType")
+private class JsonBodyHandler<T>(
+    private val uri: URI,
+    private val deserializer: DeserializationStrategy<T>
+) : HttpResponse.BodyHandler<T> {
+    override fun apply(responseInfo: HttpResponse.ResponseInfo): HttpResponse.BodySubscriber<T> {
+        if (responseInfo.statusCode() != 200)
+            throw BadRequestException("$uri: (${responseInfo.statusCode()}")
+
+        responseInfo.headers().firstValue("content-type")
+            .orElseThrow { BadRequestException("$uri: no content-type") }
+            .let {
+                val contentType = ContentType.parse(it)
+                if (contentType.mimeType.toLowerCase() !in permittedJsonMimeTypes)
+                    throw BadRequestException("$uri: unhandled content-type: $contentType")
+            }
+
+        return HttpResponse.BodySubscribers.mapping(HttpResponse.BodySubscribers.ofString(UTF_8)) { string ->
+            format.decodeFromString(deserializer, string)
         }
+    }
 
-    return Json { ignoreUnknownKeys = true }.decodeFromString(deserializer, response.body().toString(UTF_8))
+    companion object {
+        private val format = Json { ignoreUnknownKeys = true }
+    }
 }
