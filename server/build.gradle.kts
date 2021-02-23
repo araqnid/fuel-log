@@ -92,6 +92,7 @@ dependencies {
     testImplementation("com.timgroup:clocks-testing:1.0.1070")
     testImplementation("org.araqnid:hamkrest-json:1.1.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${LibraryVersions.kotlinCoroutines}")
+    testImplementation("org.araqnid.kotlin.assert-that:assert-that:0.1.1")
     testRuntimeOnly("org.slf4j:slf4j-simple:${LibraryVersions.slf4j}")
     runtimeOnly("ch.qos.logback:logback-classic:1.2.3")
     runtimeOnly("org.slf4j:jcl-over-slf4j:${LibraryVersions.slf4j}")

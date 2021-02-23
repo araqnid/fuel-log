@@ -15,8 +15,7 @@ import javax.inject.Inject
 import javax.inject.Named
 
 class FacebookClient @Inject constructor(
-    @Named("FacebookDebugTokenUri") private val debugTokenUri: URI,
-    @Named("FacebookOauthAccessTokenUri") private val oauthAccessTokenUri: URI,
+    @Named("FacebookGraphUri") private val graphUri: URI,
     private val config: FacebookClientConfig,
     private val asyncHttpClient: HttpAsyncClient
 ) {
@@ -52,8 +51,9 @@ class FacebookClient @Inject constructor(
     )
 
     suspend fun fetchFacebookAppToken(): String {
+        val uri = graphUri.resolve("oauth/access_token")
         val request = HttpGet(
-            oauthAccessTokenUri.withParameters(
+            uri.withParameters(
                 "client_id" to config.id,
                 "client_secret" to config.secret,
                 "grant_type" to "client_credentials"
@@ -63,15 +63,16 @@ class FacebookClient @Inject constructor(
         val response = asyncHttpClient.executeAsyncHttpRequest(request)
 
         return parseJsonResponse(
-            oauthAccessTokenUri,
+            uri,
             response,
             AccessTokenResponse.serializer(),
         ).accessToken
     }
 
     suspend fun validateUserAccessToken(token: String): DebugTokenResponse {
+        val uri = graphUri.resolve("debug_token")
         val request = HttpGet(
-            debugTokenUri.withParameters(
+            uri.withParameters(
                 "input_token" to token,
                 "access_token" to "${config.id}|${config.secret}"
             )
@@ -79,11 +80,11 @@ class FacebookClient @Inject constructor(
 
         val response = asyncHttpClient.executeAsyncHttpRequest(request)
 
-        return parseJsonResponse(debugTokenUri, response, DebugTokenResponse.serializer())
+        return parseJsonResponse(uri, response, DebugTokenResponse.serializer())
     }
 
     suspend fun fetchUsersOwnProfile(accessToken: String): UserIdentity {
-        val uri = URI("https://graph.facebook.com/me")
+        val uri = graphUri.resolve("me")
         val response = asyncHttpClient.executeAsyncHttpRequest(
             HttpGet(
                 uri.withParameters(
@@ -96,7 +97,7 @@ class FacebookClient @Inject constructor(
     }
 
     suspend fun fetchUserProfile(userId: String): UserIdentity {
-        val uri = URI("https://graph.facebook.com/$userId")
+        val uri = graphUri.resolve(userId)
         val response = asyncHttpClient.executeAsyncHttpRequest(
             HttpGet(
                 uri.withParameters(

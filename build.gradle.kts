@@ -9,6 +9,15 @@ subprojects {
 
     repositories {
         mavenLocal()
+        mavenCentral()
+        if (isGithubUserAvailable(project)) {
+            for (repo in listOf("assert-that")) {
+                maven(url = "https://maven.pkg.github.com/araqnid/$repo") {
+                    name = "github-$repo"
+                    credentials(githubUserCredentials(project))
+                }
+            }
+        }
         jcenter()
     }
 }
