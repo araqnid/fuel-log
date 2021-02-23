@@ -1,6 +1,5 @@
 package org.araqnid.fuellog
 
-import com.fasterxml.jackson.databind.ObjectReader
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.Json
@@ -51,18 +50,6 @@ inline fun httpClient(block: (HttpClient.Builder).() -> Unit): HttpClient {
 private val permittedJsonMimeTypes = setOf("text/javascript", "application/json")
 
 suspend inline fun <T : Any> HttpClient.getJson(
-    objectReader: ObjectReader,
-    requestConfig: (HttpRequest.Builder).() -> Unit
-): T {
-    val request = httpRequest(requestConfig)
-    return parseJsonResponse(
-        request.uri(),
-        sendAsync(request, HttpResponse.BodyHandlers.ofByteArray()).await(),
-        objectReader
-    )
-}
-
-suspend inline fun <T : Any> HttpClient.getJson(
     deserializer: DeserializationStrategy<T>,
     requestConfig: (HttpRequest.Builder).() -> Unit
 ): T {
@@ -72,25 +59,6 @@ suspend inline fun <T : Any> HttpClient.getJson(
         sendAsync(request, HttpResponse.BodyHandlers.ofByteArray()).await(),
         deserializer
     )
-}
-
-fun <T : Any> parseJsonResponse(
-    uri: URI,
-    response: HttpResponse<ByteArray>,
-    objectReader: ObjectReader
-): T {
-    if (response.statusCode() != HttpStatus.SC_OK)
-        throw BadRequestException("$uri: ${response.statusCode()}")
-
-    response.headers().firstValue("content-type")
-        .orElseThrow { BadRequestException("$uri: no content-type") }
-        .let {
-            val contentType = ContentType.parse(it)
-            if (contentType.mimeType.toLowerCase() !in permittedJsonMimeTypes)
-                throw BadRequestException("$uri: unhandled content-type: $contentType")
-        }
-
-    return objectReader.readValue(response.body())
 }
 
 fun <T : Any> parseJsonResponse(
