@@ -41,8 +41,6 @@ class AppConfig(private val environment: Map<String, String>) : AbstractModule()
 
     companion object {
         val GOOGLE_TOKEN_INFO_ENDPOINT = URI("https://www.googleapis.com/oauth2/v3/tokeninfo")
-        val FACEBOOK_DEBUG_TOKEN_ENDPOINT = URI("https://graph.facebook.com/debug_token")
-        val FACEBOOK_ACCESS_TOKEN_ENDPOINT = URI("https://graph.facebook.com/oauth/access_token")
         val FACEBOOK_GRAPH_URI = URI("https://graph.facebook.com/")
     }
 
@@ -50,11 +48,7 @@ class AppConfig(private val environment: Map<String, String>) : AbstractModule()
         environment.forEach { (k, v) -> bindConstant().annotatedWith(named(k)).to(v) }
 
         bind(URI::class.java).annotatedWith(named("GoogleTokenInfo")).toInstance(GOOGLE_TOKEN_INFO_ENDPOINT)
-        bind(URI::class.java).annotatedWith(named("FacebookDebugTokenUri")).toInstance(FACEBOOK_DEBUG_TOKEN_ENDPOINT)
-        bind(URI::class.java).annotatedWith(named("FacebookOauthAccessTokenUri"))
-            .toInstance(FACEBOOK_ACCESS_TOKEN_ENDPOINT)
-        bind(URI::class.java).annotatedWith(named("FacebookGraphUri"))
-            .toInstance(FACEBOOK_GRAPH_URI)
+        bind(URI::class.java).annotatedWith(named("FacebookGraphUri")).toInstance(FACEBOOK_GRAPH_URI)
         bind(EventSource::class.java).to(TieredFilesystemEventSource::class.java)
         bind(Clock::class.java).toInstance(Clock.systemDefaultZone())
         bind(InfoResources::class.java)

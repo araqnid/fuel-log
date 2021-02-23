@@ -11,22 +11,17 @@ import org.araqnid.fuellog.FacebookClient
 import org.araqnid.fuellog.FacebookClientConfig
 import org.araqnid.fuellog.hamkrest.assumeThat
 import org.araqnid.fuellog.test.assertThrows
-import org.junit.Rule
 import org.junit.Test
 import javax.ws.rs.BadRequestException
 import kotlin.test.assertNotEquals
 
 class FacebookClientIntegrationTest {
-    @get:Rule
-    val httpClient = HttpAsyncClientRule()
-
     private val facebookClientConfig by lazy { FacebookClientConfig(facebookAppId, facebookAppSecret) }
 
     @Test
     fun `fetches app token`() {
         val facebookClient = FacebookClient(
-            AppConfig.FACEBOOK_DEBUG_TOKEN_ENDPOINT,
-            AppConfig.FACEBOOK_ACCESS_TOKEN_ENDPOINT,
+            AppConfig.FACEBOOK_GRAPH_URI,
             facebookClientConfig,
             httpClient
         )
@@ -37,8 +32,7 @@ class FacebookClientIntegrationTest {
     @Test
     fun `failure to fetch app token produces bad request exception`() {
         val facebookClient = FacebookClient(
-            AppConfig.FACEBOOK_DEBUG_TOKEN_ENDPOINT,
-            AppConfig.FACEBOOK_ACCESS_TOKEN_ENDPOINT,
+            AppConfig.FACEBOOK_GRAPH_URI,
             FacebookClientConfig("", ""),
             httpClient
         )
@@ -51,8 +45,7 @@ class FacebookClientIntegrationTest {
     @Test
     fun `fetches user profile by id`() {
         val facebookClient = FacebookClient(
-            AppConfig.FACEBOOK_DEBUG_TOKEN_ENDPOINT,
-            AppConfig.FACEBOOK_ACCESS_TOKEN_ENDPOINT,
+            AppConfig.FACEBOOK_GRAPH_URI,
             facebookClientConfig,
             httpClient
         )
@@ -66,8 +59,7 @@ class FacebookClientIntegrationTest {
         assumeThat(facebookUserAccessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(
-            AppConfig.FACEBOOK_DEBUG_TOKEN_ENDPOINT,
-            AppConfig.FACEBOOK_ACCESS_TOKEN_ENDPOINT,
+            AppConfig.FACEBOOK_GRAPH_URI,
             facebookClientConfig,
             httpClient
         )
@@ -81,8 +73,7 @@ class FacebookClientIntegrationTest {
         assumeThat(facebookUserAccessToken, !isEmptyString)
 
         val facebookClient = FacebookClient(
-            AppConfig.FACEBOOK_DEBUG_TOKEN_ENDPOINT,
-            AppConfig.FACEBOOK_ACCESS_TOKEN_ENDPOINT,
+            AppConfig.FACEBOOK_GRAPH_URI,
             facebookClientConfig,
             httpClient
         )

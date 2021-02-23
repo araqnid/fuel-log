@@ -7,15 +7,12 @@ import kotlinx.coroutines.runBlocking
 import org.araqnid.fuellog.AppConfig
 import org.araqnid.fuellog.GoogleClient
 import org.araqnid.fuellog.GoogleClientConfig
-import org.araqnid.fuellog.httpClient
 import org.araqnid.fuellog.test.assertThrows
 import org.junit.Test
 import java.time.Clock
 import javax.ws.rs.BadRequestException
 
 class GoogleClientIntegrationTest {
-    val httpClient = httpClient { }
-
     private val clock = Clock.systemDefaultZone()
 
     private val googleClientConfig by lazy { GoogleClientConfig(googleClientId, googleClientSecret) }
