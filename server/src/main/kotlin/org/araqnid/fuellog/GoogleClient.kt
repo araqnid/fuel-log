@@ -36,18 +36,16 @@ class GoogleClient @Inject constructor(
     }
 
     suspend fun validateToken(idToken: String): TokenInfo {
-        val tokenInfo = httpClient.getJson(TokenInfo.serializer()) {
+        return httpClient.getJson(TokenInfo.serializer()) {
             POSTFormData("id_token" to idToken)
             uri(tokenInfoUri)
+        }.also { tokenInfo ->
+            if (tokenInfo.clientId != config.id)
+                throw BadRequestException("Token is not for our client ID: $tokenInfo")
+            if (tokenInfo.expiresAt < Instant.now(clock))
+                throw BadRequestException("Token already expired: $tokenInfo")
+            if (tokenInfo.issuedBy != "accounts.google.com" && tokenInfo.issuedBy != "https://accounts.google.com")
+                throw BadRequestException("Token issuer is unrecognised: $tokenInfo")
         }
-
-        if (tokenInfo.clientId != config.id)
-            throw BadRequestException("Token is not for our client ID: $tokenInfo")
-        if (tokenInfo.expiresAt < Instant.now(clock))
-            throw BadRequestException("Token already expired: $tokenInfo")
-        if (tokenInfo.issuedBy != "accounts.google.com" && tokenInfo.issuedBy != "https://accounts.google.com")
-            throw BadRequestException("Token issuer is unrecognised: $tokenInfo")
-
-        return tokenInfo
     }
 }
