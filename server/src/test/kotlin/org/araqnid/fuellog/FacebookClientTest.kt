@@ -1,7 +1,6 @@
 package org.araqnid.fuellog
 
 import kotlinx.coroutines.runBlocking
-import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.araqnid.kotlin.assertthat.assertThat
 import org.araqnid.kotlin.assertthat.equalTo
 import org.eclipse.jetty.server.NetworkConnector
@@ -13,6 +12,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExternalResource
 import java.net.URI
+import java.net.http.HttpClient
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -20,9 +20,6 @@ import javax.servlet.http.HttpServletResponse
 class FacebookClientTest {
     @get:Rule
     val server = FakeServer()
-
-    @get:Rule
-    val client = AsyncHttpClientRule()
 
     @Volatile
     var debugGetHandler: (req: HttpServletRequest, resp: HttpServletResponse) -> Unit = { req, resp ->
@@ -64,7 +61,7 @@ class FacebookClientTest {
         val client = FacebookClient(
             server.graphUri,
             FacebookClientConfig(id = "id", secret = "secret"),
-            client.httpClient
+            HttpClient.newHttpClient()
         )
         runBlocking {
             val tokenInfo = client.validateUserAccessToken("some_token")
@@ -85,7 +82,7 @@ class FacebookClientTest {
         val client = FacebookClient(
             server.graphUri,
             FacebookClientConfig(id = "id", secret = "secret"),
-            client.httpClient
+            HttpClient.newHttpClient()
         )
         runBlocking {
             val token = client.fetchFacebookAppToken()
@@ -107,7 +104,7 @@ class FacebookClientTest {
         val client = FacebookClient(
             server.graphUri,
             FacebookClientConfig(id = "id", secret = "secret"),
-            client.httpClient
+            HttpClient.newHttpClient()
         )
         runBlocking {
             val profile = client.fetchUsersOwnProfile("the_access_token")
@@ -143,7 +140,7 @@ class FacebookClientTest {
         val client = FacebookClient(
             server.graphUri,
             FacebookClientConfig(id = "id", secret = "secret"),
-            client.httpClient
+            HttpClient.newHttpClient()
         )
         defaultGetHandler = meGetHandler
         runBlocking {
@@ -212,18 +209,6 @@ class FacebookClientTest {
 
         override fun after() {
             server.stop()
-        }
-    }
-
-    class AsyncHttpClientRule : ExternalResource() {
-        val httpClient = HttpAsyncClients.createDefault()
-
-        override fun before() {
-            httpClient.start()
-        }
-
-        override fun after() {
-            httpClient.close()
         }
     }
 }

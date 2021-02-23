@@ -5,11 +5,10 @@ package org.araqnid.fuellog
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
-import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.utils.URIBuilder
 import org.apache.http.message.BasicNameValuePair
-import org.apache.http.nio.client.HttpAsyncClient
 import java.net.URI
+import java.net.http.HttpClient
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Named
@@ -17,7 +16,7 @@ import javax.inject.Named
 class FacebookClient @Inject constructor(
     @Named("FacebookGraphUri") private val graphUri: URI,
     private val config: FacebookClientConfig,
-    private val asyncHttpClient: HttpAsyncClient
+    private val httpClient: HttpClient
 ) {
     @Serializable
     data class AccessTokenResponse(
@@ -51,62 +50,48 @@ class FacebookClient @Inject constructor(
     )
 
     suspend fun fetchFacebookAppToken(): String {
-        val uri = graphUri.resolve("oauth/access_token")
-        val request = HttpGet(
-            uri.withParameters(
-                "client_id" to config.id,
-                "client_secret" to config.secret,
-                "grant_type" to "client_credentials"
+        return httpClient.getJson(AccessTokenResponse.serializer()) {
+            uri(
+                graphUri.resolve("oauth/access_token").withParameters(
+                    "client_id" to config.id,
+                    "client_secret" to config.secret,
+                    "grant_type" to "client_credentials"
+                )
             )
-        )
-
-        val response = asyncHttpClient.executeAsyncHttpRequest(request)
-
-        return parseJsonResponse(
-            uri,
-            response,
-            AccessTokenResponse.serializer(),
-        ).accessToken
+        }.accessToken
     }
 
     suspend fun validateUserAccessToken(token: String): DebugTokenResponse {
-        val uri = graphUri.resolve("debug_token")
-        val request = HttpGet(
-            uri.withParameters(
-                "input_token" to token,
-                "access_token" to "${config.id}|${config.secret}"
+        return httpClient.getJson(DebugTokenResponse.serializer()) {
+            uri(
+                graphUri.resolve("debug_token").withParameters(
+                    "input_token" to token,
+                    "access_token" to "${config.id}|${config.secret}"
+                )
             )
-        )
-
-        val response = asyncHttpClient.executeAsyncHttpRequest(request)
-
-        return parseJsonResponse(uri, response, DebugTokenResponse.serializer())
+        }
     }
 
     suspend fun fetchUsersOwnProfile(accessToken: String): UserIdentity {
-        val uri = graphUri.resolve("me")
-        val response = asyncHttpClient.executeAsyncHttpRequest(
-            HttpGet(
-                uri.withParameters(
+        return httpClient.getJson(UserIdentity.serializer()) {
+            uri(
+                graphUri.resolve("me").withParameters(
                     "access_token" to accessToken,
                     "fields" to "id,name,picture"
                 )
             )
-        )
-        return parseJsonResponse(uri, response, UserIdentity.serializer())
+        }
     }
 
     suspend fun fetchUserProfile(userId: String): UserIdentity {
-        val uri = graphUri.resolve(userId)
-        val response = asyncHttpClient.executeAsyncHttpRequest(
-            HttpGet(
-                uri.withParameters(
+        return httpClient.getJson(UserIdentity.serializer()) {
+            uri(
+                graphUri.resolve(userId).withParameters(
                     "access_token" to "${config.id}|${config.secret}",
                     "fields" to "id,name,picture"
                 )
             )
-        )
-        return parseJsonResponse(uri, response, UserIdentity.serializer())
+        }
     }
 
     private fun URI.withParameters(vararg parameters: Pair<String, String>): URI =
